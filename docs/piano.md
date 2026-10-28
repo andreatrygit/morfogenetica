@@ -165,13 +165,33 @@ Fatto e verificato (`scripts/prove.sh`, 368 prove su 368):
 Da tenere:
 
 - **Piegarsi costa poco, quindi è lento.** Con Δ piccolo una striscia di 40 cellule non converge
-  in 5 milioni di passi. Per le forme servirà un integratore migliore di Eulero a passo fisso.
+  in 5 milioni di passi di Eulero. Risolto dall'integratore (sezione 7).
 - tyssue si ferma con forze residue di 0.01 nN: per il confronto lo si fa ripartire fino a 1e-7.
 
 La Fase 2 è chiusa: la meccanica è congelata come `motore-meccanica-v1`. Il tag git non si può
 pushare da questo ambiente: al suo posto c'è il commit vuoto "CONGELATO: MOTORE-MECCANICA-V1" e,
 soprattutto, la prova "file congelati", che confronta l'impronta SHA-256 dei cinque file con
 `prove/congelati.txt` e fallisce se uno cambia.
+
+## 7. L'integratore (fase 3, primo lavoro)
+
+`motore/06_integratore.jl`, file nuovo: i cinque file congelati non sono toccati.
+
+- **`minimizza!`: Newton smorzato** (Levenberg–Marquardt), con la matrice delle derivate
+  seconde per differenze del gradiente esatto e un passo accettato solo se l'energia scende.
+  Per gli equilibri. Una striscia di 40 cellule converge in 151 iterazioni (Eulero: non in 5
+  milioni di passi), una di 80 in 598, l'anello in 16; l'angolo coincide con la teoria fino a
+  1e-11. Limite dichiarato: la matrice è piena, va bene per il 2D con qualche centinaio di
+  vertici, non per il 3D, dove servirà una versione sparsa.
+- **`passo_implicito!` ed `evolvi!`: Eulero implicito** per la dinamica sovrasmorzata, scritto
+  come spostamento minimizzante (il minimo di E(x) + η/(2dt)·|x − x_n|²). Stabile con qualunque
+  passo: con dt = 50 min, oltre cento volte il limite di Eulero esplicito, l'energia non sale
+  mai. Per dt → 0 ritrova la traiettoria di Eulero esplicito, con errore del primo ordine.
+- FIRE, provato prima, è stato scartato: 13 volte più veloce di Eulero ma ancora lontano da
+  Newton (una striscia di 80 cellule non converge in 2 milioni di iterazioni).
+
+Le prove (`test/integratore.jl`) ritrovano con Newton F2, F3 e F5 (contro tyssue) e lo stesso
+equilibrio di Eulero, e verificano il contatto. 459 prove su 459.
 
 ## Fonti
 
