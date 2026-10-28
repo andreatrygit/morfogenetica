@@ -47,6 +47,10 @@ Oltre quel limite la cellula collassa a triangolo (apice zero) e il modello va r
 una lunghezza minima di spigolo: il motore deve **rifiutare** quella configurazione, non
 simularla in silenzio.
 
+Con l'angolo **imposto** (un anello chiuso di N cellule, α = π/N) la stessa richiesta, lato
+apicale positivo, diventa **sin(π/N) < Γl / (2Γa)**. È la soglia che la batteria verifica: con
+Γa = 1.3 e Γl = 1 l'anello collassa per N ≤ 7 e regge per N ≥ 9.
+
 **Verificato numericamente** (Julia, minimizzazione a forza bruta su 6 milioni di configurazioni,
 A = 1): con Γ = (1.3, 1.0, 1.0) l'angolo misurato è 0.305 contro 0.305 previsto, l'altezza 1.628
 contro 1.628; con Γ = (1.1, 1.0, 0.8) l'angolo è 0.125 contro 0.125, l'altezza 1.638 contro 1.639.
@@ -131,13 +135,38 @@ indici e pagine di progetto: vanno ricontrollate sul file LICENSE prima dell'uso
    chimica su griglia contro un profilo noto. Ognuno con il proprio tag quando è validato:
    aggiungere un modulo non è modificarne uno congelato.
 
-## 5. Decisioni che servono
+## 5. Decisioni prese
 
-1. **Si comincia dal 2D laterale** per validare la fisica contro il conto esatto, sapendo che non
-   tara il 3D?
-2. **tyssue** come motore di confronto?
-3. **Incomprimibilità**: vincolo esatto o penalità? Proposta: penalità, più semplice e standard,
-   con una prova che il risultato non cambia alzando K.
+1. Si comincia dal **2D laterale**.
+2. **tyssue** come motore di confronto.
+3. Incomprimibilità come **penalità**. In pratica K va tenuta morbida (0.01 nN/µm³ con aree di
+   100 µm²): con K = 1 il passo di Eulero stabile diventa così piccolo che il rilassamento non
+   finisce. L'area all'equilibrio scende allora del 10–20%, ma le previsioni valgono per l'area
+   misurata, e la prova F4 verifica che cambiare K non sposta la forma.
+
+## 6. Stato della Fase 2 (28 ottobre 2026)
+
+Fatto e verificato (`scripts/prove.sh`, 258 prove su 258):
+
+- geometria laterale, energia, forze esatte scritte a mano, rilassamento sovrasmorzato, misure;
+- meccanica pura: forze uguali alle differenze finite, risultante e momento nulli, energia che
+  scende a ogni passo, errore di Eulero del primo ordine;
+- F1 (foglio piatto), F2 (anello, esatto fino a 1e-8), F3 (striscia costretta: al centro l'angolo
+  coincide con sin α = Δ/Γl a meno di 1e-6), F4 (invarianza di scala e indipendenza da K);
+- il rifiuto delle configurazioni degeneri, sulla soglia dell'anello.
+
+Due cose imparate, da tenere:
+
+- **Il contatto fra parti lontane del tessuto non c'è.** Una striscia che si arrotola più di un
+  giro passa attraverso sé stessa: le forze locali restano in equilibrio e l'angolo torna, ma la
+  forma è impossibile. C'è un controllo (`autointersezioni`) e le prove lo usano, ma serve
+  un'interazione di contatto prima di qualunque forma che chiuda un solco: è la situazione della
+  lacerazione del solco nel motore vecchio.
+- **Piegarsi costa poco, quindi è lento.** Con Δ piccolo una striscia di 40 cellule non converge
+  in 5 milioni di passi. Per le forme servirà un integratore migliore di Eulero a passo fisso.
+
+Resta per chiudere la Fase 2: F5 (una fila costretta dentro un foglio piatto) contro tyssue, poi
+il tag `motore-meccanica-v1`.
 
 ## Fonti
 

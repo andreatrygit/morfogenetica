@@ -82,7 +82,7 @@ registro da GitHub con `JULIA_PKG_SERVER="" scripts/prove.sh`.
 
 ## Stato
 
-Fase 0 (preparazione) fatta e verificata: la batteria passa con Julia 1.13. Prossimo passo: la Fase 1, colmare i buchi della specifica prima di
-scrivere il motore — la previsione analitica per il primo test fisico, la tabella delle unità e
-dei parametri, il motore esterno di confronto. Primo traguardo: il test fisico della curvatura
-(README, "Primo traguardo").
+Fase 0 e Fase 1 fatte. Fase 2 in corso: la meccanica del modello laterale passa le prove F1–F4
+(stato dettagliato in `docs/piano.md`, sezione 6). Prossimo passo: F5 contro tyssue, poi il tag
+`motore-meccanica-v1`. Ogni file nuovo in `motore/` va aggiunto a mano in `src/Morfogenetica.jl`:
+la cache di Julia non vede i file nuovi in una cartella.
