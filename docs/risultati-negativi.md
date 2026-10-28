@@ -195,3 +195,20 @@ all'infinito) si era provato a restringere il margine di nascita a R − r/2.
 
 **Esito:** risolveva gli stalli ma **restringeva la sfera del 12%** e la rendeva meno rotonda.
 Scartata in favore della quiescenza contata su eventi reali e della pausa della figliata non vitale.
+
+---
+
+### 13. Un pezzo di foglio 3D con bordo libero non ha equilibrio
+
+**Cosa:** un pezzo di foglio di prismi esagonali (7 cellule) con il bordo libero, portato al
+minimo dell'energia con le tensioni uguali su tutte le facce.
+
+**Esito:** non converge. Gli spigoli del bordo si accorciano fino alla lunghezza minima e lì il
+minimizzatore si ferma, con una forza residua di 0.17 nN.
+
+**Perché:** al bordo le facce laterali appartengono a una cellula sola, quindi niente bilancia la
+loro tensione. L'equilibrio richiederebbe uno scambio di vicine che il motore non ha ancora.
+
+**Regressione:** `test/guscio.jl`. Le prove di equilibrio 3D usano il foglio periodico, che non
+ha bordi.
+
