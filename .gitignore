@@ -3,3 +3,6 @@ run2.js
 run3d.js
 __pycache__/
 *.png
+
+# Julia: il manifesto si genera in locale finché non ci sono dipendenze
+Manifest.toml
