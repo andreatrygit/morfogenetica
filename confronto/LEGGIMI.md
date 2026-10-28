@@ -32,3 +32,21 @@ la sostituisce con un segnaposto, perché qui non serve.
 
 Licenza di tyssue: GPL-3.0, verificata sul pacchetto installato. È usato come programma
 separato; il suo codice non entra nel motore.
+
+## tyssue — guscio 3D (prova F7)
+
+Un pezzo di foglio di 37 prismi esagonali con il bordo bloccato (un tessuto ancorato tutto
+intorno), in due scenari: la cellula centrale che stringe l'anello apicale, e una placca di
+sette cellule che lo stringe con l'apice più teso della base. Gli scenari sono definiti una
+volta sola in `scenari_guscio.jl`.
+
+1. `julia --project=. confronto/esporta_guscio.jl` scrive la geometria di partenza dal nostro
+   motore (`risultati/guscio_<scenario>_vertici.csv`, `_facce.csv`, `_cellule.csv`), con le
+   tensioni già tradotte nelle convenzioni di tyssue: una faccia laterale condivisa ha due
+   copie a metà tensione, e l'anello apicale va per mezzi-spigoli (λ = 2Λ/condivisione).
+2. `venv-tyssue/bin/python -I confronto/tyssue_guscio.py` costruisce un Monolayer di tyssue con
+   quelle facce, lo minimizza tenendo fermo il bordo (`is_active = 0`) e scrive
+   `risultati/guscio_<scenario>_tyssue.csv`.
+
+Controllo prima di minimizzare: sulla geometria di partenza le due energie coincidono fino alla
+quindicesima cifra (14748.680433476 nN·µm per il primo scenario).
