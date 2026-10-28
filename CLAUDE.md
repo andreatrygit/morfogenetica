@@ -16,7 +16,8 @@ Prima di toccare il codice leggi, in quest'ordine:
 3. `docs/algebra-delle-primitive-morfogenetiche.md` — il quaderno di ricerca
 4. `prove/attesi.md` — i numeri del motore vecchio (riferimento, non bersaglio)
 
-I documenti vivi su claude.ai (link nel README) vincono sulle copie in `docs/` se divergono.
+I documenti di riferimento sono quelli in `docs/`: le vecchie copie su claude.ai sono archiviate e
+non si aggiornano. Lo stato del lavoro è in `docs/piano.md`.
 
 ## Le tre regole di lavoro (non negoziabili)
 
@@ -82,7 +83,7 @@ registro da GitHub con `JULIA_PKG_SERVER="" scripts/prove.sh`.
 
 ## Stato
 
-Fase 0 e Fase 1 fatte. Fase 2 in corso: la meccanica del modello laterale passa le prove F1–F4
-(stato dettagliato in `docs/piano.md`, sezione 6). Prossimo passo: F5 contro tyssue, poi il tag
-`motore-meccanica-v1`. Ogni file nuovo in `motore/` va aggiunto a mano in `src/Morfogenetica.jl`:
+Fase 0 e Fase 1 fatte. Fase 2: la meccanica del modello laterale passa le prove F1–F5, F5 contro
+tyssue (stato in `docs/piano.md`, sezione 6). Manca il tag `motore-meccanica-v1`, da mettere con
+l'accordo dell'utente. Ogni file nuovo in `motore/` va aggiunto a mano in `src/Morfogenetica.jl`:
 la cache di Julia non vede i file nuovi in una cartella.
