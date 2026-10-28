@@ -1,0 +1,266 @@
+<title>Banco Morfogenetico 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: banco da laboratorio, come la versione 2D — vasca 3D a sinistra, quaderno a destra; impilati su telefono */
+:root{
+  --bg:#edf1f1; --panel:#f8fbfb; --fg:#172124; --muted:#5a696d; --line:#cdd7d8; --dish:#e1e9e9; --rim:#b7c6c7;
+  --s-prolifera:#c97a12; --s-migra:#2f7fc0; --s-quiescente:#3f7d72; --s-bordo:#3a3c96; --s-apoptosi:#a4a9aa; --s-impalcatura:#b9a27a; --s-cavita:#b2584a; --polo:#d1215a; --disco1:#e0a21b; --disco2:#2a9d8f; --tenue:#c9d3d4; --epi:#8fa3c4;
+  --g0:#1f5f8a; --g1:#e8b04a;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0e1416; --panel:#151d20; --fg:#e2eaeb; --muted:#8c9ca0; --line:#27343a; --dish:#091012; --rim:#2c3b40;
+  --s-prolifera:#eba23c; --s-migra:#5aa9e6; --s-quiescente:#5fae9f; --s-bordo:#8b8ff0; --s-apoptosi:#56605f; --s-impalcatura:#8a7a5c; --s-cavita:#e08474; --polo:#ff4f86; --disco1:#f2c14e; --disco2:#4fd1c0; --tenue:#2a3539; --epi:#4f6283;
+  --g0:#2d7fb5; --g1:#f2c46a; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0e1416; --panel:#151d20; --fg:#e2eaeb; --muted:#8c9ca0; --line:#27343a; --dish:#091012; --rim:#2c3b40;
+  --s-prolifera:#eba23c; --s-migra:#5aa9e6; --s-quiescente:#5fae9f; --s-bordo:#8b8ff0; --s-apoptosi:#56605f; --s-impalcatura:#8a7a5c; --s-cavita:#e08474; --polo:#ff4f86; --disco1:#f2c14e; --disco2:#4fd1c0; --tenue:#2a3539; --epi:#4f6283;
+  --g0:#2d7fb5; --g1:#f2c46a; color-scheme:dark }
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--display);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px}
+.wrap{max-width:1080px;margin:0 auto;display:grid;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
+h1{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:700;margin:0;letter-spacing:-.02em;text-wrap:balance}
+header p{margin:0;color:var(--muted);font-size:.95rem;max-width:66ch;line-height:1.45}
+header a{color:var(--fg)}
+.bench{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:760px){.bench{grid-template-columns:minmax(0,1fr)}}
+.plate{display:grid;gap:10px}
+.tank{position:relative;width:100%;max-width:100%;aspect-ratio:1;border-radius:14px;background:var(--dish);box-shadow:inset 0 0 0 2px var(--rim);overflow:hidden;touch-action:none;cursor:grab}
+.tank:active{cursor:grabbing}
+.tank canvas{width:100%;height:100%;display:block}
+.hud{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-family:var(--mono);font-size:.72rem;color:var(--muted);pointer-events:none;letter-spacing:.04em}
+.err{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;font:.85rem var(--mono);color:var(--muted)}
+.controls{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+button,.seg label{font:500 .82rem var(--mono);border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:7px 12px;border-radius:6px;cursor:pointer}
+button:hover,.seg label:hover{border-color:var(--muted)}
+button:focus-visible,.seg input:focus-visible+span,input:focus-visible,select:focus-visible{outline:2px solid var(--s-migra);outline-offset:2px}
+.seg{display:inline-flex}
+.seg label{border-radius:0;display:inline-flex;padding:0;border-left-width:0}
+.seg label span{padding:7px 12px}
+.seg label:first-child{border-radius:6px 0 0 6px;border-left-width:1px}.seg label:last-child{border-radius:0 6px 6px 0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{background:var(--fg);color:var(--bg)}
+.lbl{font:.72rem var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.range{display:flex;align-items:center;gap:8px;font:.78rem var(--mono);color:var(--muted)}
+.range input[type=range]{width:100px;accent-color:var(--s-bordo)}
+.range output{color:var(--fg);min-width:3ch;font-variant-numeric:tabular-nums}
+select{font:.78rem var(--mono);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.hint{font:.75rem var(--mono);color:var(--muted);margin:0;line-height:1.5}
+.notebook{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:grid;gap:16px;min-width:0}
+.notebook h2{font-size:.72rem;font-family:var(--mono);font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 8px}
+.mname{font-size:1.25rem;font-weight:700;margin:0 0 4px}
+.msum{margin:0;color:var(--muted);font-size:.86rem;line-height:1.45}
+.states{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.states li{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:10px;align-items:start;font-size:.88rem;line-height:1.35}
+.dot{width:12px;height:12px;border-radius:50%;margin-top:3px}
+.states b{font-weight:700}
+.states small{display:block;color:var(--muted);font-family:var(--mono);font-size:.72rem}
+.count{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.85rem}
+.obs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 8px}
+.obs div{font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+.obs strong{display:block;font-size:1.15rem;color:var(--fg);font-variant-numeric:tabular-nums;font-weight:500}
+.note{font-size:.82rem;color:var(--muted);margin:0;line-height:1.45}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Banco Morfogenetico 3D</h1>
+    <p>Le stesse macchine a stati del <a href="https://claude.ai/artifact/GHhsrc6T4hjcpP9dNJDT2q" target="_blank" rel="noopener">banco 2D</a>, in tre dimensioni. Ogni cellula stima la distanza ρ da un centro che nessuno occupa; la matrice tiene, voxel per voxel, la normale al piano delle fibre e il ρ di chi le ha deposte. Il disco diventa una sfera, l'anello un guscio cavo come una blastula.</p>
+  </header>
+
+  <div class="bench">
+    <section class="plate">
+      <div class="tank" id="tank" aria-label="Tessuto in 3D. Trascina per ruotare.">
+        <div class="hud" id="hud">t = 0</div>
+      </div>
+      <div class="controls">
+        <span class="lbl">Forma</span>
+        <div class="seg" role="radiogroup" aria-label="Forma" id="msel"></div>
+        <button id="play">Pausa</button>
+        <button id="reset">Riparti da 1 cellula</button>
+      </div>
+      <div class="controls">
+        <span class="lbl">Cellule</span>
+        <div class="seg" role="radiogroup" aria-label="Dimensione delle cellule" id="csel">
+          <label><input type="radio" name="cel" value="6" checked><span>grandi · 850</span></label>
+          <label><input type="radio" name="cel" value="4.5"><span>medie · 1.900</span></label>
+          <label><input type="radio" name="cel" value="3"><span>piccole · 6.100, lenta</span></label>
+        </div>
+      </div>
+      <div class="controls">
+        <label class="range" for="mx-on"><input type="checkbox" id="mx-on" checked> matrice extracellulare</label>
+        <label class="range" for="view">vista
+          <select id="view"><option value="stati">stati</option><option value="rho">gusci di ρ</option><option value="prog">programma</option></select></label>
+      </div>
+      <div class="controls">
+        <span class="lbl" id="toro-lbl" hidden>Toro</span>
+        <button id="asse" hidden>Guarda lungo l'asse</button>
+        <button id="sez-asse" hidden>Sezione lungo l'asse</button>
+      </div>
+      <div class="controls">
+        <label class="range" for="cut">sezione <input type="range" id="cut" min="-70" max="80" value="80"><output id="cutv">intera</output></label>
+        <label class="range" for="rot">rotazione cellule <input type="range" id="rot" min="0" max="10" value="0"><output id="rotv">0</output></label>
+      </div>
+      <div class="controls">
+        <label class="range" for="rad">R <input type="range" id="rad" min="40" max="70" value="60"><output id="radv">60</output></label>
+        <label class="range" for="rin" id="rinbox">Rin <input type="range" id="rin" min="15" max="55" value="35"><output id="rinv">35</output></label>
+        <label class="range" for="spd">velocità <input type="range" id="spd" min="1" max="4" value="2"><output id="spdv">2</output></label>
+      </div>
+      <div class="controls">
+        <span class="lbl">Ferite</span>
+        <button id="w-cap">Togli una calotta</button>
+        <button id="w-core">Togli il centro</button>
+        <button id="w-split">Taglia in due</button>
+        <label class="range" for="w-clr"><input type="checkbox" id="w-clr"> cancella anche la matrice</label>
+      </div>
+      <p class="hint">Con "Sfera → toro" la sfera cresce, elegge due poli agli antipodi e marca due dischi (in giallo e verde). Poi smette di crescere e i dischi avanzano verso il centro restando piatti: le cellule che trovano davanti muoiono e si apre un canale. Quando i dischi si toccano si incollano, si staccano e muoiono: resta il foro. Alla fine la vista si gira da sola lungo l'asse e si vede la ciambella; "Sezione lungo l'asse" taglia il toro a metà. Ogni cellula ha stampato la propria posizione nella matrice, quindi il toro si ripara: prova "Togli una calotta"; con "cancella anche la matrice" lo stampo si perde e quella parte non ricresce. Trascina per ruotare. La sezione toglie le cellule più vicine a te, così si vede dentro: nel guscio compare la cavità, e con la vista "gusci di ρ" si vedono gli strati. "Taglia in due" allontana le due metà, ognuna con la sua matrice; prova a ruotare le cellule e a cancellare la matrice.</p>
+    </section>
+
+    <aside class="notebook">
+      <div><p class="mname" id="mname"></p><p class="msum" id="msum"></p></div>
+      <div><h2>Stati</h2><ul class="states" id="states"></ul></div>
+      <div>
+        <h2>Osservatore esterno</h2>
+        <div class="obs">
+          <div><strong id="o-n">1</strong>cellule</div>
+          <div><strong id="o-done">no</strong>forma stabile</div>
+          <div><strong id="o-rad">–</strong>raggio esterno (min–max)</div>
+          <div><strong id="o-in">–</strong>raggio interno (min–max)</div>
+          <div><strong id="o-err">–</strong>errore medio di ρ</div>
+          <div><strong id="o-mx">–</strong>cellule che leggono la matrice</div>
+        </div>
+      </div>
+      <div id="progbox" hidden>
+        <h2>Programma</h2>
+        <p class="msum" id="prog-fase">in attesa della quiete</p>
+        <ul class="states" id="prog-ev"></ul>
+      </div>
+      <p class="note">Il raggio è misurato dall'osservatore, attorno alla mediana dei centri stimati, in 26 direzioni. In 3D la fibra non è una linea ma un piano: la matrice memorizza la sua normale, e la curvatura si legge spostandosi lungo quel piano.</p>
+    </aside>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="macchine.js"></script>
+<script src="motore3d.js"></script>
+<script src="primitive3d.js"></script>
+<script src="simulatore.js"></script>
+<script>
+(function(){
+const M=window.MACCHINE, $=id=>document.getElementById(id), tank=$("tank");
+const STATI=["MIGRA","PROLIFERA","QUIESCENTE","BORDO","APOPTOSI","IMPALCATURA","CAVITA"];
+const NOMI={disco:"Sfera",anello:"Guscio",toro:"Sfera → toro",gastrula:"Sfera → invaginazione"}, MAC={disco:"disco",anello:"anello",toro:"disco",gastrula:"disco"}, PROG={toro:"toro",gastrula:"gastrula"}, SINTESI={
+  gastrula:"Stesse primitive del toro, programma diverso: un polo solo, un disco solo. Il disco scende verso il centro invece che verso un altro polo, e si ferma a un terzo del raggio. Il disco arriva in fondo, ma la bocca si richiude: non esce una coppa. Il corpo si chiude dietro al disco più in fretta di quanto le regole riescano a liberare il canale. È una prova riuscita a metà, tenuta qui com'è.",
+  toro:"La sfera cresce, si ferma, elegge due poli agli antipodi e marca due dischi. Poi smette di crescere e i dischi avanzano verso il centro: le cellule che trovano davanti muoiono e si apre un canale. I dischi si fondono, si staccano e muoiono: resta il foro. Infine la forma si stampa nella matrice e il toro si ripara.",
+  disco:"Fascia [0, R]: ogni cellula esposta mette una figlia dove ρ resta entro R. Il disco in tre dimensioni.",
+  anello:"Fascia [Rin, R]: le cellule sotto Rin fanno da impalcatura e poi muoiono. Resta un guscio cavo, come una blastula."};
+let progOn=false, cur="disco", running=true, speed=2, view="stati", cut=80, ist=null, ultimaStat=null;
+
+// --- simulatore: in un worker se possibile, altrimenti nella pagina con lo stesso protocollo
+let invia=null;
+function riceve(m){ if(m.tipo!=="istantanea") return; ist=m; if(m.stats){ ultimaStat=m; stats(m); progStats(m); }
+  if(m.asse&&progOn){ asse=m.asse; $("asse").hidden=false; $("sez-asse").hidden=false; $("toro-lbl").hidden=false; }
+  if(progOn&&!allineato&&m.forato){ allineato=true; guardaAsse(); } }
+function avviaLocale(){ window.__modo="locale"; const r=window.Simulatore(m=>riceve(m)); invia=d=>r(d); }
+try{ const w=new Worker("simulatore.js"); let vivo=false;
+  w.onmessage=e=>{ vivo=true; window.__modo="worker"; riceve(e.data); };
+  w.onerror=()=>{ if(!vivo){ w.terminate(); avviaLocale(); inizia(); } };
+  invia=d=>w.postMessage(d); }
+catch(e){ avviaLocale(); }
+function inizia(){ invia({cmd:"init",par:{r:6,m:MAC[cur],R:+$("rad").value,Rin:+$("rin").value,rot:0,matOn:$("mx-on").checked},prog:false,velocita:speed}); }
+
+const msel=$("msel");
+["disco","anello","toro","gastrula"].forEach((id,i)=>{const l=document.createElement("label");
+  l.innerHTML=`<input type="radio" name="forma" id="f-${id}" value="${id}" ${i===0?"checked":""}><span>${NOMI[id]}</span>`;msel.appendChild(l);
+  l.querySelector("input").onchange=()=>{cur=id;setProg(PROG[id]);setup();invia({cmd:"forma",m:MAC[id],prog:PROG[id]});};});
+function setup(){const m=M[MAC[cur]];$("mname").textContent=NOMI[cur];$("msum").textContent=SINTESI[cur];
+  $("states").innerHTML=m.stati.map(s=>`<li><span class="dot" style="background:var(--${s.token})"></span><span><b>${s.id}</b><small>${s.desc}</small></span><span class="count" id="c-${s.id}">0</span></li>`).join("");
+  $("rinbox").hidden=!m.parametri.includes("Rin"); readColors();}
+
+let colors={};
+function readColors(){const cs=getComputedStyle(document.documentElement);
+  ["bg","dish","muted","g0","g1","polo","disco1","disco2","tenue","epi"].forEach(k=>colors[k]=cs.getPropertyValue("--"+k).trim());
+  Object.values(M).forEach(mm=>mm.stati.forEach(s=>colors[s.id]=cs.getPropertyValue("--"+s.token).trim()));
+  if(scene) scene.background=new THREE.Color(colors.dish);}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",readColors);
+new MutationObserver(readColors).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+// --- scena
+let scene=null, renderer, camera, group, mesh, CAP=9000, fermo=false, asse=null, allineato=false;
+if(!window.THREE){ const e=document.createElement("div");e.className="err";e.textContent="La libreria 3D non si è caricata, quindi la vista non è disponibile. La simulazione è la stessa del banco 2D.";tank.appendChild(e); }
+else {
+  scene=new THREE.Scene(); camera=new THREE.PerspectiveCamera(35,1,1,2000); camera.position.set(0,0,300);
+  renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio||1,2)); tank.prepend(renderer.domElement);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x445566,0.85)); const dl=new THREE.DirectionalLight(0xffffff,0.55); dl.position.set(1,1.4,1.2); scene.add(dl);
+  group=new THREE.Group(); scene.add(group); group.rotation.set(-0.45,0.6,0);
+  mesh=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,1),new THREE.MeshLambertMaterial(),CAP);
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); group.add(mesh);
+  // i colori per istanza devono esistere prima del primo disegno, altrimenti three.js compila il materiale senza
+  { const c0=new THREE.Color(1,1,1); for(let i=0;i<CAP;i++) mesh.setColorAt(i,c0); mesh.count=0; }
+  const resize=()=>{const w=tank.clientWidth;renderer.setSize(w,w,false);};
+  new ResizeObserver(resize).observe(tank); resize();
+  let drag=null; const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  tank.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY};fermo=false;tank.setPointerCapture(e.pointerId);});
+  tank.addEventListener("pointermove",e=>{if(!drag)return;group.rotation.y+=(e.clientX-drag.x)*0.008;group.rotation.x+=(e.clientY-drag.y)*0.008;drag={x:e.clientX,y:e.clientY};});
+  tank.addEventListener("pointerup",()=>drag=null); tank.addEventListener("pointercancel",()=>drag=null);
+  window.__auto=()=>{if(!drag&&!still&&!fermo)group.rotation.y+=0.0025;};
+}
+const dummy=window.THREE?new THREE.Object3D():null, col=window.THREE?new THREE.Color():null, vv=window.THREE?new THREE.Vector3():null;
+function lerpHex(a,b,t){const pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16),c=k=>Math.round(((pa>>k)&255)*(1-t)+((pb>>k)&255)*t);return (c(16)<<16)|(c(8)<<8)|c(0);}
+function draw(){ if(!scene) return; if(ist){ const {n,pos,st,fl,rho}=ist, R=ist.R; let k=0;
+  for(let i=0;i<n&&k<CAP;i++){ const x=pos[4*i],y=pos[4*i+1],z=pos[4*i+2],r=pos[4*i+3], f=fl[i], morta=f&32, polo=f&3, disco=(f>>2)&3;
+    // la sezione taglia sempre verso chi guarda: si nascondono le cellule più vicine alla camera del piano
+    vv.set(x,y,z).applyEuler(group.rotation); if(vv.z>cut) continue;
+    dummy.position.set(x,y,z); dummy.scale.setScalar(Math.max(0.3,r*0.93)*(progOn&&polo?1.45:1)); dummy.updateMatrix(); mesh.setMatrixAt(k,dummy.matrix);
+    if(view==="prog"&&!morta) col.set(polo?colors.polo:disco===1?colors.disco1:disco===2?colors.disco2:(f&16)?colors.epi:colors.tenue);
+    else if(view==="rho"&&!morta){const band=Math.floor(rho[i]/(2*6)),t=Math.min(1,rho[i]/R);col.setHex(lerpHex(colors.g0,colors.g1,t)); if(band%2) col.multiplyScalar(0.78);}
+    else col.set(colors[STATI[st[i]]]||colors.muted);
+    mesh.setColorAt(k,col); k++; }
+  mesh.count=k; mesh.instanceMatrix.needsUpdate=true; if(mesh.instanceColor) mesh.instanceColor.needsUpdate=true; }
+  if(window.__auto) window.__auto(); renderer.render(scene,camera); }
+
+function stats(m){ const s=m.stats, mm=M[MAC[cur]], cnt=s.cnt||{};
+  mm.stati.forEach(st=>{const el=$("c-"+st.id); if(el) el.textContent=cnt[st.id]||0;});
+  const done=m.calm>120&&s.n>1;
+  $("o-n").textContent=s.n; $("o-done").textContent=done?"sì":"no";
+  $("o-rad").textContent=s.n>1?Math.round(s.rmin)+"–"+Math.round(s.rmax):"–";
+  $("o-in").textContent=s.n>1?Math.round(s.imin)+"–"+Math.round(s.imax):"–";
+  $("o-err").textContent=s.n?s.err.toFixed(1):"–";
+  $("o-mx").textContent=s.matOn?Math.round(100*(s.readers||0))+"%":"spenta";
+  $("hud").textContent=`t = ${m.tick}${done?" · quiete":""}`; }
+
+const FASE={CRESCI:"crescita: in attesa della quiete",ELEGGI1:"quiete rilevata: elezione del primo polo",ELEGGI2:"campo d₁ stabile: elezione del secondo polo",POLI:"due poli: campo d₂ in costruzione",DISCHI:"disco marcato attorno al polo",SPINGI:"impegna: niente crescita; il disco avanza scavando",ATTACCA:"contatto: i dischi si incollano",STACCA:"i dischi fusi si staccano dal corpo",FORA:"il cuscino muore: il foro è aperto",MANTIENI:"mantieni: la forma è stampata nella matrice; prova a ferirla"};
+function progStats(m){ if(!progOn||!m.fasi) return; const top=Object.entries(m.fasi).sort((a,b)=>b[1]-a[1])[0];
+  $("prog-fase").textContent=top?FASE[top[0]]||top[0]:"in attesa della quiete";
+  $("prog-ev").innerHTML=(m.eventi||[]).map(e=>`<li><span class="dot" style="background:var(--polo)"></span><span><b>${e}</b></span><span></span></li>`).join(""); }
+function guardaAsse(){ if(!scene||!asse) return; cut=80;$("cut").value=80;$("cutv").textContent="intera"; const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(...asse),new THREE.Vector3(0,0,1)); group.quaternion.copy(q); fermo=true; }
+// sezione lungo l'asse: l'asse del toro va in verticale e il taglio passa per il centro
+function sezioneAsse(){ if(!scene||!asse) return; const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(...asse),new THREE.Vector3(0,1,0)); group.quaternion.copy(q); fermo=true;
+  cut=0;$("cut").value=0;$("cutv").textContent=0; }
+function loop(){ draw(); requestAnimationFrame(loop); }
+function azzeraVista(){ allineato=false; asse=null; $("asse").hidden=true; $("sez-asse").hidden=true; $("toro-lbl").hidden=true; cut=80; $("cut").value=80; $("cutv").textContent="intera"; }
+
+$("play").onclick=e=>{running=!running;e.target.textContent=running?"Pausa":"Avvia";invia({cmd:"corsa",corre:running});};
+$("asse").onclick=guardaAsse; $("sez-asse").onclick=sezioneAsse;
+// dimensione delle cellule: a R fisso, cellule più piccole sono più numerose. Si riparte da una cellula.
+document.querySelectorAll('input[name="cel"]').forEach(el=>el.onchange=e=>{ azzeraVista(); invia({cmd:"cellule",r:+e.target.value}); });
+$("reset").onclick=()=>{running=true;azzeraVista();$("play").textContent="Pausa";invia({cmd:"corsa",corre:true});invia({cmd:"reset"});};
+function setProg(on){progOn=on;azzeraVista();$("progbox").hidden=!on;$("prog-ev").innerHTML="";
+  $("view").value=on?"prog":"stati";view=$("view").value; if(on){speed=4;$("spd").value=4;$("spdv").textContent=4;invia({cmd:"corsa",velocita:4});}}
+$("mx-on").onchange=e=>invia({cmd:"set",par:{matOn:e.target.checked}});
+$("view").onchange=e=>view=e.target.value;
+const bind=(id,out,fn,fmt=v=>v)=>{const el=$(id);el.oninput=()=>{fn(+el.value);$(out).textContent=fmt(+el.value);};};
+bind("rad","radv",v=>invia({cmd:"set",par:{R:v}})); bind("rin","rinv",v=>invia({cmd:"set",par:{Rin:v}})); bind("spd","spdv",v=>{speed=v;invia({cmd:"corsa",velocita:v});});
+bind("rot","rotv",v=>invia({cmd:"set",par:{rot:v*0.005}})); bind("cut","cutv",v=>cut=v,v=>v>=80?"intera":v);
+const clr=()=>$("w-clr").checked;
+$("w-cap").onclick=()=>invia({cmd:"ferita",tipo:"calotta",u:[Math.random()*2-1,Math.random()*2-1,Math.random()*2-1],cancella:clr()});
+$("w-core").onclick=()=>invia({cmd:"ferita",tipo:"centro",cancella:clr()});
+$("w-split").onclick=()=>invia({cmd:"ferita",tipo:"taglio",cancella:clr()});
+
+setup(); inizia(); loop();
+})();
+</script>
