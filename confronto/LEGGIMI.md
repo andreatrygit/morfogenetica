@@ -45,8 +45,29 @@ volta sola in `scenari_guscio.jl`.
    tensioni già tradotte nelle convenzioni di tyssue: una faccia laterale condivisa ha due
    copie a metà tensione, e l'anello apicale va per mezzi-spigoli (λ = 2Λ/condivisione).
 2. `venv-tyssue/bin/python -I confronto/tyssue_guscio.py` costruisce un Monolayer di tyssue con
-   quelle facce, lo minimizza tenendo fermo il bordo (`is_active = 0`) e scrive
-   `risultati/guscio_<scenario>_tyssue.csv`.
+   quelle facce, lo minimizza tenendo fermo il bordo (`is_active = 0`) e scrive posizioni
+   finali, gradiente ed energia in `risultati/guscio_<scenario>_tyssue_vertici.csv`. Ci vogliono
+   circa dieci minuti.
 
 Controllo prima di minimizzare: sulla geometria di partenza le due energie coincidono fino alla
 quindicesima cifra (14748.680433476 nN·µm per il primo scenario).
+
+Risultato al 28 ottobre 2026:
+
+- **le due energie coincidono** anche sulle posizioni deformate dove tyssue si ferma, fino a
+  1e-12 relativo: il modello è lo stesso;
+- **il minimizzatore di tyssue non converge** (forza residua di ~0.1 nN dopo 300 ripartenze),
+  perché **il suo gradiente non è la derivata esatta della sua energia**. Verificato con le
+  differenze finite su tyssue stesso: scarto dell'1% circa nel termine di volume
+  (CellVolumeElasticity), dello 0.1% in quello di superficie (SurfaceTension), nessuno
+  nell'anello apicale (LineTension). Probabilmente non deriva il baricentro delle facce: il
+  contributo si annulla per facce piane e regolari, e infatti al punto di partenza tutto
+  coincide;
+- il nostro gradiente è la derivata esatta di quell'energia comune; il nostro minimo è più basso
+  del punto in cui tyssue si ferma (di 4 parti su un milione) e lo si raggiunge anche partendo
+  da lì.
+
+Attenzione nello script: la costruzione del Monolayer riempie le tabelle che riceve con i suoi
+valori predefiniti, compreso `is_active = 1`. Senza rimettere l'elenco dei vertici bloccati dopo
+la costruzione, il bordo è libero e collassa (prima versione di questo confronto).
+

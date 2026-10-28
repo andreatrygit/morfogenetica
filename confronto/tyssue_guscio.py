@@ -117,20 +117,6 @@ def minimizza(eptm, forza_obiettivo=1e-7, giri_massimi=300):
     return giro, f
 
 
-def misure(eptm):
-    righe = []
-    for c in eptm.cell_df.index:
-        facce = eptm.edge_df[eptm.edge_df["cell"] == c]["face"].unique()
-        seg = eptm.face_df.loc[facce, "segment"]
-        fa = seg[seg == "apical"].index[0]
-        fb = seg[seg == "basal"].index[0]
-        pa = eptm.face_df.loc[fa, ["x", "y", "z"]].values.astype(float)
-        pb = eptm.face_df.loc[fb, ["x", "y", "z"]].values.astype(float)
-        righe.append([c + 1, eptm.face_df.at[fa, "area"], float(np.linalg.norm(pa - pb)),
-                      eptm.cell_df.at[c, "vol"], pa[2]])
-    return righe
-
-
 if __name__ == "__main__":
     from importlib.metadata import version
     print("tyssue", version("tyssue"))
@@ -140,10 +126,17 @@ if __name__ == "__main__":
         giri, f = minimizza(eptm)
         E = float(modello.compute_energy(eptm))
         print(nome, "giri:", giri, "| forza massima residua:", f, "| energia:", E)
-        with open(os.path.join(CARTELLA, f"guscio_{nome}_tyssue.csv"), "w", newline="") as fh:
-            w = csv.writer(fh)
-            w.writerow(["cellula", "area_apicale", "altezza", "volume", "z_apicale", "energia_totale"])
-            for r in misure(eptm):
-                w.writerow([r[0]] + [repr(float(v)) for v in r[1:]] + [repr(E)])
-        eptm.vert_df[["x", "y", "z"]].to_csv(
-            os.path.join(CARTELLA, f"guscio_{nome}_tyssue_vertici.csv"), header=True, index=False)
+        scrivi_stato(nome, eptm)
+
+
+def scrivi_stato(nome, eptm):
+    """Posizioni finali e gradiente di tyssue in quelle posizioni (zero sui vertici bloccati):
+    la batteria ricalcola energia e forze con il nostro motore sulle stesse posizioni."""
+    g = modello.compute_gradient(eptm)
+    g = g.reindex(eptm.vert_df.index).fillna(0.0)
+    g[eptm.vert_df["is_active"].values == 0] = 0.0
+    tab = eptm.vert_df[["x", "y", "z"]].copy()
+    tab[["gx", "gy", "gz"]] = g[["gx", "gy", "gz"]].values
+    tab["energia"] = float(modello.compute_energy(eptm))
+    tab.to_csv(os.path.join(CARTELLA, f"guscio_{nome}_tyssue_vertici.csv"),
+               header=True, index=False, float_format="%.17g")
