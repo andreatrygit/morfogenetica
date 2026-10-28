@@ -88,7 +88,8 @@ Fase 0, 1 e 2 fatte. La meccanica del modello laterale passa le prove F1–F5 (F
 qui `motore/01`–`05` si toccano solo con un test fisico che fallisce. La batteria lo fa
 rispettare: `prove/congelati.txt` tiene l'impronta SHA-256 di ogni file congelato e la prova
 "file congelati" fallisce se cambia. Una modifica ammessa aggiorna l'impronta nello stesso
-commit del test che l'ha resa necessaria. Moduli nuovi (integratore più veloce, guscio 3D, scambi di vicine,
-chimica) si aggiungono come file nuovi, ognuno con il proprio tag quando è validato. Stato in
+commit del test che l'ha resa necessaria. Moduli nuovi si aggiungono come file nuovi, ognuno congelato quando è validato. Fatto:
+`06_integratore.jl` (Newton per gli equilibri, Eulero implicito per la dinamica; per le forme
+si usa questo, non `rilassa!`). Da fare: guscio 3D, scambi di vicine, chimica. Stato in
 `docs/piano.md`, sezione 6. Ogni file nuovo in `motore/` va aggiunto a mano in
 `src/Morfogenetica.jl`: la cache di Julia non vede i file nuovi in una cartella.
