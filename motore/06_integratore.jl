@@ -26,7 +26,15 @@
 
 using LinearAlgebra: Symmetric, cholesky, issuccess, I
 
-export minimizza!, passo_implicito!, evolvi!
+export minimizza!, passo_implicito!, evolvi!, forza_per_vertice
+
+# Il tessuto `t` può essere di qualunque tipo che fornisca: il vettore delle posizioni `t.x`,
+# `energia(t, p, x)`, `gradiente!(g, t, p, x)`, `controlla_ammissibile(t, p, x)`,
+# `forza_per_vertice(t, g)` e `_controlla_contatto(t, p)`, più `autointersezioni(t, x)` se il
+# contatto è acceso. Così lo stesso integratore serve il modello laterale 2D e il guscio 3D.
+
+"Il modulo massimo, fra i vertici, del vettore `g` (forze o spostamenti) di un tessuto 2D."
+forza_per_vertice(t::Tessuto, g) = _forza_massima(g)
 
 """
     minimizza!(t, p; tolleranza, iterazioni_massime, spostamento_massimo = 1.0,
@@ -39,7 +47,7 @@ non può essere scavalcato.
 
 Restituisce `(convergito, iterazioni, forza_massima)`.
 """
-function minimizza!(t::Tessuto, p::ParametriMeccanici; tolleranza, iterazioni_massime,
+function minimizza!(t, p::ParametriMeccanici; tolleranza, iterazioni_massime,
                     spostamento_massimo = 1.0, ancora = nothing, peso = 0.0)
     p.k_contatto > 0 && (spostamento_massimo = min(spostamento_massimo, p.d_contatto / 4))
     x = t.x
@@ -56,7 +64,7 @@ function minimizza!(t::Tessuto, p::ParametriMeccanici; tolleranza, iterazioni_ma
     f = Inf
     for it in 1:iterazioni_massime
         grad!(g, x)
-        f = _forza_massima(g)
+        f = forza_per_vertice(t, g)
         if f < tolleranza
             _controlla_contatto(t, p)
             return (convergito = true, iterazioni = it, forza_massima = f)
@@ -80,7 +88,7 @@ function minimizza!(t::Tessuto, p::ParametriMeccanici; tolleranza, iterazioni_ma
                 continue
             end
             d = -(C \ g)
-            s = _forza_massima(d)
+            s = forza_per_vertice(t, d)
             s > spostamento_massimo && (d .*= spostamento_massimo / s)
             prova = x .+ d
             ammissibile = try
@@ -94,7 +102,7 @@ function minimizza!(t::Tessuto, p::ParametriMeccanici; tolleranza, iterazioni_ma
             # accetta il passo se riduce la forza
             Ep = ammissibile ? obiettivo(prova) : Inf
             scende = Ep < E0 || (abs(Ep - E0) <= 1e-12 * abs(E0) &&
-                                 _forza_massima(grad!(gp, prova)) < f)
+                                 forza_per_vertice(t, grad!(gp, prova)) < f)
             if ammissibile && scende
                 x .= prova
                 μ = max(μ / 3, 1e-12)
@@ -106,7 +114,7 @@ function minimizza!(t::Tessuto, p::ParametriMeccanici; tolleranza, iterazioni_ma
         accettato || break             # nessun passo fa scendere l'energia: si è al minimo numerico
     end
     grad!(g, x)
-    f = _forza_massima(g)
+    f = forza_per_vertice(t, g)
     _controlla_contatto(t, p)
     return (convergito = f < tolleranza, iterazioni = iterazioni_massime, forza_massima = f)
 end
@@ -117,7 +125,7 @@ end
 Un passo di Eulero implicito di durata `dt` (min): il minimo di E(x) + (η/2dt)·|x − x_n|².
 `tolleranza` è il residuo ammesso sull'equazione del passo (nN).
 """
-function passo_implicito!(t::Tessuto, p::ParametriMeccanici, dt; tolleranza = 1e-9,
+function passo_implicito!(t, p::ParametriMeccanici, dt; tolleranza = 1e-9,
                           iterazioni_massime = 200)
     r = minimizza!(t, p; tolleranza, iterazioni_massime, ancora = copy(t.x), peso = p.η / dt)
     r.convergito || error("passo implicito non risolto: residuo $(r.forza_massima) nN")
@@ -130,7 +138,7 @@ end
 Fa evolvere il tessuto per `durata` minuti con passi impliciti di `dt` minuti.
 Restituisce il numero di passi.
 """
-function evolvi!(t::Tessuto, p::ParametriMeccanici; durata, dt, tolleranza = 1e-9)
+function evolvi!(t, p::ParametriMeccanici; durata, dt, tolleranza = 1e-9)
     n = max(1, round(Int, durata / dt))
     for _ in 1:n
         passo_implicito!(t, p, durata / n; tolleranza)

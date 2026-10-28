@@ -193,6 +193,9 @@ soprattutto, la prova "file congelati", che confronta l'impronta SHA-256 dei cin
 Le prove (`test/integratore.jl`) ritrovano con Newton F2, F3 e F5 (contro tyssue) e lo stesso
 equilibrio di Eulero, e verificano il contatto. 459 prove su 459.
 
+Congelato come `motore-integratore-v1` (commit "CONGELATO: MOTORE-INTEGRATORE-V1"), dopo averlo
+reso indipendente dal tipo di tessuto, così il guscio 3D lo usa senza toccarlo.
+
 ## Fonti
 
 - Krajnc e Ziherl, *Theory of epithelial elasticity*, Phys. Rev. E 92, 052713 (2015):
