@@ -196,6 +196,44 @@ equilibrio di Eulero, e verificano il contatto. 459 prove su 459.
 Congelato come `motore-integratore-v1` (commit "CONGELATO: MOTORE-INTEGRATORE-V1"), dopo averlo
 reso indipendente dal tipo di tessuto, così il guscio 3D lo usa senza toccarlo.
 
+## 8. Il guscio 3D (fase 3, secondo lavoro)
+
+`motore/07_guscio.jl`, file nuovo. Ogni cellula è un prisma fra un poligono apicale e uno
+basale, con facce laterali condivise; tensione di superficie per faccia (apicale, basale,
+laterale), tensione di linea sull'anello apicale, penalità sul volume. Usa l'integratore
+congelato senza toccarlo.
+
+Le previsioni esatte, per prismi esagonali regolari a volume fissato:
+
+- **in un foglio** (facce laterali condivise): **altezza/lato = √3·(σa + σb)/σl**;
+- **isolato** (σa = σb): lato s con s³ = 3σl·V/((σa + σb)·c²), c = 3√3/2, cioè metà del rapporto
+  del foglio.
+
+Verificate (`test/guscio.jl`, 643 prove su 643 in tutto):
+
+- geometria esatta su prismi regolari, forze uguali alle differenze finite (a meno di 1e-7) e
+  appaiate;
+- F6a, prisma isolato, e F6b, **foglio periodico**: entrambe coincidono con la formula a meno
+  di 1e-9. Newton converge in 10 iterazioni;
+- F6c invarianza di scala e indipendenza da K;
+- una cellula che alza l'anello apicale (Λ = 2 nN) si restringe all'apice da 50 a 15 µm².
+
+Il foglio periodico non ha bordi: le cellule a destra toccano quelle a sinistra, e le due
+dimensioni del periodo sono incognite come le posizioni. È la prova pulita, perché:
+
+- **un pezzo di foglio con bordo libero non ha equilibrio** senza scambi di vicine: le facce
+  laterali del bordo, di una cellula sola, accorciano gli spigoli fino alla lunghezza minima.
+  Registrato come risultato negativo #13;
+- **con σl < σa una cellula isolata si arrotonda**: lascia la forma di prisma, tre spigoli
+  apicali su sei collassano e l'energia scende sotto quella del miglior prisma regolare. È
+  fisica (una cellula libera si arrotonda), ma richiede di nuovo uno scambio topologico.
+
+Con un anello apicale forte (Λ = 5 nN) l'apice si chiude del tutto: in una cellula vera è
+l'estrusione dal foglio, che il modello non ha ancora, e il motore si ferma prima.
+
+Prossimi passi: il confronto 3D con tyssue (un'invaginazione in un foglio periodico), poi gli
+scambi di vicine, che servono a tutti e tre i casi sopra.
+
 ## Fonti
 
 - Krajnc e Ziherl, *Theory of epithelial elasticity*, Phys. Rev. E 92, 052713 (2015):
