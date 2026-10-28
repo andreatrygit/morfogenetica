@@ -2,10 +2,11 @@
 
 La geometria di partenza e le tensioni, già tradotte nelle convenzioni di tyssue, vengono dal
 nostro motore (confronto/esporta_guscio.jl, file guscio_<scenario>_*.csv). Qui si costruisce un
-Monolayer di tyssue con quelle facce, lo si porta al minimo con il suo risolutore quasi-statico
-(L-BFGS-B) tenendo fermi i vertici del bordo (is_active = 0), e si scrivono le misure per
-cellula in guscio_<scenario>_tyssue.csv. La batteria Julia (test/fisica_confronto_3d.jl) le
-confronta con il nostro motore.
+Monolayer di tyssue con quelle facce, lo si porta verso il minimo con il suo risolutore
+quasi-statico (L-BFGS-B) tenendo fermi i vertici del bordo (is_active = 0), e si scrivono le
+posizioni finali, il gradiente di tyssue in quelle posizioni e l'energia in
+guscio_<scenario>_tyssue_vertici.csv. La batteria Julia (test/fisica_confronto_3d.jl) ricalcola
+energia e forze con il nostro motore sulle stesse posizioni.
 
 Effettori di tyssue usati, con le loro formule (verificate sul codice, versione 1.1.0):
 - SurfaceTension: surface_tension · area, per copia di faccia;
