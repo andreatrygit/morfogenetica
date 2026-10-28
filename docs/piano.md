@@ -168,7 +168,10 @@ Da tenere:
   in 5 milioni di passi. Per le forme servirà un integratore migliore di Eulero a passo fisso.
 - tyssue si ferma con forze residue di 0.01 nN: per il confronto lo si fa ripartire fino a 1e-7.
 
-La Fase 2 è chiusa: la meccanica è congelata con il tag `motore-meccanica-v1`.
+La Fase 2 è chiusa: la meccanica è congelata come `motore-meccanica-v1`. Il tag git non si può
+pushare da questo ambiente: al suo posto c'è il commit vuoto "CONGELATO: MOTORE-MECCANICA-V1" e,
+soprattutto, la prova "file congelati", che confronta l'impronta SHA-256 dei cinque file con
+`prove/congelati.txt` e fallisce se uno cambia.
 
 ## Fonti
 
