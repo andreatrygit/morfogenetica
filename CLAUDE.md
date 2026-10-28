@@ -75,12 +75,14 @@ curl -fsSL https://install.julialang.org | sh -s -- --yes
 export PATH="$HOME/.juliaup/bin:$PATH"
 ```
 
-La rete deve permettere `install.julialang.org`, `julialang-s3.julialang.org` e
-`pkg.julialang.org` (i pacchetti).
+La rete deve permettere `*.julialang.org` (installazione e server dei pacchetti, compresi quelli
+regionali come `us-west.pkg.julialang.org`) e `storage.julialang.net` — attenzione, **.net**: il
+server dei pacchetti rimanda lì. Se `storage.julialang.net` è bloccato, si può scaricare il
+registro da GitHub con `JULIA_PKG_SERVER="" scripts/prove.sh`.
 
 ## Stato
 
-Fase 0 (preparazione) fatta. Prossimo passo: la Fase 1, colmare i buchi della specifica prima di
+Fase 0 (preparazione) fatta e verificata: la batteria passa con Julia 1.13. Prossimo passo: la Fase 1, colmare i buchi della specifica prima di
 scrivere il motore — la previsione analitica per il primo test fisico, la tabella delle unità e
 dei parametri, il motore esterno di confronto. Primo traguardo: il test fisico della curvatura
 (README, "Primo traguardo").
