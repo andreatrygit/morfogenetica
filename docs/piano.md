@@ -168,7 +168,7 @@ Da tenere:
   in 5 milioni di passi. Per le forme servirà un integratore migliore di Eulero a passo fisso.
 - tyssue si ferma con forze residue di 0.01 nN: per il confronto lo si fa ripartire fino a 1e-7.
 
-Resta per chiudere la Fase 2 il tag `motore-meccanica-v1`.
+La Fase 2 è chiusa: la meccanica è congelata con il tag `motore-meccanica-v1`.
 
 ## Fonti
 

@@ -48,9 +48,9 @@ end
 """
     autointersezioni(t)
 
-Numero di coppie di spigoli senza vertici in comune che si incrociano. Il motore non modella
-ancora il contatto fra parti lontane del tessuto: una configurazione con autointersezioni
-non è fisica, anche se le forze locali sono in equilibrio.
+Numero di coppie di spigoli senza vertici in comune che si incrociano. Una configurazione con
+autointersezioni non è fisica, anche se le forze locali sono in equilibrio. Con il contatto
+acceso (05_contatto.jl) il motore la rifiuta.
 """
 function autointersezioni(t::Tessuto, x = t.x)
     n = 0
