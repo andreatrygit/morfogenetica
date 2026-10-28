@@ -58,7 +58,18 @@ function rilassa!(t::Tessuto, p::ParametriMeccanici; dt, tolleranza, passi_massi
     f = Inf
     for n in 1:passi_massimi
         f = passo!(t, p, dt, g)
-        f < tolleranza && return (convergito = true, passi = n, forza_massima = f)
+        if f < tolleranza
+            _controlla_contatto(t, p)
+            return (convergito = true, passi = n, forza_massima = f)
+        end
     end
+    _controlla_contatto(t, p)
     return (convergito = false, passi = passi_massimi, forza_massima = f)
+end
+
+# Alla fine di un rilassamento, con il contatto acceso, il tessuto non deve essersi attraversato.
+function _controlla_contatto(t::Tessuto, p::ParametriMeccanici)
+    p.k_contatto > 0 && autointersezioni(t) > 0 &&
+        throw(ConfigurazioneNonAmmissibile("il tessuto si è attraversato"))
+    return nothing
 end

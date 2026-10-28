@@ -8,7 +8,7 @@
 # lavorano su un solo array.
 
 export Etichetta, apicale, basale, laterale
-export Spigolo, Cellula, Intenzioni, Tessuto
+export Spigolo, Cellula, Intenzioni, Contatti, Tessuto
 export striscia, anello, numero_vertici, posizione, lunghezza, area
 
 @enum Etichetta apicale basale laterale
@@ -48,15 +48,52 @@ struct Intenzioni
 end
 
 """
+    Contatti
+
+Le coppie (vertice, spigolo) che possono toccarsi, e la lista di quelle abbastanza vicine.
+Dipende solo dalla topologia: va ricostruita se la topologia cambia.
+"""
+mutable struct Contatti
+    ammissibili::Vector{Tuple{Int,Int}}
+    vicine::Vector{Tuple{Int,Int}}
+    x_riferimento::Vector{Float64}
+    valida::Bool
+end
+
+# Un vertice e uno spigolo sono "vicini" (e non si respingono) se una cellula del vertice
+# condivide un vertice con una cellula dello spigolo: così le cellule adiacenti restano
+# governate solo dalle loro tensioni e dalla loro area.
+function Contatti(cellule::Vector{Cellula}, spigoli::Vector{Spigolo}, nv::Int)
+    cellule_di = [Int[] for _ in 1:nv]
+    for (c, cel) in enumerate(cellule), v in cel.vertici
+        push!(cellule_di[v], c)
+    end
+    # per ogni cellula, l'insieme dei vertici delle cellule che la toccano
+    vicinato = [Set{Int}() for _ in cellule]
+    for (c, cel) in enumerate(cellule), v in cel.vertici, c2 in cellule_di[v]
+        union!(vicinato[c], cellule[c2].vertici)
+    end
+    ammissibili = Tuple{Int,Int}[]
+    for v in 1:nv, (k, s) in enumerate(spigoli)
+        (v == s.i || v == s.j) && continue
+        vicino = any(c -> v in vicinato[c], s.cellule)
+        vicino || push!(ammissibili, (v, k))
+    end
+    return Contatti(ammissibili, Tuple{Int,Int}[], Float64[], false)
+end
+
+"""
     Tessuto
 
-Stato meccanico: posizioni dei vertici, spigoli, cellule e le intenzioni di ogni cellula.
+Stato meccanico: posizioni dei vertici, spigoli, cellule, le intenzioni di ogni cellula e la
+lista dei contatti possibili fra parti lontane del tessuto.
 """
 mutable struct Tessuto
     x::Vector{Float64}
     spigoli::Vector{Spigolo}
     cellule::Vector{Cellula}
     intenzioni::Vector{Intenzioni}
+    contatti::Contatti
 end
 
 numero_vertici(t::Tessuto) = length(t.x) ÷ 2
@@ -138,5 +175,6 @@ function _collega(x, n, m, intenzioni, chiuso)
         j <= n && push!(vicine, j)
         push!(spigoli, Spigolo(_ap(j), _ba(j), laterale, unique(vicine)))
     end
-    return Tessuto(x, spigoli, cellule, copy(intenzioni))
+    nv = length(x) ÷ 2
+    return Tessuto(x, spigoli, cellule, copy(intenzioni), Contatti(cellule, spigoli, nv))
 end

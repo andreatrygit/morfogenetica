@@ -11,4 +11,5 @@ include("previsioni.jl")
     end
     include("meccanica.jl")
     include("fisica_laterale.jl")
+    include("contatto.jl")
 end

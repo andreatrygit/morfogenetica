@@ -53,7 +53,8 @@ rilassa_prova!(t, p = P_PROVA) =
     @testset "F4 invarianza di scala e indipendenza da K" begin
         n = 20
         misura(A0, K) = begin
-            p = ParametriMeccanici(K = K, η = 1.0, lunghezza_minima = 0.05)
+            p = ParametriMeccanici(K = K, η = 1.0, lunghezza_minima = 0.05,
+    k_contatto = 0.0, d_contatto = 0.5)
             s = sqrt(A0 / 100)
             t = striscia(fill(Intenzioni(1.05, 1.0, 1.0, A0), n); larghezza = 7.0s, altezza = 14.0s)
             @test rilassa_prova!(t, p).convergito
