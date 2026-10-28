@@ -1,6 +1,7 @@
 # Prove di meccanica pura: non dipendono dal modello biologico.
 
-const P_PROVA = ParametriMeccanici(K = 0.01, η = 1.0, lunghezza_minima = 0.05)
+const P_PROVA = ParametriMeccanici(K = 0.01, η = 1.0, lunghezza_minima = 0.05,
+    k_contatto = 0.0, d_contatto = 0.5)
 const CUNEO = Intenzioni(1.3, 1.0, 1.0, 100.0)
 
 function tessuto_disturbato(seme)

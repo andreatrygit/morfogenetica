@@ -11,10 +11,11 @@ module Morfogenetica
 
 const RADICE = normpath(joinpath(@__DIR__, ".."))
 
-# motore/: geometria, energia, dinamica, misure
+# motore/: geometria, energia, dinamica, misure, contatto
 include(joinpath(RADICE, "motore", "01_geometria.jl"))
 include(joinpath(RADICE, "motore", "02_energia.jl"))
 include(joinpath(RADICE, "motore", "03_rilassamento.jl"))
 include(joinpath(RADICE, "motore", "04_misure.jl"))
+include(joinpath(RADICE, "motore", "05_contatto.jl"))
 
 end # module

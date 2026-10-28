@@ -55,11 +55,13 @@ tensione dell'anello apicale, e la curvatura che ne risulta confrontata con la p
 analitica del modello a vertici. Se quello torna, la fisica tiene e si può ricominciare a
 costruire forme — questa volta senza toccare il motore.
 
-## I documenti vivi
+## Dove stanno i documenti
 
-I due documenti principali sono anche documenti vivi su claude.ai, dove vengono aggiornati:
+**I documenti di riferimento sono quelli in `docs/`**, versionati con il codice. Fino al 27
+ottobre 2026 la specifica e l'algebra vivevano anche come documenti su claude.ai; dal 28 ottobre
+quelle copie sono archiviate (lo dice un avviso in cima a ciascuna) e non si aggiornano più:
 
 - algebra: https://claude.ai/artifact/28ddvGrMSXCBoKfiaG4bVi
 - specifica: https://claude.ai/artifact/8y9AazU8HEowgy3oKMV482
 
-Le copie in `docs/` sono istantanee del 27 ottobre 2026. Se divergono, il documento vivo vince.
+Lo stato del lavoro e le decisioni prese sono in `docs/piano.md`.

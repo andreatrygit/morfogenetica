@@ -146,27 +146,29 @@ indici e pagine di progetto: vanno ricontrollate sul file LICENSE prima dell'uso
 
 ## 6. Stato della Fase 2 (28 ottobre 2026)
 
-Fatto e verificato (`scripts/prove.sh`, 258 prove su 258):
+Fatto e verificato (`scripts/prove.sh`, 368 prove su 368):
 
 - geometria laterale, energia, forze esatte scritte a mano, rilassamento sovrasmorzato, misure;
 - meccanica pura: forze uguali alle differenze finite, risultante e momento nulli, energia che
   scende a ogni passo, errore di Eulero del primo ordine;
 - F1 (foglio piatto), F2 (anello, esatto fino a 1e-8), F3 (striscia costretta: al centro l'angolo
   coincide con sin α = Δ/Γl a meno di 1e-6), F4 (invarianza di scala e indipendenza da K);
-- il rifiuto delle configurazioni degeneri, sulla soglia dell'anello.
+- il rifiuto delle configurazioni degeneri, sulla soglia dell'anello;
+- **il contatto fra parti lontane del tessuto** (`motore/05_contatto.jl`): un vertice e uno
+  spigolo di cellule non vicine si respingono sotto d_contatto, come energia. Spento, una
+  striscia che si arrotola oltre un giro si attraversa (56 incroci); acceso, si ferma quando
+  tocca sé stessa. Se il tessuto si attraversa comunque, il motore lo rifiuta;
+- **F5, il confronto con tyssue** (`confronto/`): stessa energia, due motori indipendenti, su
+  una striscia piatta con una e con quattro cellule costrette e su un anello. Coincidono a meno
+  di 1e-6 su angoli, altezze e aree, e l'energia fino a 1e-13 relativo.
 
-Due cose imparate, da tenere:
+Da tenere:
 
-- **Il contatto fra parti lontane del tessuto non c'è.** Una striscia che si arrotola più di un
-  giro passa attraverso sé stessa: le forze locali restano in equilibrio e l'angolo torna, ma la
-  forma è impossibile. C'è un controllo (`autointersezioni`) e le prove lo usano, ma serve
-  un'interazione di contatto prima di qualunque forma che chiuda un solco: è la situazione della
-  lacerazione del solco nel motore vecchio.
 - **Piegarsi costa poco, quindi è lento.** Con Δ piccolo una striscia di 40 cellule non converge
   in 5 milioni di passi. Per le forme servirà un integratore migliore di Eulero a passo fisso.
+- tyssue si ferma con forze residue di 0.01 nN: per il confronto lo si fa ripartire fino a 1e-7.
 
-Resta per chiudere la Fase 2: F5 (una fila costretta dentro un foglio piatto) contro tyssue, poi
-il tag `motore-meccanica-v1`.
+La Fase 2 è chiusa: la meccanica è congelata con il tag `motore-meccanica-v1`.
 
 ## Fonti
 
