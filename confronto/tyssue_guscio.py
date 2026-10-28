@@ -49,6 +49,9 @@ def costruisci(nome):
     vert = leggi(nome, "vertici")
     facce = leggi(nome, "facce")
     cell = leggi(nome, "cellule")
+    # tenuti da parte: la costruzione del Monolayer riempie le tabelle che riceve con i suoi
+    # valori predefiniti (is_active = 1 compreso), quindi li si rimette dopo da qui
+    attivi = [1 - int(r["fisso"]) for r in vert]
     vert_df = pd.DataFrame(
         {
             "x": [float(r["x"]) for r in vert],
@@ -88,8 +91,9 @@ def costruisci(nome):
     eptm.edge_df["line_tension"] = edge_df["line_tension"].values
     eptm.cell_df["prefered_vol"] = cell_df["prefered_vol"].values
     eptm.cell_df["vol_elasticity"] = cell_df["vol_elasticity"].values
-    eptm.vert_df["is_active"] = vert_df["is_active"].values
+    eptm.vert_df["is_active"] = attivi
     BulkGeometry.update_all(eptm)
+    assert int((eptm.vert_df["is_active"] == 0).sum()) == attivi.count(0), "bordo non bloccato"
     return eptm
 
 
@@ -141,3 +145,5 @@ if __name__ == "__main__":
             w.writerow(["cellula", "area_apicale", "altezza", "volume", "z_apicale", "energia_totale"])
             for r in misure(eptm):
                 w.writerow([r[0]] + [repr(float(v)) for v in r[1:]] + [repr(E)])
+        eptm.vert_df[["x", "y", "z"]].to_csv(
+            os.path.join(CARTELLA, f"guscio_{nome}_tyssue_vertici.csv"), header=True, index=False)
