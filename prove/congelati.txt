@@ -1,0 +1,13 @@
+# File congelati del motore e la loro impronta SHA-256.
+#
+# La prova "file congelati" (test/congelati.jl) ricalcola l'impronta di ogni file e fallisce
+# se è cambiata. Una modifica a un file congelato è ammessa solo con un test fisico che
+# fallisce (CLAUDE.md, regola 1): in quel caso si aggiorna qui l'impronta, nello stesso commit
+# del test e della correzione, e il messaggio di commit dice quale test l'ha resa necessaria.
+#
+# motore-meccanica-v1 — commit "CONGELATO: MOTORE-MECCANICA-V1", 28 ottobre 2026
+5c1f716c295d576c1a074610b8ebe65599cbe56965a2a733f1e908fefbdc1651  motore/01_geometria.jl
+f1a9c4ab37ffaad90e680073cf6f86774355b5b14836ad12a0e8d5c8ccc48821  motore/02_energia.jl
+a3b2a08c7e07d3121d09beb47a1bbe59b7c24881de674517c3155b604e7f871f  motore/03_rilassamento.jl
+09264f5933fb63d725c366f7486de8a028ab3cda96000e3b28093bdd2b46a334  motore/04_misure.jl
+0cfa3dcdb72dcc74069bd111181faa8d02bc981f279e9d4a8fbd27d0f1452d74  motore/05_contatto.jl
