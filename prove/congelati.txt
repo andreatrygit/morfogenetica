@@ -14,3 +14,6 @@ a3b2a08c7e07d3121d09beb47a1bbe59b7c24881de674517c3155b604e7f871f  motore/03_rila
 
 # motore-integratore-v1 — commit "CONGELATO: MOTORE-INTEGRATORE-V1", 28 ottobre 2026
 6a4aa72ed6a9a1ebf4381056daf7fe9ba2e4c8e55a1c7fce3cf5ff53105102d3  motore/06_integratore.jl
+
+# motore-guscio-v1 — commit "CONGELATO: MOTORE-GUSCIO-V1", 29 ottobre 2026
+842ff4c46cec2969857058fc289d021fe65dbfbb3e39d984ccb3721dbbd67548  motore/07_guscio.jl
