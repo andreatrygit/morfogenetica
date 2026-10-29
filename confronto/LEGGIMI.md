@@ -71,3 +71,10 @@ Attenzione nello script: la costruzione del Monolayer riempie le tabelle che ric
 valori predefiniti, compreso `is_active = 1`. Senza rimettere l'elenco dei vertici bloccati dopo
 la costruzione, il bordo è libero e collassa (prima versione di questo confronto).
 
+**Aggiornamento, 29 ottobre 2026.** Il nostro centro di triangolazione delle facce è ora il
+baricentro del contorno (media dei punti medi degli spigoli pesata per la lunghezza), non più
+quello dei vertici: così aggiungere un punto su uno spigolo non cambia aree e volumi, e gli
+scutoidi lo richiedono. Le due energie coincidono quindi solo dove le facce sono piane (la
+geometria di partenza, fino a 1e-12); sulle forme deformate differiscono per la convenzione, di
+3 parti su centomila. `test/fisica_confronto_3d.jl` verifica questo.
+

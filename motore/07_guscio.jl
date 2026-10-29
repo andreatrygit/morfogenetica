@@ -109,9 +109,57 @@ _norma(a) = sqrt(_punto(a, a))
 _vertici(t::Tessuto3D, x, f::Faccia, tr = (0, 0)) =
     [_pos(t, x, v, _somma(im, tr)) for (v, im) in zip(f.vertici, f.immagini)]
 
+# Il centro da cui si triangola una faccia: il baricentro del suo contorno, cioè la media dei
+# punti medi degli spigoli pesata per la loro lunghezza. Non cambia se si aggiunge un punto su uno
+# spigolo, quindi aree e volumi non dipendono da come è suddiviso il contorno. Il baricentro dei
+# soli vertici invece si sposta verso il punto nuovo e, su facce non piane, cambia la superficie
+# (test "suddividere uno spigolo non cambia la geometria"). Per un poligono regolare i due
+# coincidono. Se tutti gli spigoli sono nulli si usa la media dei vertici.
 function _baricentro(P)
     n = length(P)
+    S = (0.0, 0.0, 0.0)
+    L = 0.0
+    for k in 1:n
+        a, b = P[k], P[mod1(k + 1, n)]
+        l = _norma(_meno(b, a))
+        S = (S[1] + l * (a[1] + b[1]) / 2, S[2] + l * (a[2] + b[2]) / 2, S[3] + l * (a[3] + b[3]) / 2)
+        L += l
+    end
+    L > 0 && return (S[1] / L, S[2] / L, S[3] / L)
     return (sum(p[1] for p in P) / n, sum(p[2] for p in P) / n, sum(p[3] for p in P) / n)
+end
+
+# Ripartisce sui vertici della faccia il gradiente `gc` rispetto al suo centro c, moltiplicato
+# per w. Con c = Σ_e L_e m_e / Σ_e L_e, la derivata rispetto al vertice k raccoglie i due spigoli
+# che lo toccano: Σ_e [u_e ((m_e − c)·gc) + (L_e / 2) gc] / L_tot, con u_e il versore dello
+# spigolo verso k e m_e il suo punto medio.
+function _ripartisci_centro!(g, t, vertici, immagini, P, c, gc, w)
+    n = length(P)
+    Ltot = 0.0
+    for k in 1:n
+        Ltot += _norma(_meno(P[mod1(k + 1, n)], P[k]))
+    end
+    if Ltot == 0
+        for k in 1:n
+            _aggiungi!(g, t, vertici[k], immagini[k], gc, w / n)
+        end
+        return g
+    end
+    for k in 1:n
+        tot = (0.0, 0.0, 0.0)
+        for altro in (P[mod1(k - 1, n)], P[mod1(k + 1, n)])
+            d = _meno(P[k], altro)
+            l = _norma(d)
+            l == 0 && continue
+            u = (d[1] / l, d[2] / l, d[3] / l)
+            m = ((P[k][1] + altro[1]) / 2, (P[k][2] + altro[2]) / 2, (P[k][3] + altro[3]) / 2)
+            s = _punto(_meno(m, c), gc)
+            tot = (tot[1] + u[1] * s + l / 2 * gc[1], tot[2] + u[2] * s + l / 2 * gc[2],
+                   tot[3] + u[3] * s + l / 2 * gc[3])
+        end
+        _aggiungi!(g, t, vertici[k], immagini[k], tot, w / Ltot)
+    end
+    return g
 end
 
 # Aggiunge w·G al gradiente del vertice v nell'immagine im (e del periodo, se periodico).
@@ -124,7 +172,7 @@ function _aggiungi!(g, t::Tessuto3D, v, im, G, w)
     return g
 end
 
-"Area di una faccia (µm²), a ventaglio dal baricentro dei suoi vertici."
+"Area di una faccia (µm²), a ventaglio dal baricentro del suo contorno."
 area_faccia(t::Tessuto3D, f::Faccia, x = t.x) = _area(_vertici(t, x, f))
 
 function _area(P)
@@ -215,9 +263,7 @@ function gradiente!(g, t::Tessuto3D, p::ParametriMeccanici, x = t.x)
                 _aggiungi!(g, t, f.vertici[k], f.immagini[k], d, -w)
             end
         end
-        for k in 1:n
-            _aggiungi!(g, t, f.vertici[k], f.immagini[k], gc, 1 / n)
-        end
+        _ripartisci_centro!(g, t, f.vertici, f.immagini, P, c, gc, 1.0)
     end
     # volume, cellula per cellula, con le facce nel riferimento della cellula
     for (ci, cel) in enumerate(t.cellule)
@@ -238,9 +284,7 @@ function gradiente!(g, t::Tessuto3D, p::ParametriMeccanici, x = t.x)
                 ab = _croce(a, b)
                 gc = (gc[1] + ab[1], gc[2] + ab[2], gc[3] + ab[3])
             end
-            for k in 1:n
-                _aggiungi!(g, t, f.vertici[k], _somma(f.immagini[k], tr), gc, w / n)
-            end
+            _ripartisci_centro!(g, t, f.vertici, [_somma(im, tr) for im in f.immagini], P, c, gc, w)
         end
     end
     for j in findall(t.fissi)

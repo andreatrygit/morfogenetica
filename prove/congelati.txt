@@ -16,7 +16,9 @@ a3b2a08c7e07d3121d09beb47a1bbe59b7c24881de674517c3155b604e7f871f  motore/03_rila
 6a4aa72ed6a9a1ebf4381056daf7fe9ba2e4c8e55a1c7fce3cf5ff53105102d3  motore/06_integratore.jl
 
 # motore-guscio-v1 — commit "CONGELATO: MOTORE-GUSCIO-V1", 29 ottobre 2026
-842ff4c46cec2969857058fc289d021fe65dbfbb3e39d984ccb3721dbbd67548  motore/07_guscio.jl
+# 07 modificato il 29 ottobre: centro delle facce = baricentro del contorno; test fisico che
+# fallisce: "suddividere uno spigolo non cambia la geometria" (test/guscio.jl)
+484eea0928a86b61d3ef85c0805ee0fa7520e0a6b2ce71d47014b3bc781cc664  motore/07_guscio.jl
 
 # motore-scambi-v1 — commit "CONGELATO: MOTORE-SCAMBI-V1", 29 ottobre 2026
 2570bbbbd4248689ae39aed200d5e2baaaa04278e0b5ecac4bc961feb84b0a98  motore/08_scambi.jl

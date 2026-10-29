@@ -95,7 +95,9 @@ fornisca energia, gradiente e controlli: l'interfaccia è descritta in cima al f
 ricostruiscono il tessuto con `tessuto_da_poligoni`). Congelato anche `08_scambi.jl`
 (`motore-scambi-v1`: scambi di vicine registrati, solo quando è corta tutta la parete). Congelato anche
 `09_estrusione.jl` (`motore-estrusione-v1`: una cellula triangolare piccola tutta intera esce
-dal foglio; `rilassa_con_topologia!` alterna Newton, scambi ed estrusioni). Da fare: scambio al
-bordo, chimica. Stato in
-`docs/piano.md`, sezioni 6–10. Ogni file nuovo in `motore/` va aggiunto a mano in
+dal foglio; `rilassa_con_topologia!` alterna Newton, scambi ed estrusioni). In corso: scutoidi
+(`10_scutoidi.jl`, non congelato: la cellula è un poliedro qualunque; fatto lo scambio apicale
+con scutoide, mancano le operazioni inverse, sezione 12 del piano). Da fare poi: chimica. Il
+centro delle facce del guscio è il baricentro del contorno (modifica giustificata a `07`). Stato in
+`docs/piano.md`, sezioni 6–12. Ogni file nuovo in `motore/` va aggiunto a mano in
 `src/Morfogenetica.jl`: la cache di Julia non vede i file nuovi in una cartella.
