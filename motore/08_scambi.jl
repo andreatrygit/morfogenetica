@@ -127,8 +127,11 @@ end
 """
     scambi_di_vicine!(t, p; soglia, lunghezza_nuova)
 
-Esegue uno scambio su ogni spigolo apicale interno più corto di `soglia` (µm), dal più corto,
-e restituisce il registro degli scambi fatti. `lunghezza_nuova` deve superare `soglia`, così uno
+Esegue uno scambio su ogni parete laterale interna i cui due spigoli, apicale **e** basale, sono
+più corti di `soglia` (µm), dalla più corta, e restituisce il registro degli scambi fatti.
+Servono tutti e due: nel guscio a prismi una cellula ha gli stessi vicini sopra e sotto, quindi
+lo scambio cambia insieme le due superfici, e farlo quando solo lo spigolo apicale è corto
+schiaccerebbe uno spigolo basale lungo (risultato negativo #14). `lunghezza_nuova` deve superare `soglia`, così uno
 spigolo appena creato non viene scambiato di nuovo nella stessa chiamata; `soglia` deve
 superare la lunghezza minima ammessa, così lo scambio arriva prima del rifiuto.
 """
@@ -143,7 +146,9 @@ function scambi_di_vicine!(t::Tessuto3D, p::ParametriMeccanici; soglia, lunghezz
         for w in poligoni(t), k in eachindex(w)
             (j1, i1), (j2, i2) = w[k], w[mod1(k + 1, length(w))]
             minmax(j1, j2) in fatti && continue
-            L = _norma(_meno(_pos(t, t.x, 2j2 - 1, i2), _pos(t, t.x, 2j1 - 1, i1)))
+            La = _norma(_meno(_pos(t, t.x, 2j2 - 1, i2), _pos(t, t.x, 2j1 - 1, i1)))
+            Lb = _norma(_meno(_pos(t, t.x, 2j2, i2), _pos(t, t.x, 2j1, i1)))
+            L = max(La, Lb)
             if L < Lmin && _quartetto(t, poligoni(t), j1, j2) !== nothing
                 corto, Lmin = (j1, j2), L
             end

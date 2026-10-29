@@ -71,7 +71,7 @@ volume_totale(t) = sum(volume_cellula(t, c) for c in eachindex(t.cellule))
         @test s3 < 0.1
     end
 
-    @testset "uno spigolo sotto soglia viene scambiato, gli altri no" begin
+    @testset "una parete sotto soglia viene scambiata, le altre no" begin
         t = foglio_scambi()
         p, q = spigolo_di_prova(t)
         accorcia!(t, p, q, 0.1)
@@ -107,5 +107,65 @@ volume_totale(t) = sum(volume_cellula(t, c) for c in eachindex(t.cellule))
         scambia!(t, p, q; lunghezza_nuova = 1.0)
         @test minimizza_3d!(t).convergito
         @test isapprox(energia(t, P_SCAMBI), Ereg; rtol = 1e-9)
+    end
+    @testset "risultato negativo #14: una giunzione solo apicale non si scambia" begin
+        # Due cellule vicine stringono l'anello apicale: la giunzione apicale fra loro si chiude,
+        # quella basale no. Lo scambio non deve partire, perché cambierebbe anche la base.
+        P = ParametriMeccanici(K = 0.1, η = 1.0, lunghezza_minima = 0.05,
+                               k_contatto = 0.0, d_contatto = 0.5)
+        ints = fill(PRISMA, 36)
+        ints[15] = ints[16] = Intenzioni3D(1.0, 1.0, 1.0, 4.0, 1000.0)
+        t = foglio_periodico(ints, 6, 6; lato = 5.0, altezza = 15.0)
+        minimizza!(t, P; tolleranza = 1e-9, iterazioni_massime = 100)
+        W = poligoni(t)
+        p, q = intersect(first.(W[15]), first.(W[16]))
+        w = W[15]
+        ip, iq = w[findfirst(e -> e[1] == p, w)][2], w[findfirst(e -> e[1] == q, w)][2]
+        L(a, b) = Morfogenetica._norma(Morfogenetica._meno(Morfogenetica._pos(t, t.x, b, iq),
+                                                           Morfogenetica._pos(t, t.x, a, ip)))
+        @test L(2p - 1, 2q - 1) < 0.3          # apicale chiusa
+        @test L(2p, 2q) > 5.0                  # basale lunga
+        @test isempty(scambi_di_vicine!(t, P; soglia = 0.3, lunghezza_nuova = 1.0))
+    end
+    @testset "scambi spontanei: un tessuto stirato oltre la soglia scorre" begin
+        # Pezzo di 37 prismi, bordo bloccato, tessuto "fluido" (σl = 0.4). Estensione convergente
+        # a area costante, x / s e y · s. Fino a s = 2.1 la risposta è elastica, nessuno scambio;
+        # a s = 2.15 parte una valanga di scambi e l'energia scende sotto lo stato elastico: il
+        # tessuto scorre invece di strapparsi. La valanga arriva al bordo, dove lo scambio non è
+        # ancora ammesso (docs/piano.md, sezione 9): lì restano pareti bloccate, tutte di bordo.
+        P = ParametriMeccanici(K = 0.1, η = 1.0, lunghezza_minima = 0.05,
+                               k_contatto = 0.0, d_contatto = 0.5)
+        stirato(s) = begin
+            t = foglio_esagonale(fill(Intenzioni3D(1.0, 1.0, 0.4, 0.0, 1000.0), 37), 3;
+                                 lato = 5.0, altezza = 15.0, bordo_fisso = true)
+            for k in 1:length(t.x)÷3
+                t.x[3k-2] /= s; t.x[3k-1] *= s
+            end
+            t.ancore .= t.x
+            t
+        end
+        # sotto la soglia: elastico
+        t = stirato(2.1)
+        r = rilassa_con_scambi!(t, P; soglia = 0.3, lunghezza_nuova = 1.0, tolleranza = 1e-9)
+        @test r.convergito && isempty(r.registro)
+        # sopra la soglia: scorre
+        elastico = stirato(2.15)
+        @test minimizza!(elastico, P; tolleranza = 1e-9, iterazioni_massime = 300).convergito
+        t = stirato(2.15)
+        r = rilassa_con_scambi!(t, P; soglia = 0.3, lunghezza_nuova = 1.0, tolleranza = 1e-9,
+                                cicli_massimi = 5)
+        @test length(r.registro) >= 10
+        @test energia(t, P) < energia(elastico, P) - 100
+        W = poligoni(t)
+        interni = [j for j in 1:length(t.x)÷6 if !t.fissi[2j - 1]]
+        @test all(length(cellule_attorno(W, j)) == 3 for j in interni)
+        @test all(volume_cellula(t, c) > 0 for c in eachindex(t.cellule))
+        # quello che resta bloccato tocca il bordo
+        for w in W, k in eachindex(w)
+            (j1, i1), (j2, i2) = w[k], w[mod1(k + 1, length(w))]
+            L = Morfogenetica._norma(Morfogenetica._meno(Morfogenetica._pos(t, t.x, 2j2 - 1, i2),
+                                                         Morfogenetica._pos(t, t.x, 2j1 - 1, i1)))
+            L < 0.3 && @test t.fissi[2j1 - 1] || t.fissi[2j2 - 1]
+        end
     end
 end

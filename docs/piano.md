@@ -271,9 +271,58 @@ Verificato (`test/scambi.jl`, 693 prove su 693 in tutto):
   regolare il tessuto si ferma con due cellule a 5 lati e due a 7, 24 nN·µm sopra il reticolo
   regolare, e non torna indietro da solo; con lo scambio inverso esplicito sì.
 
-Non ancora congelato: manca una prova in cui lo scambio avviene da sé, spinto dalla meccanica
-(per esempio un'intercalazione), e restano i due casi al bordo libero e l'apice che si chiude,
-che chiedono altre operazioni (scambio al bordo, estrusione).
+- lo scambio parte **solo se è corta tutta la parete**, apicale e basale: nel guscio a prismi
+  una cellula ha gli stessi vicini sopra e sotto. Due cellule che stringono l'anello apicale
+  chiudono la giunzione apicale ma non quella basale, e lo scambio fatto lo stesso fa saltare
+  l'energia di 8000 nN·µm: risultato negativo #14 (le cellule vere qui diventano scutoidi);
+- **scambi spontanei**: un pezzo di tessuto fluido (σl = 0.4) ancorato al bordo e stirato
+  (estensione convergente) risponde in modo elastico fino a s = 2.1; a s = 2.15 parte una
+  valanga di scambi e l'energia scende di 170 nN·µm sotto lo stato elastico. È una soglia di
+  snervamento: sotto il tessuto è solido, sopra scorre. La valanga arriva al bordo bloccato, dove
+  lo scambio non è ammesso, e lì si ferma.
+
+Congelato come `motore-scambi-v1` (commit "CONGELATO: MOTORE-SCAMBI-V1"). Le operazioni che
+mancano (estrusione, scambio al bordo) entrano come file nuovi.
+
+## 10. Estrusione (fase 3, quarto lavoro)
+
+`motore/09_estrusione.jl`, file nuovo (specifica, decisione 4, e il repertorio: "morire:
+apoptosi, oppure estrusione dal foglio"). Una cellula triangolare con apice e base tutti e due
+sotto una soglia d'area esce dal foglio: i suoi tre vertici apicali si fondono in uno, così i
+tre basali, e le tre vicine si chiudono su quel vertice. È l'operazione T2 dei modelli a
+vertici, sulle due superfici del guscio. Ogni estrusione è registrata.
+`rilassa_con_topologia!` alterna Newton, scambi ed estrusioni.
+
+Verificato (`test/estrusione.jl`, 739 prove su 739 in tutto):
+
+- **una cellula apoptotica esce dal foglio da sola**: con il volume bersaglio portato da 1000 a
+  1 µm³ si restringe, perde tre lati con tre scambi di vicine, diventa un triangolo ed esce; il
+  tessuto si richiude (da 36 a 35 cellule, due vertici in meno) e converge;
+- interruttore: senza operazioni topologiche la stessa cellula si blocca, esagonale, e il
+  rilassamento non converge;
+- l'estrusione è un evento discreto che libera energia: le pareti del triangolo, alte ancora
+  ~15 µm, spariscono con lui (caduta dello 0.3% dell'energia totale), e dopo il tessuto si
+  richiude abbassandola ancora;
+- **risultato negativo #15**: una cellula che chiude solo l'apice (0.015 µm²) con la base larga
+  (175 µm²), la cellula a bottiglia, non si può estrudere nel guscio a prismi. È lo stesso limite
+  del #14: apice e base cambiano insieme.
+
+Congelato come `motore-estrusione-v1` (commit "CONGELATO: MOTORE-ESTRUSIONE-V1").
+
+## 11. Il bordo libero, e il limite comune
+
+Il terzo lavoro previsto, lo scambio al bordo libero, non si può fare nel guscio a prismi. La
+diagnosi (risultato negativo #13, aggiornato): le pareti libere delle cellule di bordo si
+torcono, e collassano a turno all'apice o alla base, mai insieme. Ogni operazione sui prismi
+cambia insieme le due superfici e schiaccerebbe uno spigolo di 8 µm.
+
+I risultati #13, #14 e #15, e la cellula isolata che si arrotonda, hanno **la stessa radice**:
+nel guscio a prismi una cellula ha lo stesso poligono all'apice e alla base. Le cellule vere no
+(gli scutoidi). L'estensione che li risolve tutti è un guscio con **superfici apicale e basale a
+topologia propria**: ogni superficie fa i suoi scambi, e le facce laterali non sono più
+quadrilateri ma poligoni che collegano lo spigolo apicale e quello basale di due cellule
+vicine, anche quando sono vicine solo da una parte. È un cambio di rappresentazione, da
+decidere prima di scriverlo.
 
 ## Fonti
 

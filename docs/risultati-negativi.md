@@ -207,8 +207,60 @@ minimo dell'energia con le tensioni uguali su tutte le facce.
 minimizzatore si ferma, con una forza residua di 0.17 nN.
 
 **Perché:** al bordo le facce laterali appartengono a una cellula sola, quindi niente bilancia la
-loro tensione. L'equilibrio richiederebbe uno scambio di vicine che il motore non ha ancora.
+loro tensione, e ogni parete libera si torce. Misurato (29 ottobre, 19 cellule, K = 0.1): gli
+spigoli che collassano sono quelli di bordo delle cellule d'angolo, e collassano **a turno in
+alto o in basso**: 43–44 apicale 0.24 µm e basale 8.3 µm, 45–46 apicale 8.3 µm e basale
+0.36 µm, e così via. La cellula di bordo vuole un lato in meno all'apice e un altro in meno alla
+base, come la cellula isolata che si arrotonda.
+
+**Conseguenza:** nel guscio a prismi non esiste un'operazione al bordo che risolva il caso. Una
+fusione di vertici fatta insieme sulle due superfici schiaccerebbe uno spigolo di 8 µm (come lo
+scambio nel #14). È lo stesso limite dei #14 e #15: servirebbero superfici apicale e basale con
+topologie proprie.
 
 **Regressione:** `test/guscio.jl`. Le prove di equilibrio 3D usano il foglio periodico, che non
 ha bordi.
+
+---
+
+### 14. Nel guscio a prismi non c'è uno scambio di vicine solo apicale
+
+**Cosa:** due cellule vicine stringono l'anello apicale (Λ = 4 nN, foglio periodico 6 × 6), per
+far chiudere la giunzione fra loro e provocare uno scambio di vicine spontaneo.
+
+**Esito:** la giunzione apicale si chiude (0.05 µm) ma quella basale resta lunga 9.3 µm. Lo
+scambio, che nel guscio a prismi cambia insieme le due superfici, schiaccia e ruota anche lo
+spigolo basale: l'energia salta da 13040 a 21424 nN·µm e il tessuto non si riassesta (lo
+scambio si ripete avanti e indietro).
+
+**Perché:** nel guscio ogni cellula è un prisma, con gli stessi vicini sopra e sotto. Le cellule
+vere possono avere vicini diversi all'apice e alla base (la forma detta scutoide); il modello
+non le rappresenta.
+
+**Correzione:** lo scambio si fa solo quando sono corti tutti e due gli spigoli della parete,
+apicale e basale. Una giunzione solo apicale che si chiude resta un caso aperto: chiede cellule a
+scutoide o una contrattilità basale.
+
+**Regressione:** `test/scambi.jl`.
+
+---
+
+### 15. Nel guscio a prismi una cellula che chiude solo l'apice non si può estrudere
+
+**Cosa:** una cellula stringe forte l'anello apicale (Λ = 8 nN, foglio periodico 6 × 6), come
+una cellula che si prepara a uscire dal foglio.
+
+**Esito:** l'apice si chiude (0.015 µm²) ma la base si allarga (175 µm²): è la cellula a
+bottiglia. Non si può estrudere: l'estrusione, che nel guscio fonde insieme i vertici apicali e
+quelli basali, farebbe sparire di colpo una base di 175 µm².
+
+**Perché:** come il #14, nel guscio a prismi apice e base cambiano insieme. Una cellula vera che
+chiude l'apice esce dal lato basale o si invagina; il modello non rappresenta né l'una né
+l'altra cosa.
+
+**Cosa invece funziona:** l'estrusione di una cellula piccola tutta intera, cioè apoptotica, che
+riduce il suo volume, perde lati con gli scambi di vicine fino al triangolo ed esce
+(`test/estrusione.jl`).
+
+**Regressione:** `test/estrusione.jl`.
 

@@ -152,5 +152,17 @@ end
                         for k in eachindex(P))
             end, t.facce)
         @test corto < 2 * P_3D.lunghezza_minima
+        # e collassano a turno in alto o in basso: ogni spigolo di bordo corto da una parte è
+        # lungo dall'altra (la parete libera si torce), quindi nessuna operazione sui prismi,
+        # che cambia insieme le due superfici, può risolverlo
+        W = poligoni(t)
+        for w in W, k in eachindex(w)
+            (j1, i1), (j2, i2) = w[k], w[mod1(k + 1, length(w))]
+            La = Morfogenetica._norma(Morfogenetica._meno(Morfogenetica._pos(t, t.x, 2j2 - 1, i2),
+                                                          Morfogenetica._pos(t, t.x, 2j1 - 1, i1)))
+            Lb = Morfogenetica._norma(Morfogenetica._meno(Morfogenetica._pos(t, t.x, 2j2, i2),
+                                                          Morfogenetica._pos(t, t.x, 2j1, i1)))
+            min(La, Lb) < 1.0 && @test max(La, Lb) > 5.0
+        end
     end
 end
