@@ -76,6 +76,38 @@ end
         @test energia(t, P_3D, y) == energia(t, P_3D)
     end
 
+    @testset "suddividere uno spigolo non cambia la geometria" begin
+        # Test fisico (regola 1): un punto aggiunto a metà di uno spigolo non cambia la forma
+        # della cellula, quindi non deve cambiare né le aree né i volumi né l'energia, anche
+        # se le facce non sono piane. Con il baricentro dei vertici questo non vale (la faccia
+        # si triangola da un centro che si sposta verso il punto nuovo): è il difetto che
+        # faceva saltare l'energia di 183 nN·µm negli scambi apicali con scutoide.
+        t = foglio_esagonale(fill(Intenzioni3D(1.2, 0.9, 1.1, 0.4, 1000.0), 7), 1;
+                             lato = 5.0, altezza = 15.0)
+        t.x .+= 0.8 .* randn(Xoshiro(21), length(t.x))     # facce non piane
+        E0 = energia(t, P_3D)
+        V0 = [volume_cellula(t, c) for c in eachindex(t.cellule)]
+        # spigolo verticale di una faccia laterale condivisa: lo si suddivide in tutte le facce
+        # che lo contengono
+        fi = findfirst(f -> f.etichetta == laterale && length(f.cellule) == 2, t.facce)
+        a, b = t.facce[fi].vertici[1], t.facce[fi].vertici[end]
+        pa, pb = Morfogenetica._pos(t, t.x, a, (0, 0)), Morfogenetica._pos(t, t.x, b, (0, 0))
+        v = length(t.x) ÷ 3 + 1
+        append!(t.x, (pa .+ pb) ./ 2); push!(t.fissi, false); append!(t.ancore, (pa .+ pb) ./ 2)
+        for (k, f) in enumerate(t.facce)
+            w = f.vertici
+            i = findfirst(j -> minmax(w[j], w[mod1(j + 1, length(w))]) == minmax(a, b), eachindex(w))
+            i === nothing && continue
+            u = insert!(copy(w), i + 1, v)
+            t.facce[k] = Faccia(u, fill((0, 0), length(u)), f.etichetta, f.cellule, f.segni,
+                                f.etichetta == apicale ? zeros(Int, length(u)) : Int[])
+        end
+        # lo spigolo è verticale: nessuna faccia apicale cambia, la tensione di linea neppure
+        @test all(f.etichetta != apicale for f in t.facce if v in f.vertici)
+        @test isapprox(energia(t, P_3D), E0; rtol = 1e-12)
+        @test all(isapprox(volume_cellula(t, c), V0[c]; rtol = 1e-12) for c in eachindex(t.cellule))
+    end
+
     @testset "F6a prisma isolato: lato e rapporto esatti" begin
         # Solo con σa = σb e σl ≥ σa. Un prisma isolato non è costretto ad avere apice e base
         # uguali: con σa ≠ σb diventa un tronco di piramide (nel foglio è il reticolo a imporli
