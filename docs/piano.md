@@ -324,6 +324,47 @@ quadrilateri ma poligoni che collegano lo spigolo apicale e quello basale di due
 vicine, anche quando sono vicine solo da una parte. È un cambio di rappresentazione, da
 decidere prima di scriverlo.
 
+## 12. Scutoidi: la cellula come poliedro qualunque (fase 3, quinto lavoro)
+
+Decisione presa il 29 ottobre: risolvere subito il limite comune dei risultati #13, #14 e #15.
+Una cellula resta un **monostrato** (va dalla superficie apicale a quella basale), ma è un
+**poliedro qualunque**, non più un prisma. È il compromesso fra il guscio a prismi e il modello
+3D pieno che la specifica esclude (cellule che si rimescolano in volume): le operazioni
+topologiche avvengono sulle superfici e lungo le pareti, non nel volume.
+
+Energia, aree, volumi e forze del guscio (`07_guscio.jl`) lavorano già su facce poligonali
+qualsiasi: a supporre i prismi erano solo la costruzione e le operazioni topologiche. Gli
+scutoidi entrano quindi come operazioni nuove, in `motore/10_scutoidi.jl`.
+
+**Fatto: lo scambio apicale con scutoide.** Quando si chiude solo la giunzione apicale fra A e
+B: in alto lo spigolo passa a C e D; la parete fra A e B resta e in alto finisce in un vertice
+nuovo, interno al foglio, dove si incontrano A, B, C e D; sopra quel vertice nasce una parete
+triangolare fra C e D. Verificato (`test/scutoidi.jl`): ogni cellula resta un poliedro chiuso
+(V − E + F = 2), volumi positivi, forze esatte, volume totale conservato, energia continua (il
+salto va a zero come ε).
+
+**Trovato per strada, e corretto in un file congelato** (regola 1, con il test fisico che
+fallisce): aggiungere un punto su uno spigolo cambiava aree e volumi di facce non piane, perché
+il centro di triangolazione era il baricentro dei vertici. Ora è il baricentro del contorno,
+che non cambia suddividendo uno spigolo. Prima della correzione lo scambio apicale faceva
+saltare l'energia di 183 nN·µm. Conseguenza su F7: con tyssue, che usa il baricentro dei
+vertici, le energie coincidono solo dove le facce sono piane (sezione 8).
+
+**Che cosa manca.** In un tessuto uniforme uno scutoide forzato torna indietro: il vertice
+interno risale all'apice e lo spigolo nuovo fra C e D si riaccorcia. Servono le operazioni che
+completano il quadro, cioè le due operazioni elementari dei modelli a vertici 3D (Okuda et al.,
+"reversible network reconnection"):
+
+1. **da spigolo a triangolo**: uno spigolo corto, condiviso da tre facce, diventa una faccia
+   triangolare (lo scambio apicale ne è il caso sulla superficie);
+2. **da triangolo a spigolo**: una faccia triangolare piccola diventa uno spigolo. È l'inversa,
+   e serve a far tornare indietro lo scutoide, o a completarlo in uno scambio intero quando il
+   vertice interno arriva alla base.
+
+Con queste due, sulle superfici e nel volume del foglio, si risolvono anche il bordo libero
+(#13) e la cellula che si arrotonda; l'estrusione apicale della cellula a bottiglia (#15)
+chiede in più che una cellula possa lasciare una delle due superfici.
+
 ## Fonti
 
 - Krajnc e Ziherl, *Theory of epithelial elasticity*, Phys. Rev. E 92, 052713 (2015):

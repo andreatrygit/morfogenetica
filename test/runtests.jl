@@ -17,6 +17,7 @@ include("previsioni.jl")
     include("guscio.jl")
     include("scambi.jl")
     include("estrusione.jl")
+    include("scutoidi.jl")
     include("fisica_confronto_3d.jl")
     include("congelati.jl")
 end
