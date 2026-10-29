@@ -271,9 +271,18 @@ Verificato (`test/scambi.jl`, 693 prove su 693 in tutto):
   regolare il tessuto si ferma con due cellule a 5 lati e due a 7, 24 nN·µm sopra il reticolo
   regolare, e non torna indietro da solo; con lo scambio inverso esplicito sì.
 
-Non ancora congelato: manca una prova in cui lo scambio avviene da sé, spinto dalla meccanica
-(per esempio un'intercalazione), e restano i due casi al bordo libero e l'apice che si chiude,
-che chiedono altre operazioni (scambio al bordo, estrusione).
+- lo scambio parte **solo se è corta tutta la parete**, apicale e basale: nel guscio a prismi
+  una cellula ha gli stessi vicini sopra e sotto. Due cellule che stringono l'anello apicale
+  chiudono la giunzione apicale ma non quella basale, e lo scambio fatto lo stesso fa saltare
+  l'energia di 8000 nN·µm: risultato negativo #14 (le cellule vere qui diventano scutoidi);
+- **scambi spontanei**: un pezzo di tessuto fluido (σl = 0.4) ancorato al bordo e stirato
+  (estensione convergente) risponde in modo elastico fino a s = 2.1; a s = 2.15 parte una
+  valanga di scambi e l'energia scende di 170 nN·µm sotto lo stato elastico. È una soglia di
+  snervamento: sotto il tessuto è solido, sopra scorre. La valanga arriva al bordo bloccato, dove
+  lo scambio non è ammesso, e lì si ferma.
+
+Congelato come `motore-scambi-v1` (commit "CONGELATO: MOTORE-SCAMBI-V1"). Le operazioni che
+mancano (estrusione, scambio al bordo) entrano come file nuovi.
 
 ## Fonti
 

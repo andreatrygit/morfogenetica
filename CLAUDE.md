@@ -92,7 +92,8 @@ commit del test che l'ha resa necessaria. Moduli nuovi si aggiungono come file n
 anche `06_integratore.jl` (`motore-integratore-v1`: Newton per gli equilibri, Eulero implicito
 per la dinamica; per le forme si usa questo, non `rilassa!`). Funziona con qualunque tessuto che
 fornisca energia, gradiente e controlli: l'interfaccia è descritta in cima al file. Congelato anche `07_guscio.jl` (`motore-guscio-v1`: il guscio 3D; i cambi di topologia
-ricostruiscono il tessuto con `tessuto_da_poligoni`). In corso: scambi di vicine
-(`08_scambi.jl`, non ancora congelato). Da fare: estrusione, scambio al bordo, chimica. Stato in
+ricostruiscono il tessuto con `tessuto_da_poligoni`). Congelato anche `08_scambi.jl`
+(`motore-scambi-v1`: scambi di vicine registrati, solo quando è corta tutta la parete). Da fare:
+estrusione, scambio al bordo, chimica. Stato in
 `docs/piano.md`, sezioni 6–9. Ogni file nuovo in `motore/` va aggiunto a mano in
 `src/Morfogenetica.jl`: la cache di Julia non vede i file nuovi in una cartella.
