@@ -9,6 +9,10 @@ Morfogenetica: cellule con una macchina a stati che fanno crescere forme da sole
 Si sta riscrivendo il motore in **Julia**, partendo da zero, su fondamenta diverse dal vecchio
 motore JavaScript (congelato in `riferimento/`).
 
+**Per riprendere il lavoro si parte da `docs/roadmap.md`**: che cosa stiamo facendo, dove siamo,
+come si lavora (red-green, congelamento) e i passi che vengono dopo. Va aggiornato nello stesso
+commit di ogni passo fatto.
+
 Prima di toccare il codice leggi, in quest'ordine:
 
 1. `docs/specifica-motore-julia.md` — cosa deve fare il motore e perché
@@ -83,21 +87,10 @@ registro da GitHub con `JULIA_PKG_SERVER="" scripts/prove.sh`.
 
 ## Stato
 
-Fase 0, 1 e 2 fatte. La meccanica del modello laterale passa le prove F1–F5 (F5 contro tyssue) ed
-è **congelata** (`motore-meccanica-v1`, segnato dal commit "CONGELATO: MOTORE-MECCANICA-V1"): da
-qui `motore/01`–`05` si toccano solo con un test fisico che fallisce. La batteria lo fa
-rispettare: `prove/congelati.txt` tiene l'impronta SHA-256 di ogni file congelato e la prova
-"file congelati" fallisce se cambia. Una modifica ammessa aggiorna l'impronta nello stesso
-commit del test che l'ha resa necessaria. Moduli nuovi si aggiungono come file nuovi, ognuno congelato quando è validato. Congelato
-anche `06_integratore.jl` (`motore-integratore-v1`: Newton per gli equilibri, Eulero implicito
-per la dinamica; per le forme si usa questo, non `rilassa!`). Funziona con qualunque tessuto che
-fornisca energia, gradiente e controlli: l'interfaccia è descritta in cima al file. Congelato anche `07_guscio.jl` (`motore-guscio-v1`: il guscio 3D; i cambi di topologia
-ricostruiscono il tessuto con `tessuto_da_poligoni`). Congelato anche `08_scambi.jl`
-(`motore-scambi-v1`: scambi di vicine registrati, solo quando è corta tutta la parete). Congelato anche
-`09_estrusione.jl` (`motore-estrusione-v1`: una cellula triangolare piccola tutta intera esce
-dal foglio; `rilassa_con_topologia!` alterna Newton, scambi ed estrusioni). In corso: scutoidi
-(`10_scutoidi.jl`, non congelato: la cellula è un poliedro qualunque; fatto lo scambio apicale
-con scutoide, mancano le operazioni inverse, sezione 12 del piano). Da fare poi: chimica. Il
-centro delle facce del guscio è il baricentro del contorno (modifica giustificata a `07`). Stato in
-`docs/piano.md`, sezioni 6–12. Ogni file nuovo in `motore/` va aggiunto a mano in
-`src/Morfogenetica.jl`: la cache di Julia non vede i file nuovi in una cartella.
+Lo stato aggiornato, modulo per modulo, è in `docs/roadmap.md` (sezione 2); la storia dettagliata
+e i numeri misurati in `docs/piano.md`. In breve: `motore/01`–`09` sono congelati (impronte in
+`prove/congelati.txt`, la prova "file congelati" fallisce se cambiano; una modifica ammessa
+richiede un test fisico che fallisce e aggiorna l'impronta nello stesso commit); `10_scutoidi.jl`
+è in corso. I moduli congelati sono segnati da commit vuoti "CONGELATO: MOTORE-…-V1" al posto
+dei tag, che da questo ambiente non si possono pushare. Ogni file nuovo in `motore/` va aggiunto
+a mano in `src/Morfogenetica.jl`: la cache di Julia non vede i file nuovi in una cartella.
