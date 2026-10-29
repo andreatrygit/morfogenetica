@@ -284,6 +284,35 @@ Verificato (`test/scambi.jl`, 693 prove su 693 in tutto):
 Congelato come `motore-scambi-v1` (commit "CONGELATO: MOTORE-SCAMBI-V1"). Le operazioni che
 mancano (estrusione, scambio al bordo) entrano come file nuovi.
 
+## 10. Estrusione (fase 3, quarto lavoro)
+
+`motore/09_estrusione.jl`, file nuovo (specifica, decisione 4, e il repertorio: "morire:
+apoptosi, oppure estrusione dal foglio"). Una cellula triangolare con apice e base tutti e due
+sotto una soglia d'area esce dal foglio: i suoi tre vertici apicali si fondono in uno, così i
+tre basali, e le tre vicine si chiudono su quel vertice. È l'operazione T2 dei modelli a
+vertici, sulle due superfici del guscio. Ogni estrusione è registrata.
+`rilassa_con_topologia!` alterna Newton, scambi ed estrusioni.
+
+Verificato (`test/estrusione.jl`, 739 prove su 739 in tutto):
+
+- **una cellula apoptotica esce dal foglio da sola**: con il volume bersaglio portato da 1000 a
+  1 µm³ si restringe, perde tre lati con tre scambi di vicine, diventa un triangolo ed esce; il
+  tessuto si richiude (da 36 a 35 cellule, due vertici in meno) e converge;
+- interruttore: senza operazioni topologiche la stessa cellula si blocca, esagonale, e il
+  rilassamento non converge;
+- l'estrusione è un evento discreto che libera energia: le pareti del triangolo, alte ancora
+  ~15 µm, spariscono con lui (caduta dello 0.3% dell'energia totale), e dopo il tessuto si
+  richiude abbassandola ancora;
+- **risultato negativo #15**: una cellula che chiude solo l'apice (0.015 µm²) con la base larga
+  (175 µm²), la cellula a bottiglia, non si può estrudere nel guscio a prismi. È lo stesso limite
+  del #14: apice e base cambiano insieme.
+
+Congelato come `motore-estrusione-v1` (commit "CONGELATO: MOTORE-ESTRUSIONE-V1").
+
+I due risultati #14 e #15 indicano la stessa estensione del modello, da decidere: cellule con
+vicini diversi all'apice e alla base (scutoidi), cioè superfici apicale e basale con topologie
+proprie collegate da facce laterali non più quadrilatere.
+
 ## Fonti
 
 - Krajnc e Ziherl, *Theory of epithelial elasticity*, Phys. Rev. E 92, 052713 (2015):

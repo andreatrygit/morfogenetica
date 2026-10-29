@@ -234,3 +234,24 @@ scutoide o una contrattilità basale.
 
 **Regressione:** `test/scambi.jl`.
 
+---
+
+### 15. Nel guscio a prismi una cellula che chiude solo l'apice non si può estrudere
+
+**Cosa:** una cellula stringe forte l'anello apicale (Λ = 8 nN, foglio periodico 6 × 6), come
+una cellula che si prepara a uscire dal foglio.
+
+**Esito:** l'apice si chiude (0.015 µm²) ma la base si allarga (175 µm²): è la cellula a
+bottiglia. Non si può estrudere: l'estrusione, che nel guscio fonde insieme i vertici apicali e
+quelli basali, farebbe sparire di colpo una base di 175 µm².
+
+**Perché:** come il #14, nel guscio a prismi apice e base cambiano insieme. Una cellula vera che
+chiude l'apice esce dal lato basale o si invagina; il modello non rappresenta né l'una né
+l'altra cosa.
+
+**Cosa invece funziona:** l'estrusione di una cellula piccola tutta intera, cioè apoptotica, che
+riduce il suo volume, perde lati con gli scambi di vicine fino al triangolo ed esce
+(`test/estrusione.jl`).
+
+**Regressione:** `test/estrusione.jl`.
+
