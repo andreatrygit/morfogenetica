@@ -92,6 +92,6 @@ commit del test che l'ha resa necessaria. Moduli nuovi si aggiungono come file n
 anche `06_integratore.jl` (`motore-integratore-v1`: Newton per gli equilibri, Eulero implicito
 per la dinamica; per le forme si usa questo, non `rilassa!`). Funziona con qualunque tessuto che
 fornisca energia, gradiente e controlli: l'interfaccia è descritta in cima al file. In corso: guscio 3D (`07_guscio.jl`, non ancora congelato; prove esatte su foglio periodico
-e prisma isolato). Da fare: confronto 3D con tyssue, scambi di vicine, chimica. Stato in
+e prisma isolato, F7 contro tyssue con il bordo bloccato). Da fare: scambi di vicine, chimica. Stato in
 `docs/piano.md`, sezione 6. Ogni file nuovo in `motore/` va aggiunto a mano in
 `src/Morfogenetica.jl`: la cache di Julia non vede i file nuovi in una cartella.

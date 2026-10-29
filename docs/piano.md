@@ -231,8 +231,25 @@ dimensioni del periodo sono incognite come le posizioni. È la prova pulita, per
 Con un anello apicale forte (Λ = 5 nN) l'apice si chiude del tutto: in una cellula vera è
 l'estrusione dal foglio, che il modello non ha ancora, e il motore si ferma prima.
 
-Prossimi passi: il confronto 3D con tyssue (un'invaginazione in un foglio periodico), poi gli
-scambi di vicine, che servono a tutti e tre i casi sopra.
+### F7, il confronto 3D con tyssue
+
+tyssue non sa fare fogli periodici in 3D, quindi il confronto usa un pezzo di 37 prismi con il
+**bordo bloccato** (vertici fissi, una novità di `07_guscio.jl`), in due scenari: la cellula
+centrale che stringe l'anello apicale e una placca di sette cellule. Esito
+(`confronto/LEGGIMI.md`):
+
+- le due energie coincidono fino a 1e-12 relativo anche su posizioni deformate;
+- il gradiente di tyssue non è la derivata esatta della sua energia (1% nel termine di volume),
+  e per questo il suo minimizzatore non converge; il nostro sì, in 7–8 iterazioni, e trova un
+  minimo più basso del punto in cui tyssue si ferma.
+
+Trovato strada facendo, nel nostro motore: con i vertici bloccati, Newton li sentiva ancora
+nella matrice delle derivate seconde e il passo li spostava, così il rilassamento si
+trascinava. Ora la posizione di un vertice bloccato si legge da una copia fissa, e per
+l'integratore non è un'incognita.
+
+Prossimo passo: gli scambi di vicine, che servono al bordo libero, alla cellula che si
+arrotonda e all'apice che si chiude.
 
 ## Fonti
 

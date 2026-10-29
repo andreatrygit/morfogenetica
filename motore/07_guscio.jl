@@ -71,12 +71,22 @@ struct Intenzioni3D
     V0::Float64
 end
 
+"""
+    Tessuto3D
+
+Posizioni, facce, cellule, intenzioni; `periodico` dice se il foglio si chiude su sé stesso;
+`fissi[j]` blocca il vertice j (un tessuto ancorato al bordo): la sua posizione si legge da
+`ancore`, una copia presa alla costruzione, e non da `x`. Così per un integratore quel vertice
+non è un'incognita: l'energia non dipende dalle sue voci in `x` e la sua forza è nulla.
+"""
 mutable struct Tessuto3D
     x::Vector{Float64}
     facce::Vector{Faccia}
     cellule::Vector{Cellula3D}
     intenzioni::Vector{Intenzioni3D}
     periodico::Bool
+    fissi::BitVector
+    ancore::Vector{Float64}
 end
 
 _nvert(t::Tessuto3D) = (length(t.x) - (t.periodico ? 2 : 0)) ÷ 3
@@ -84,7 +94,8 @@ _periodo(t::Tessuto3D, x) = t.periodico ? (x[end-1], x[end]) : (0.0, 0.0)
 
 function _pos(t::Tessuto3D, x, v, (ix, iy))
     Lx, Ly = _periodo(t, x)
-    return (x[3v-2] + ix * Lx, x[3v-1] + iy * Ly, x[3v])
+    q = t.fissi[v] ? t.ancore : x
+    return (q[3v-2] + ix * Lx, q[3v-1] + iy * Ly, q[3v])
 end
 
 _somma(a, b) = (a[1] + b[1], a[2] + b[2])
@@ -231,6 +242,9 @@ function gradiente!(g, t::Tessuto3D, p::ParametriMeccanici, x = t.x)
             end
         end
     end
+    for j in findall(t.fissi)
+        g[3j-2] = 0; g[3j-1] = 0; g[3j] = 0
+    end
     return g
 end
 
@@ -328,24 +342,37 @@ function _foglio(intenzioni, centri, lato, altezza, avvolgi, periodico, Lx, Ly)
         x[3ba(j)-2], x[3ba(j)-1], x[3ba(j)] = px, py, 0.0
     end
     periodico && (x[end-1] = Lx; x[end] = Ly)
-    return Tessuto3D(x, facce, cellule, copy(intenzioni), periodico)
+    # vertici del bordo: nel piano, quelli che non sono condivisi da tre cellule
+    quante = zeros(Int, length(piani))
+    for w in angoli, (j, _) in w
+        quante[j] += 1
+    end
+    bordo = falses(2 * length(piani))
+    for j in eachindex(piani)
+        quante[j] < 3 && (bordo[ap(j)] = true; bordo[ba(j)] = true)
+    end
+    return Tessuto3D(x, facce, cellule, copy(intenzioni), periodico, bordo, copy(x))
 end
 
 """
-    foglio_esagonale(intenzioni, R; lato, altezza)
+    foglio_esagonale(intenzioni, R; lato, altezza, bordo_fisso = false)
 
 Pezzo di foglio piatto di prismi esagonali regolari: la cellula centrale e `R` anelli attorno
-(1 + 3R(R+1) cellule, tante quante `intenzioni`), con bordo libero. Basale su z = 0, apicale su
-z = `altezza`. Con R = 0 è un prisma isolato.
+(1 + 3R(R+1) cellule, tante quante `intenzioni`). Basale su z = 0, apicale su z = `altezza`.
+Con R = 0 è un prisma isolato. Con `bordo_fisso` i vertici del bordo sono bloccati (un
+tessuto ancorato tutto intorno); altrimenti il bordo è libero.
 """
-function foglio_esagonale(intenzioni::Vector{Intenzioni3D}, R::Int; lato, altezza)
+function foglio_esagonale(intenzioni::Vector{Intenzioni3D}, R::Int; lato, altezza,
+                          bordo_fisso = false)
     centri = Tuple{Float64,Float64}[]
     for q in -R:R, r in -R:R
         abs(q + r) <= R || continue
         push!(centri, (lato * sqrt(3) * (q + r / 2), lato * 1.5 * r))
     end
     sort!(centri; by = c -> (round(hypot(c...); digits = 6), atan(c[2], c[1])))
-    return _foglio(intenzioni, centri, lato, altezza, (px, py) -> ((px, py), (0, 0)), false, 0.0, 0.0)
+    t = _foglio(intenzioni, centri, lato, altezza, (px, py) -> ((px, py), (0, 0)), false, 0.0, 0.0)
+    bordo_fisso || fill!(t.fissi, false)
+    return t
 end
 
 """
@@ -365,7 +392,9 @@ function foglio_periodico(intenzioni::Vector{Intenzioni3D}, nx::Int, ny::Int; la
         ix, iy = floor(Int, px / Lx + 1e-9), floor(Int, py / Ly + 1e-9)
         return (px - ix * Lx, py - iy * Ly), (ix, iy)
     end
-    return _foglio(intenzioni, centri, lato, altezza, avvolgi, true, Lx, Ly)
+    t = _foglio(intenzioni, centri, lato, altezza, avvolgi, true, Lx, Ly)
+    fill!(t.fissi, false)          # un foglio periodico non ha bordo
+    return t
 end
 
 # Misure per l'osservatore.

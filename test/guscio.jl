@@ -61,6 +61,21 @@ end
         @test maximum(abs, M) < 1e-10 * scala * 30
     end
 
+    @testset "bordo bloccato: i vertici fissi non sono incognite" begin
+        t = foglio_esagonale(fill(Intenzioni3D(1.2, 0.9, 1.1, 0.4, 1000.0), 19), 2;
+                             lato = 5.0, altezza = 15.0, bordo_fisso = true)
+        @test count(t.fissi) > 0
+        t.x .+= 0.3 .* randn(Xoshiro(14), length(t.x))
+        t.ancore .= t.x
+        @test errore_gradiente(t, P_3D) < 1e-7
+        g = gradiente!(similar(t.x), t, P_3D)
+        @test all(g[repeat(t.fissi, inner = 3)] .== 0)
+        # cambiare la voce di x di un vertice fisso non cambia l'energia
+        j = findfirst(t.fissi)
+        y = copy(t.x); y[3j] += 1.0
+        @test energia(t, P_3D, y) == energia(t, P_3D)
+    end
+
     @testset "F6a prisma isolato: lato e rapporto esatti" begin
         # Solo con σa = σb e σl ≥ σa. Un prisma isolato non è costretto ad avere apice e base
         # uguali: con σa ≠ σb diventa un tronco di piramide (nel foglio è il reticolo a imporli
