@@ -41,6 +41,13 @@ Sparisce anche un bug che era un effetto collaterale di avere solo distanze fra 
 
 **Il 3D come guscio a due superfici.** Restrizione di scopo deliberata, per arrivare in fondo: una maglia triangolata apicale e la sua copia basale; ogni cellula è il prisma fra un poligono apicale e il corrispondente basale, con le facce laterali che li collegano. Si ottengono cunei naturali, l'anello apicale naturale, un guscio chiuso per la blastula, e — decisivo — i cambiamenti topologici restano confinati alla superficie, quindi sono scambi di vicine bidimensionali, trattabili. Un modello a vertici 3D *pieno*, con cellule che si riarrangiano in volume, è il punto dove questi progetti si impantanano, e non ci serve: tutto ciò che vogliamo piegare è un foglio.
 
+> **Aggiornamento, 29 ottobre 2026.** Il modello 3D pieno non è escluso ma **rimandato**. Il
+> guscio a prismi si è rivelato troppo stretto (risultati negativi #13, #14, #15: una cellula
+> vera può avere vicini diversi all'apice e alla base, lo scutoide), e la cellula del guscio è
+> ora un poliedro qualunque che resta un monostrato. Le operazioni topologiche si scrivono nella
+> forma generale dei modelli 3D a vertici, così il multistrato potrà venire senza rifare la
+> topologia. Il piano è in `docs/roadmap.md`, passi R1 e R7.
+
 **Due rappresentazioni, una algebra tipata.** Il prezzo della restrizione è che il mesenchima non c'è: una palla piena di cellule, il lume che si riempie, una cellula che migra da sola non sono prismi di una maglia. Quindi:
 
 - cellula **epiteliale** = prisma in una maglia a due superfici;
