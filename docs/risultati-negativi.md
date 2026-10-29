@@ -212,3 +212,25 @@ loro tensione. L'equilibrio richiederebbe uno scambio di vicine che il motore no
 **Regressione:** `test/guscio.jl`. Le prove di equilibrio 3D usano il foglio periodico, che non
 ha bordi.
 
+---
+
+### 14. Nel guscio a prismi non c'è uno scambio di vicine solo apicale
+
+**Cosa:** due cellule vicine stringono l'anello apicale (Λ = 4 nN, foglio periodico 6 × 6), per
+far chiudere la giunzione fra loro e provocare uno scambio di vicine spontaneo.
+
+**Esito:** la giunzione apicale si chiude (0.05 µm) ma quella basale resta lunga 9.3 µm. Lo
+scambio, che nel guscio a prismi cambia insieme le due superfici, schiaccia e ruota anche lo
+spigolo basale: l'energia salta da 13040 a 21424 nN·µm e il tessuto non si riassesta (lo
+scambio si ripete avanti e indietro).
+
+**Perché:** nel guscio ogni cellula è un prisma, con gli stessi vicini sopra e sotto. Le cellule
+vere possono avere vicini diversi all'apice e alla base (la forma detta scutoide); il modello
+non le rappresenta.
+
+**Correzione:** lo scambio si fa solo quando sono corti tutti e due gli spigoli della parete,
+apicale e basale. Una giunzione solo apicale che si chiude resta un caso aperto: chiede cellule a
+scutoide o una contrattilità basale.
+
+**Regressione:** `test/scambi.jl`.
+

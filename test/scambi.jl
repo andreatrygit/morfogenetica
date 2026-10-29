@@ -71,7 +71,7 @@ volume_totale(t) = sum(volume_cellula(t, c) for c in eachindex(t.cellule))
         @test s3 < 0.1
     end
 
-    @testset "uno spigolo sotto soglia viene scambiato, gli altri no" begin
+    @testset "una parete sotto soglia viene scambiata, le altre no" begin
         t = foglio_scambi()
         p, q = spigolo_di_prova(t)
         accorcia!(t, p, q, 0.1)
@@ -107,5 +107,24 @@ volume_totale(t) = sum(volume_cellula(t, c) for c in eachindex(t.cellule))
         scambia!(t, p, q; lunghezza_nuova = 1.0)
         @test minimizza_3d!(t).convergito
         @test isapprox(energia(t, P_SCAMBI), Ereg; rtol = 1e-9)
+    end
+    @testset "risultato negativo #14: una giunzione solo apicale non si scambia" begin
+        # Due cellule vicine stringono l'anello apicale: la giunzione apicale fra loro si chiude,
+        # quella basale no. Lo scambio non deve partire, perché cambierebbe anche la base.
+        P = ParametriMeccanici(K = 0.1, η = 1.0, lunghezza_minima = 0.05,
+                               k_contatto = 0.0, d_contatto = 0.5)
+        ints = fill(PRISMA, 36)
+        ints[15] = ints[16] = Intenzioni3D(1.0, 1.0, 1.0, 4.0, 1000.0)
+        t = foglio_periodico(ints, 6, 6; lato = 5.0, altezza = 15.0)
+        minimizza!(t, P; tolleranza = 1e-9, iterazioni_massime = 100)
+        W = poligoni(t)
+        p, q = intersect(first.(W[15]), first.(W[16]))
+        w = W[15]
+        ip, iq = w[findfirst(e -> e[1] == p, w)][2], w[findfirst(e -> e[1] == q, w)][2]
+        L(a, b) = Morfogenetica._norma(Morfogenetica._meno(Morfogenetica._pos(t, t.x, b, iq),
+                                                           Morfogenetica._pos(t, t.x, a, ip)))
+        @test L(2p - 1, 2q - 1) < 0.3          # apicale chiusa
+        @test L(2p, 2q) > 5.0                  # basale lunga
+        @test isempty(scambi_di_vicine!(t, P; soglia = 0.3, lunghezza_nuova = 1.0))
     end
 end
