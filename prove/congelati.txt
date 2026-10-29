@@ -17,3 +17,6 @@ a3b2a08c7e07d3121d09beb47a1bbe59b7c24881de674517c3155b604e7f871f  motore/03_rila
 
 # motore-guscio-v1 — commit "CONGELATO: MOTORE-GUSCIO-V1", 29 ottobre 2026
 842ff4c46cec2969857058fc289d021fe65dbfbb3e39d984ccb3721dbbd67548  motore/07_guscio.jl
+
+# motore-scambi-v1 — commit "CONGELATO: MOTORE-SCAMBI-V1", 29 ottobre 2026
+2570bbbbd4248689ae39aed200d5e2baaaa04278e0b5ecac4bc961feb84b0a98  motore/08_scambi.jl
