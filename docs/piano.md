@@ -248,8 +248,32 @@ nella matrice delle derivate seconde e il passo li spostava, così il rilassamen
 trascinava. Ora la posizione di un vertice bloccato si legge da una copia fissa, e per
 l'integratore non è un'incognita.
 
-Prossimo passo: gli scambi di vicine, che servono al bordo libero, alla cellula che si
-arrotonda e all'apice che si chiude.
+Congelato come `motore-guscio-v1` (commit "CONGELATO: MOTORE-GUSCIO-V1"), dopo aver separato
+la costruzione dalla topologia (`tessuto_da_poligoni`, `poligoni`), così i cambi di topologia
+ricostruiscono facce e cellule senza toccarlo.
+
+## 9. Scambi di vicine (fase 3, terzo lavoro)
+
+`motore/08_scambi.jl`, file nuovo (specifica, decisione 4). Quando lo spigolo apicale fra due
+cellule A e B scende sotto una soglia, diventa uno spigolo perpendicolare fra le altre due
+cellule C e D che lo toccavano; lo stesso sulla superficie basale, e la faccia laterale fra A e
+B diventa una faccia fra C e D. Ogni scambio è registrato. Al bordo bloccato non è ammesso.
+
+Verificato (`test/scambi.jl`, 693 prove su 693 in tutto):
+
+- la topologia: A e B perdono un lato, C e D ne guadagnano uno, ogni vertice resta di tre
+  cellule, i volumi positivi, le forze esatte;
+- lo scambio è reversibile: rifatto sullo stesso spigolo riporta alla stessa rete di cellule;
+- l'energia è continua: con lo spigolo lungo ε il salto vale circa 49·ε nN·µm, e il volume
+  totale non cambia;
+- `scambi_di_vicine!` scambia gli spigoli sotto soglia e solo quelli;
+- **un difetto da scambio forzato è metastabile**: dopo uno scambio forzato nel reticolo
+  regolare il tessuto si ferma con due cellule a 5 lati e due a 7, 24 nN·µm sopra il reticolo
+  regolare, e non torna indietro da solo; con lo scambio inverso esplicito sì.
+
+Non ancora congelato: manca una prova in cui lo scambio avviene da sé, spinto dalla meccanica
+(per esempio un'intercalazione), e restano i due casi al bordo libero e l'apice che si chiude,
+che chiedono altre operazioni (scambio al bordo, estrusione).
 
 ## Fonti
 

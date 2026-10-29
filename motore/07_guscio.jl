@@ -24,7 +24,8 @@
 # estensione di equilibrio, senza bordi liberi.
 
 export Faccia, Cellula3D, Intenzioni3D, Tessuto3D
-export foglio_esagonale, foglio_periodico, area_faccia, volume_cellula
+export foglio_esagonale, foglio_periodico, tessuto_da_poligoni, poligoni
+export area_faccia, volume_cellula
 export area_apicale, altezza_prisma
 
 """
@@ -276,51 +277,46 @@ end
 
 _controlla_contatto(t::Tessuto3D, p::ParametriMeccanici) = (_senza_contatto(p); nothing)
 
-# Costruzione di un foglio di prismi esagonali regolari dai centri delle cellule.
-# `avvolgi(px, py)` riporta un punto nella scatola e dice di quanti periodi lo si è spostato.
-function _foglio(intenzioni, centri, lato, altezza, avvolgi, periodico, Lx, Ly)
-    length(intenzioni) == length(centri) ||
-        throw(ArgumentError("servono $(length(centri)) intenzioni, non $(length(intenzioni))"))
-    indice = Dict{Tuple{Int,Int},Int}()
-    piani = Tuple{Float64,Float64}[]
-    function vertice(px, py)
-        (qx, qy), im = avvolgi(px, py)
-        chiave = (round(Int, qx * 1e6), round(Int, qy * 1e6))
-        j = get!(indice, chiave) do
-            push!(piani, (qx, qy))
-            length(piani)
-        end
-        return j, im
-    end
+"""
+    tessuto_da_poligoni(intenzioni, poligoni, x; periodico, fissi, ancore = copy(x))
+
+Costruisce facce e cellule del guscio dalla sola topologia: `poligoni[c]` è il poligono della
+cellula c sulla superficie, come elenco di (j, immagine) in senso antiorario visto dall'alto,
+con j il vertice nel piano (apicale 2j-1, basale 2j) e immagine il numero di periodi (ix, iy).
+`x` sono le posizioni. Lo usano i costruttori dei fogli e i cambi di topologia, che modificano
+i poligoni e ricostruiscono il resto.
+"""
+function tessuto_da_poligoni(intenzioni, poligoni, x; periodico, fissi, ancore = copy(x))
+    length(intenzioni) == length(poligoni) ||
+        throw(ArgumentError("servono $(length(poligoni)) intenzioni, non $(length(intenzioni))"))
     ap(j) = 2j - 1
     ba(j) = 2j
     facce = Faccia[]
     cellule = Cellula3D[]
     laterali = Dict{Tuple{Int,Int,Int,Int},Tuple{Int,NTuple{2,Int}}}()  # → faccia, immagine di riferimento
     conta_apicali = Dict{Tuple{Int,Int,Int,Int},Int}()
-    angoli = [[vertice(c[1] + lato * cos(π / 6 + k * π / 3), c[2] + lato * sin(π / 6 + k * π / 3))
-               for k in 0:5] for c in centri]
     chiave_spigolo(a, b) = begin
         (ja, ia), (jb, ib) = a, b
         # lo stesso spigolo visto da due cellule differisce per una traslazione: la chiave
         # usa gli indici e lo scarto fra le due immagini
         ja < jb ? (ja, jb, ib[1] - ia[1], ib[2] - ia[2]) : (jb, ja, ia[1] - ib[1], ia[2] - ib[2])
     end
-    for w in angoli, k in 1:6
-        ch = chiave_spigolo(w[k], w[mod1(k + 1, 6)])
+    for w in poligoni, k in eachindex(w)
+        ch = chiave_spigolo(w[k], w[mod1(k + 1, length(w))])
         conta_apicali[ch] = get(conta_apicali, ch, 0) + 1
     end
-    for (ci, w) in enumerate(angoli)
+    for (ci, w) in enumerate(poligoni)
+        m = length(w)
         fs, ss, ts = Int[], Int[], NTuple{2,Int}[]
-        cond = [conta_apicali[chiave_spigolo(w[k], w[mod1(k + 1, 6)])] for k in 1:6]
+        cond = [conta_apicali[chiave_spigolo(w[k], w[mod1(k + 1, m)])] for k in 1:m]
         push!(facce, Faccia([ap(j) for (j, _) in w], [im for (_, im) in w], apicale, [ci], [1], cond))
         push!(fs, length(facce)); push!(ss, 1); push!(ts, (0, 0))
         wr = reverse(w)
         push!(facce, Faccia([ba(j) for (j, _) in wr], [im for (_, im) in wr], basale, [ci], [1], Int[]))
         push!(fs, length(facce)); push!(ss, 1); push!(ts, (0, 0))
-        for k in 1:6
-            (jp, ip), (jq, iq) = w[k], w[mod1(k + 1, 6)]
-            ch = chiave_spigolo(w[k], w[mod1(k + 1, 6)])
+        for k in 1:m
+            (jp, ip), (jq, iq) = w[k], w[mod1(k + 1, m)]
+            ch = chiave_spigolo(w[k], w[mod1(k + 1, m)])
             if haskey(laterali, ch)
                 fi, rif = laterali[ch]
                 push!(facce[fi].cellule, ci); push!(facce[fi].segni, -1)
@@ -336,6 +332,40 @@ function _foglio(intenzioni, centri, lato, altezza, avvolgi, periodico, Lx, Ly)
         end
         push!(cellule, Cellula3D(fs, ss, ts))
     end
+    return Tessuto3D(copy(x), facce, cellule, copy(intenzioni), periodico, copy(fissi), copy(ancore))
+end
+
+"""
+    poligoni(t)
+
+La topologia del guscio come la vuole `tessuto_da_poligoni`: per ogni cellula il poligono
+della sua faccia apicale, (j, immagine) in senso antiorario visto dall'alto.
+"""
+function poligoni(t::Tessuto3D)
+    return [begin
+                f = t.facce[only(fi for fi in cel.facce if t.facce[fi].etichetta == apicale)]
+                [((v + 1) ÷ 2, im) for (v, im) in zip(f.vertici, f.immagini)]
+            end for cel in t.cellule]
+end
+
+# Costruzione di un foglio di prismi esagonali regolari dai centri delle cellule.
+# `avvolgi(px, py)` riporta un punto nella scatola e dice di quanti periodi lo si è spostato.
+function _foglio(intenzioni, centri, lato, altezza, avvolgi, periodico, Lx, Ly)
+    indice = Dict{Tuple{Int,Int},Int}()
+    piani = Tuple{Float64,Float64}[]
+    function vertice(px, py)
+        (qx, qy), im = avvolgi(px, py)
+        chiave = (round(Int, qx * 1e6), round(Int, qy * 1e6))
+        j = get!(indice, chiave) do
+            push!(piani, (qx, qy))
+            length(piani)
+        end
+        return j, im
+    end
+    ap(j) = 2j - 1
+    ba(j) = 2j
+    angoli = [[vertice(c[1] + lato * cos(π / 6 + k * π / 3), c[2] + lato * sin(π / 6 + k * π / 3))
+               for k in 0:5] for c in centri]
     x = zeros(3 * 2 * length(piani) + (periodico ? 2 : 0))
     for (j, (px, py)) in enumerate(piani)
         x[3ap(j)-2], x[3ap(j)-1], x[3ap(j)] = px, py, altezza
@@ -351,7 +381,7 @@ function _foglio(intenzioni, centri, lato, altezza, avvolgi, periodico, Lx, Ly)
     for j in eachindex(piani)
         quante[j] < 3 && (bordo[ap(j)] = true; bordo[ba(j)] = true)
     end
-    return Tessuto3D(x, facce, cellule, copy(intenzioni), periodico, bordo, copy(x))
+    return tessuto_da_poligoni(intenzioni, angoli, x; periodico, fissi = bordo)
 end
 
 """
