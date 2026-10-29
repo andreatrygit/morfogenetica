@@ -39,7 +39,7 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `09_estrusione.jl` | estrusione di una cellula triangolare piccola (T2), `rilassa_con_topologia!` | congelato, `motore-estrusione-v1` |
 | `10_scutoidi.jl` | scambio apicale con scutoide (vertice interno al foglio) | **in corso, non congelato** |
 
-Prove: `scripts/prove.sh`, 766 su 766 al 29 ottobre, circa 5 minuti (il grosso è Newton a
+Prove: `scripts/prove.sh`, 766 passate e 10 rotte (le prove rosse di R1) al 29 ottobre, circa 5 minuti (il grosso è Newton a
 matrice piena sui tessuti 3D). Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -69,6 +69,12 @@ vuoto** "CONGELATO: MOTORE-…-V1" e dall'impronta in `prove/congelati.txt`.
 ## 4. I passi
 
 ### R1 — Le due operazioni elementari, in forma generale (in corso)
+
+Stato: **commit rosso fatto**. Le prove sono in `test/operazioni.jl`, marcate `@test_broken`
+(10 al 29 ottobre); i nomi che il codice deve avere sono in testa a quel file. Il codice va in un
+file nuovo, `motore/11_operazioni.jl`, che può riusare gli aiuti di `10_scutoidi.jl`. Quando una
+prova passa, la si cambia da `@test_broken` a `@test` (Julia segnala come errore una prova rotta
+che passa, così non si dimentica).
 
 Perché: risolvono insieme i risultati negativi #13 (bordo libero), #14 (giunzione che si chiude
 solo all'apice), la cellula isolata che si arrotonda, e lo scutoide che vuole tornare indietro;
@@ -108,10 +114,11 @@ Prove da scrivere **prima** (rosse):
 
 Poi: estendere alle immagini periodiche (oggi `10` è solo non periodico), congelare.
 
-### R2 — Aggiornare la specifica sul 3D pieno
+### R2 — Aggiornare la specifica sul 3D pieno (fatto)
 
-La specifica (sezione 3) esclude il modello 3D pieno. Decisione del 29 ottobre: non escluso,
-**rimandato**, con la strada preparata da R1. Scriverlo nella specifica e nel quaderno.
+La specifica (sezione 3) escludeva il modello 3D pieno. Decisione del 29 ottobre: non escluso,
+**rimandato**, con la strada preparata da R1. Scritto nella specifica; resta da riportarlo nel
+quaderno dell'algebra quando lo si riprende.
 
 ### R3 — Chimica (specifica, decisione 5)
 
