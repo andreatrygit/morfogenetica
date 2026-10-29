@@ -207,7 +207,16 @@ minimo dell'energia con le tensioni uguali su tutte le facce.
 minimizzatore si ferma, con una forza residua di 0.17 nN.
 
 **Perché:** al bordo le facce laterali appartengono a una cellula sola, quindi niente bilancia la
-loro tensione. L'equilibrio richiederebbe uno scambio di vicine che il motore non ha ancora.
+loro tensione, e ogni parete libera si torce. Misurato (29 ottobre, 19 cellule, K = 0.1): gli
+spigoli che collassano sono quelli di bordo delle cellule d'angolo, e collassano **a turno in
+alto o in basso**: 43–44 apicale 0.24 µm e basale 8.3 µm, 45–46 apicale 8.3 µm e basale
+0.36 µm, e così via. La cellula di bordo vuole un lato in meno all'apice e un altro in meno alla
+base, come la cellula isolata che si arrotonda.
+
+**Conseguenza:** nel guscio a prismi non esiste un'operazione al bordo che risolva il caso. Una
+fusione di vertici fatta insieme sulle due superfici schiaccerebbe uno spigolo di 8 µm (come lo
+scambio nel #14). È lo stesso limite dei #14 e #15: servirebbero superfici apicale e basale con
+topologie proprie.
 
 **Regressione:** `test/guscio.jl`. Le prove di equilibrio 3D usano il foglio periodico, che non
 ha bordi.

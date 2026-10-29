@@ -309,9 +309,20 @@ Verificato (`test/estrusione.jl`, 739 prove su 739 in tutto):
 
 Congelato come `motore-estrusione-v1` (commit "CONGELATO: MOTORE-ESTRUSIONE-V1").
 
-I due risultati #14 e #15 indicano la stessa estensione del modello, da decidere: cellule con
-vicini diversi all'apice e alla base (scutoidi), cioè superfici apicale e basale con topologie
-proprie collegate da facce laterali non più quadrilatere.
+## 11. Il bordo libero, e il limite comune
+
+Il terzo lavoro previsto, lo scambio al bordo libero, non si può fare nel guscio a prismi. La
+diagnosi (risultato negativo #13, aggiornato): le pareti libere delle cellule di bordo si
+torcono, e collassano a turno all'apice o alla base, mai insieme. Ogni operazione sui prismi
+cambia insieme le due superfici e schiaccerebbe uno spigolo di 8 µm.
+
+I risultati #13, #14 e #15, e la cellula isolata che si arrotonda, hanno **la stessa radice**:
+nel guscio a prismi una cellula ha lo stesso poligono all'apice e alla base. Le cellule vere no
+(gli scutoidi). L'estensione che li risolve tutti è un guscio con **superfici apicale e basale a
+topologia propria**: ogni superficie fa i suoi scambi, e le facce laterali non sono più
+quadrilateri ma poligoni che collegano lo spigolo apicale e quello basale di due cellule
+vicine, anche quando sono vicine solo da una parte. È un cambio di rappresentazione, da
+decidere prima di scriverlo.
 
 ## Fonti
 
