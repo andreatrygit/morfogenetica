@@ -365,6 +365,49 @@ Con queste due, sulle superfici e nel volume del foglio, si risolvono anche il b
 (#13) e la cellula che si arrotonda; l'estrusione apicale della cellula a bottiglia (#15)
 chiede in più che una cellula possa lasciare una delle due superfici.
 
+## 13. Le operazioni elementari generali (fase 3, sesto lavoro; roadmap R1)
+
+`motore/11_operazioni.jl`, fatto in red-green: prima le dieci prove in `test/operazioni.jl`
+(commit rosso), poi il codice (commit verde, 30 ottobre).
+
+Il mezzo esterno conta come una pseudo-cellula per ogni etichetta di faccia libera (apicale −1,
+basale −2, laterale −3). Così attorno a ogni spigolo ci sono tre regioni e attorno a ogni
+vertice quattro, e le operazioni sono le stesse in superficie, al bordo e dentro il foglio:
+
+- `spigolo_a_triangolo!` (I→H): lo spigolo con attorno A, B, E e agli estremi in più C e D
+  diventa un triangolo fra C e D, nel piano perpendicolare allo spigolo, di lato
+  `lunghezza_nuova`; ogni vertice nuovo va verso la faccia da cui nasce. Sullo spigolo apicale
+  dà la stessa topologia dello scambio apicale di `10_scutoidi.jl`;
+- `triangolo_a_spigolo!` (H→I): l'inversa, con lo spigolo lungo la normale del triangolo;
+- `contrai_spigolo!`: sul contorno libero di una cellula di bordo (la cellula e due mezzi) I→H
+  non è ammessa, perché creerebbe una faccia fra due mezzi; lì lo spigolo corto si contrae e
+  l'angolo si fonde nell'altro estremo. Le prove l'hanno chiesta: senza, il foglio a bordo libero
+  restava fermo con uno spigolo del contorno alla lunghezza minima, fra un angolo e un vertice
+  dove arriva una vicina;
+- `problemi_topologici`: gli invarianti. Al bordo libero valgono due eccezioni: il vertice
+  d'angolo ha tre regioni, e lo spigolo dove la superficie libera di una cellula fa angolo
+  (fra due sue facce verso il mezzo laterale) ne ha due.
+
+Risultati (prove in `test/operazioni.jl`):
+
+| prova | esito |
+| --- | --- |
+| invarianti dei fogli (a bordo bloccato, periodico, dopo lo scambio apicale) | nessuna violazione |
+| invarianti violati (una faccia tolta) | visti |
+| I→H sullo spigolo apicale = `scambio_apicale!` | stessa topologia |
+| H→I dopo I→H | topologia di partenza |
+| continuità, ε = 10⁻² e 10⁻³ | salto di energia ∝ ε (rapporto fra 9 e 11), volume conservato a 10⁻¹² |
+| forze esatte dopo I→H e dopo H→I | errore sotto 10⁻⁷ |
+| scambio intero in due passi | chi-tocca-chi dello scambio fra prismi di `08` |
+| scutoide forzato | torna indietro, stesso vicinato ed energia del reticolo regolare |
+| foglio di 19 prismi a bordo libero (#13) | equilibrio in 10 cicli, 24 contrazioni, 7747.9 nN·µm |
+| cellula isolata, σl = 0.9 | equilibrio in 2 cicli, 6 contrazioni (esagoni → triangoli), 455.92 nN·µm, sotto i 456.03 dove si fermava senza operazioni |
+
+Limiti: niente fogli periodici (le operazioni rispondono `nothing`); la contrazione lascia
+fermo l'estremo che resta, quindi il salto di energia è proporzionale alla lunghezza dello
+spigolo, come per le altre due. `10` e `11` non sono congelati: lo saranno insieme, dopo il
+supporto periodico.
+
 ## Fonti
 
 - Krajnc e Ziherl, *Theory of epithelial elasticity*, Phys. Rev. E 92, 052713 (2015):

@@ -8,8 +8,8 @@
 # Il mezzo esterno conta come una "cellula" per ogni etichetta di faccia libera (apicale, basale,
 # laterale): così ogni spigolo ha tre cellule attorno e ogni vertice quattro.
 #
-# Commit rosso: le prove sono marcate @test_broken finché il codice non c'è. Ogni prova è una
-# funzione che restituisce un Bool, così un errore (funzione che non esiste) conta come "rotta".
+# Ogni prova è una funzione che restituisce un Bool. Scritte prima del codice (commit rosso, con
+# @test_broken), passano dal commit verde.
 
 const P_OPERAZIONI = P_SCUTOIDI
 
@@ -97,14 +97,13 @@ end
 
 function prova_scambio_intero_in_due_passi()
     # I→H sullo spigolo apicale, poi H→I sulla parete fra A e B, diventata un triangolo: deve
-    # dare chi-tocca-chi dello scambio fra prismi di 08_scambi.jl
-    prismi = foglio_scambi()
-    p, q = spigolo_di_prova(prismi)
-    rif = scambia!(prismi, p, q; lunghezza_nuova = 1.0)
-    t = foglio_scambi()
-    W = poligoni(t)
-    ip = W[6][1][2]; iq = W[6][2][2]
-    r = spigolo_a_triangolo!(t, 2p - 1, 2q - 1; lunghezza_nuova = 1.0)
+    # dare chi-tocca-chi dello scambio fra prismi di 08_scambi.jl. Sul pezzo di foglio a bordo
+    # bloccato: le operazioni generali non lavorano ancora sui fogli periodici.
+    prismi = foglio_operazioni()
+    i, j = spigolo_apicale_12(prismi)                  # vertici apicali 2p - 1 e 2q - 1
+    scambia!(prismi, (i + 1) ÷ 2, (j + 1) ÷ 2; lunghezza_nuova = 1.0) === nothing && return false
+    t = foglio_operazioni()
+    r = spigolo_a_triangolo!(t, i, j; lunghezza_nuova = 1.0)
     r === nothing && return false
     A, B = r.perdono
     fAB = findfirst(f -> f.etichetta == laterale && A in f.cellule && B in f.cellule, t.facce)
@@ -141,14 +140,14 @@ function prova_cellula_isolata_si_arrotonda()
 end
 
 @testset "R1 operazioni elementari" begin
-    @test_broken prova_invarianti_dei_fogli()
-    @test_broken prova_invarianti_violati_si_vedono()
-    @test_broken prova_spigolo_apicale_come_scambio_apicale()
-    @test_broken prova_triangolo_a_spigolo_inverte()
-    @test_broken prova_continuita()
-    @test_broken prova_forze_esatte_dopo_le_operazioni()
-    @test_broken prova_scambio_intero_in_due_passi()
-    @test_broken prova_scutoide_forzato_torna_indietro()
-    @test_broken prova_bordo_libero_trova_equilibrio()
-    @test_broken prova_cellula_isolata_si_arrotonda()
+    @test prova_invarianti_dei_fogli()
+    @test prova_invarianti_violati_si_vedono()
+    @test prova_spigolo_apicale_come_scambio_apicale()
+    @test prova_triangolo_a_spigolo_inverte()
+    @test prova_continuita()
+    @test prova_forze_esatte_dopo_le_operazioni()
+    @test prova_scambio_intero_in_due_passi()
+    @test prova_scutoide_forzato_torna_indietro()
+    @test prova_bordo_libero_trova_equilibrio()
+    @test prova_cellula_isolata_si_arrotonda()
 end

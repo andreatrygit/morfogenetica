@@ -22,5 +22,6 @@ include(joinpath(RADICE, "motore", "07_guscio.jl"))
 include(joinpath(RADICE, "motore", "08_scambi.jl"))
 include(joinpath(RADICE, "motore", "09_estrusione.jl"))
 include(joinpath(RADICE, "motore", "10_scutoidi.jl"))
+include(joinpath(RADICE, "motore", "11_operazioni.jl"))
 
 end # module
