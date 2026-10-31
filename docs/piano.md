@@ -107,7 +107,7 @@ Proposta:
 Restano da trovare con una fonte, prima di passare alle forme (non servono per F1–F5): la taglia
 delle cellule nel tessuto di riferimento, i rapporti di tensione misurati in un'invaginazione vera
 (il solco ventrale di *Drosophila*, Polyakov et al. 2014, è il candidato naturale), i coefficienti
-di diffusione e degradazione per la chimica.
+di diffusione e degradazione per la chimica (trovati il 31 ottobre: sezione 14).
 
 ## 3. Il motore esterno di confronto
 
@@ -422,6 +422,45 @@ forzato che torna indietro all'energia del reticolo regolare. Batteria: 781 prov
 `10` e `11` sono congelati insieme (`motore-scutoidi-v1`, `motore-operazioni-v1`).
 `scambio_apicale!` resta solo non periodico: nei fogli periodici fa lo stesso
 `spigolo_a_triangolo!` sullo spigolo apicale.
+
+## 14. La chimica (roadmap R3)
+
+`motore/12_chimica.jl`, in red-green: prima le dieci prove analitiche di `test/chimica.jl`, poi
+il codice (31 ottobre).
+
+**Il modello.** ∂c/∂t = D∇²c − kc + sorgenti − assorbimenti, su una griglia cartesiana 3D di
+voxel con un passo per asse; ogni asse chiuso (flusso nullo) o periodico. Un passo di chimica:
+diffusione esplicita a differenze centrate (conserva la massa, stabile per
+dt ≤ 1/(2D Σ 1/h²)); degradazione e secrezione integrate esattamente nel passo,
+c ← c·e^(−k dt) + s(1 − e^(−k dt))/k; assorbimento del primo ordine esatto nel voxel, così la
+concentrazione resta positiva anche con un assorbitore enorme. Secrezione e lettura alla
+posizione della cellula con pesi trilineari: il baricentro di ciò che si secerne è la
+posizione, e la lettura è esatta su un campo lineare. `avanza!` divide l'intervallo in passi
+uguali sotto il limite di stabilità: la chimica ha un passo proprio, più corto di quello
+meccanico. `centro_cellula` è la media dei vertici della cellula, riportata nella scatola nei
+fogli periodici.
+
+**Parametri.** Di riferimento, Dpp nel disco dell'ala di *Drosophila*: D = 0.1 µm²/s =
+6 µm²/min, λ ≈ 20 µm (Kicheva et al., *Science* 315, 521, 2007), quindi k = D/λ² = 0.015/min.
+Il valore di D è discusso (c'è chi sostiene una diffusione extracellulare veloce,
+D ≈ 20 µm²/s, con assorbimento dai recettori): per il motore conta λ, che è misurata.
+
+| prova | esito |
+| --- | --- |
+| massa conservata, bordi chiusi e periodici | a 10⁻¹² |
+| varianza da un punto | 6Dt, a 10⁻⁹ (esatta per lo schema) |
+| degradazione di un campo uniforme | e^(−kt), a 10⁻¹² |
+| lunghezza di decadimento in 1D, λ = 20 µm | errore 2.1·10⁻⁴ (h = 1 µm), 8.3·10⁻⁴ (h = 2 µm): secondo ordine |
+| bilancio stazionario k·M = q | a 10⁻⁶ |
+| sorgente puntiforme 3D, λ = 5 µm, h = 1 µm | errore 6.7% a 3 µm, 2.8% a 5, 1.7% a 8, 2.6% a 12 (lì pesa il bordo chiuso) |
+| secrezione alla posizione | massa q·Δt e baricentro nella posizione, a 10⁻¹² |
+| assorbimento | concentrazioni ≥ 0, quantità registrata uguale alla massa persa |
+| convergenza nel tempo | primo ordine: errore 2.07 volte più grande al passo doppio; un passo oltre il limite è rifiutato |
+| cellule del guscio che secernono | massa N·q·T, anche nel foglio periodico, dove i centri stanno nella scatola |
+
+**Che cosa manca.** La griglia non segue la scatola, che nei fogli periodici è un'incognita
+della meccanica: da decidere con R4, quando chimica e meccanica girano nella stessa passata.
+`12` non è ancora congelato per questo.
 
 ## Fonti
 

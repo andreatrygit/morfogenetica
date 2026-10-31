@@ -17,8 +17,8 @@
 # riferimento (Dpp nel disco dell'ala di Drosophila, Kicheva et al., Science 315, 521, 2007):
 # D = 0.1 µm²/s = 6 µm²/min e λ ≈ 20 µm, quindi k = D/λ² = 0.015/min.
 #
-# Ogni prova è una funzione che restituisce un Bool. Commit rosso: marcate @test_broken finché
-# il codice (motore/12_chimica.jl) non c'è.
+# Ogni prova è una funzione che restituisce un Bool. Scritte prima del codice
+# (motore/12_chimica.jl; commit rosso, con @test_broken), passano dal commit verde.
 
 const DPP = (D = 6.0, k = 0.015)          # µm²/min, 1/min: λ = 20 µm
 
@@ -174,14 +174,14 @@ function prova_cellule_secernono()
 end
 
 @testset "R3 chimica" begin
-    @test_broken prova_massa_conservata()
-    @test_broken prova_varianza_cresce_come_6Dt()
-    @test_broken prova_degradazione_esatta()
-    @test_broken prova_lunghezza_di_decadimento()
-    @test_broken prova_bilancio_stazionario()
-    @test_broken prova_sorgente_puntiforme()
-    @test_broken prova_secrezione_e_lettura_alla_posizione()
-    @test_broken prova_assorbimento_positivo_e_registrato()
-    @test_broken prova_convergenza_con_il_passo()
-    @test_broken prova_cellule_secernono()
+    @test prova_massa_conservata()
+    @test prova_varianza_cresce_come_6Dt()
+    @test prova_degradazione_esatta()
+    @test prova_lunghezza_di_decadimento()
+    @test prova_bilancio_stazionario()
+    @test prova_sorgente_puntiforme()
+    @test prova_secrezione_e_lettura_alla_posizione()
+    @test prova_assorbimento_positivo_e_registrato()
+    @test prova_convergenza_con_il_passo()
+    @test prova_cellule_secernono()
 end

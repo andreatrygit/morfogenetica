@@ -39,8 +39,9 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `09_estrusione.jl` | estrusione di una cellula triangolare piccola (T2), `rilassa_con_topologia!` | congelato, `motore-estrusione-v1` |
 | `10_scutoidi.jl` | scambio apicale con scutoide (vertice interno al foglio), solo non periodico | congelato, `motore-scutoidi-v1` |
 | `11_operazioni.jl` | operazioni elementari generali: spigolo↔triangolo, contrazione al bordo libero, invarianti; anche nei fogli periodici | congelato, `motore-operazioni-v1` |
+| `12_chimica.jl` | una sostanza che diffonde su griglia 3D, con degradazione, secrezione e assorbimento delle cellule | **in corso, non congelato** (R3 verde) |
 
-Prove: `scripts/prove.sh`, 781 passate e 10 rotte (le prove rosse della chimica) al 31 ottobre, circa 6 minuti (il grosso è Newton a
+Prove: `scripts/prove.sh`, 795 passate e nessuna rotta al 31 ottobre, circa 6 minuti (il grosso è Newton a
 matrice piena sui tessuti 3D). Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -155,17 +156,22 @@ quaderno dell'algebra quando lo si riprende.
 
 ### R3 — Chimica (specifica, decisione 5) (in corso)
 
-Stato: **commit rosso fatto** (31 ottobre). Dieci prove in `test/chimica.jl`, marcate
-`@test_broken`; i nomi che il codice deve avere sono in testa al file. Il codice va in
-`motore/12_chimica.jl`: griglia cartesiana 3D a voxel (passo per asse, bordi chiusi o
-periodici), schema esplicito con sotto-passi scelti per la stabilità, degradazione esatta
-(fattore exp(−k·dt)), secrezione e assorbimento alla posizione con pesi trilineari (assorbimento
+Stato: **commit verde fatto** (31 ottobre). Le dieci prove di `test/chimica.jl`, scritte prima,
+passano; il codice è in `motore/12_chimica.jl`: griglia cartesiana 3D a voxel (passo per asse, bordi chiusi o
+periodici), schema esplicito con sotto-passi scelti per la stabilità, degradazione e secrezione
+integrate esattamente nel passo (così il bilancio stazionario non ha errore di passo), secrezione e assorbimento alla posizione con pesi trilineari (assorbimento
 esponenziale, così la concentrazione non diventa negativa), `centro_cellula` per il guscio.
 Parametri di riferimento dalla letteratura: Dpp nel disco dell'ala, D = 0.1 µm²/s = 6 µm²/min e
 λ ≈ 20 µm (Kicheva et al., Science 315, 521, 2007), quindi k = D/λ² = 0.015/min.
 
-Resta dopo: la griglia segue la scatola quando la scatola cambia (oggi ha il periodo fissato
-alla costruzione), e la regressione del #1, che chiede la percezione e le fasi (R4).
+Numeri (`docs/piano.md`, sezione 14): λ misurata con errore 2·10⁻⁴ a h = 1 µm e 8·10⁻⁴ a
+h = 2 µm (secondo ordine); varianza 6Dt esatta; sorgente puntiforme entro il 3% a 5–8 µm;
+errore nel tempo del primo ordine (rapporto 2.07 dimezzando il passo).
+
+Resta, prima di congelare `12`: la griglia deve seguire la scatola quando la scatola cambia
+(oggi il periodo è fissato alla costruzione; nei fogli periodici la scatola è un'incognita di
+Newton). Si decide con R4, quando chimica e meccanica girano nella stessa passata. La
+regressione del #1 chiede la percezione e le fasi (R4).
 
 
 Almeno una sostanza che diffonde, con sorgenti, consumo e degradazione, risolta come PDE su
