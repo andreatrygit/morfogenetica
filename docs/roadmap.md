@@ -37,10 +37,10 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `07_guscio.jl` | guscio 3D: cellule poliedriche fra superficie apicale e basale, foglio periodico, bordo bloccato | congelato, `motore-guscio-v1`; modificato il 29/10 con test fisico (centro delle facce = baricentro del contorno) |
 | `08_scambi.jl` | scambi di vicine fra prismi (T1 su tutta la parete) | congelato, `motore-scambi-v1` |
 | `09_estrusione.jl` | estrusione di una cellula triangolare piccola (T2), `rilassa_con_topologia!` | congelato, `motore-estrusione-v1` |
-| `10_scutoidi.jl` | scambio apicale con scutoide (vertice interno al foglio) | **in corso, non congelato** |
-| `11_operazioni.jl` | operazioni elementari generali: spigolo↔triangolo, contrazione al bordo libero, invarianti | **in corso, non congelato** (R1 verde, solo fogli non periodici) |
+| `10_scutoidi.jl` | scambio apicale con scutoide (vertice interno al foglio), solo non periodico | congelato, `motore-scutoidi-v1` |
+| `11_operazioni.jl` | operazioni elementari generali: spigolo↔triangolo, contrazione al bordo libero, invarianti; anche nei fogli periodici | congelato, `motore-operazioni-v1` |
 
-Prove: `scripts/prove.sh`, 776 passate e 5 rotte (le prove rosse dei fogli periodici) al 31 ottobre, circa 6 minuti (il grosso è Newton a
+Prove: `scripts/prove.sh`, 781 passate e nessuna rotta al 31 ottobre, circa 6 minuti (il grosso è Newton a
 matrice piena sui tessuti 3D). Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -69,12 +69,11 @@ vuoto** "CONGELATO: MOTORE-…-V1" e dall'impronta in `prove/congelati.txt`.
 
 ## 4. I passi
 
-### R1 — Le due operazioni elementari, in forma generale (in corso)
+### R1 — Le due operazioni elementari, in forma generale (fatto)
 
-Stato: **commit verde fatto** (30 ottobre). Le dieci prove di `test/operazioni.jl` passano; il
-codice è in `motore/11_operazioni.jl`. **Fogli periodici: commit rosso fatto** (31 ottobre), le
-cinque prove in `test/operazioni_periodiche.jl`, marcate `@test_broken`. Poi si congelano `10` e
-`11` insieme (sotto, "Poi").
+Stato: **fatto e congelato** (31 ottobre). Il codice è in `motore/11_operazioni.jl`; le prove in
+`test/operazioni.jl` (dieci, 30 ottobre) e `test/operazioni_periodiche.jl` (cinque, fogli
+periodici, 31 ottobre), tutte scritte prima del codice. `10` e `11` sono congelati insieme.
 
 Che cosa c'è:
 
@@ -88,7 +87,11 @@ Che cosa c'è:
   (lo spigolo fra la cellula, il mezzo laterale e quello apicale o basale) I→H non si può fare,
   perché creerebbe una faccia fra due mezzi; lo spigolo che si accorcia lì si contrae, l'angolo
   si fonde nell'altro estremo. È ciò che risolve il risultato negativo #13;
-- `rilassa_con_operazioni!`: Newton e operazioni alternati, fino all'equilibrio.
+- `rilassa_con_operazioni!`: Newton e operazioni alternati, fino all'equilibrio;
+- i fogli periodici: prima di un'operazione i vertici coinvolti si portano in una "cornice"
+  comune, ricalibrando vertici e facce (immagini e traslazioni compensate, geometria identica);
+  poi l'operazione lavora come nel caso non periodico. Se la scatola è così piccola che la
+  cornice non esiste, l'operazione non si fa. Un'operazione rifiutata lascia il tessuto com'era.
 
 Numeri (prove di regressione, non bersagli): il foglio di 19 prismi a bordo libero arriva
 all'equilibrio in 10 cicli con 24 contrazioni, energia 7747.9 nN·µm; la cellula isolata in 2
@@ -136,8 +139,13 @@ Le prove, scritte prima del codice (commit rosso) e ora verdi:
   passi e dallo scutoide che torna indietro; una prova dinamica, con l'anello apicale che
   stringe, verrà con R4.
 
-Poi: estendere alle immagini periodiche (oggi `10` e `11` sono solo non periodici; nei fogli
-periodici le operazioni rispondono `nothing`), congelare `10` e `11`.
+Nei fogli periodici (`test/operazioni_periodiche.jl`), su uno spigolo interno alla scatola e
+su uno che ne attraversa il bordo: andata e ritorno con gli invarianti, forze esatte (anche
+rispetto alla scatola), continuità, scambio intero in due passi uguale a quello di `08`, scutoide
+forzato che torna indietro.
+
+Lasciato com'è: `scambio_apicale!` di `10` resta solo non periodico; nei fogli periodici si usa
+`spigolo_a_triangolo!`, che fa la stessa cosa.
 
 ### R2 — Aggiornare la specifica sul 3D pieno (fatto)
 

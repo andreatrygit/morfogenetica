@@ -2,8 +2,8 @@
 # fogli periodici. Un vertice compare nelle facce con un'immagine (quanti periodi aggiungere):
 # uno spigolo che attraversa il bordo della scatola ha i due estremi con immagini diverse.
 #
-# Ogni prova è una funzione che restituisce un Bool. Commit rosso: marcate @test_broken finché
-# il codice non c'è (oggi le operazioni rispondono `nothing` sui fogli periodici).
+# Ogni prova è una funzione che restituisce un Bool. Scritte prima del codice (commit rosso, con
+# @test_broken), passano dal commit verde.
 
 foglio_periodico_op() = foglio_scambi()            # 4 × 4 prismi, periodico
 
@@ -111,9 +111,9 @@ function prova_periodico_scutoide_torna_indietro()
 end
 
 @testset "R1 operazioni nei fogli periodici" begin
-    @test_broken prova_periodico_andata_e_ritorno()
-    @test_broken prova_periodico_forze_esatte()
-    @test_broken prova_periodico_continuita()
-    @test_broken prova_periodico_scambio_intero_in_due_passi()
-    @test_broken prova_periodico_scutoide_torna_indietro()
+    @test prova_periodico_andata_e_ritorno()
+    @test prova_periodico_forze_esatte()
+    @test prova_periodico_continuita()
+    @test prova_periodico_scambio_intero_in_due_passi()
+    @test prova_periodico_scutoide_torna_indietro()
 end

@@ -14,8 +14,9 @@
 #   - sopra v nasce una parete triangolare fra C e D: lo spigolo apicale nuovo e v.
 #
 # È il cambio di vicini a metà altezza che fa uno scutoide. Le giunzioni che scendevano dagli
-# estremi dello spigolo ora partono da v. Ogni scambio è registrato. Per ora solo su tessuti non
-# periodici (le immagini dei vertici nuovi sono da aggiungere).
+# estremi dello spigolo ora partono da v. Ogni scambio è registrato. Solo su tessuti non
+# periodici: nei fogli periodici lo stesso scambio è `spigolo_a_triangolo!` sullo spigolo apicale
+# (11_operazioni.jl), che ne è la forma generale.
 
 export ScambioApicale, scambio_apicale!, scutoidi_apicali!, rilassa_con_scutoidi!
 export caratteristica_di_eulero
