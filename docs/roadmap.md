@@ -38,8 +38,9 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `08_scambi.jl` | scambi di vicine fra prismi (T1 su tutta la parete) | congelato, `motore-scambi-v1` |
 | `09_estrusione.jl` | estrusione di una cellula triangolare piccola (T2), `rilassa_con_topologia!` | congelato, `motore-estrusione-v1` |
 | `10_scutoidi.jl` | scambio apicale con scutoide (vertice interno al foglio) | **in corso, non congelato** |
+| `11_operazioni.jl` | operazioni elementari generali: spigolo↔triangolo, contrazione al bordo libero, invarianti | **in corso, non congelato** (R1 verde, solo fogli non periodici) |
 
-Prove: `scripts/prove.sh`, 766 passate e 10 rotte (le prove rosse di R1) al 29 ottobre, circa 5 minuti (il grosso è Newton a
+Prove: `scripts/prove.sh`, 776 passate e nessuna rotta al 30 ottobre, circa 6 minuti (il grosso è Newton a
 matrice piena sui tessuti 3D). Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -70,11 +71,29 @@ vuoto** "CONGELATO: MOTORE-…-V1" e dall'impronta in `prove/congelati.txt`.
 
 ### R1 — Le due operazioni elementari, in forma generale (in corso)
 
-Stato: **commit rosso fatto**. Le prove sono in `test/operazioni.jl`, marcate `@test_broken`
-(10 al 29 ottobre); i nomi che il codice deve avere sono in testa a quel file. Il codice va in un
-file nuovo, `motore/11_operazioni.jl`, che può riusare gli aiuti di `10_scutoidi.jl`. Quando una
-prova passa, la si cambia da `@test_broken` a `@test` (Julia segnala come errore una prova rotta
-che passa, così non si dimentica).
+Stato: **commit verde fatto** (30 ottobre). Le dieci prove di `test/operazioni.jl` passano; il
+codice è in `motore/11_operazioni.jl`. Resta: estenderle ai fogli periodici, poi congelare
+`10` e `11` insieme (sotto, "Poi").
+
+Che cosa c'è:
+
+- `problemi_topologici(t)`: gli invarianti (V − E + F = 2 per cellula, tre regioni per spigolo,
+  quattro per vertice, facce di almeno tre vertici, nessuna faccia doppia, una faccia apicale e
+  una basale per cellula). Due eccezioni al bordo libero, dove una cellula sola tocca due mezzi:
+  il vertice d'angolo ha tre regioni, e lo spigolo dove la superficie libera di una cellula fa
+  angolo ne ha due (la cellula e il mezzo laterale);
+- `spigolo_a_triangolo!` (I→H) e `triangolo_a_spigolo!` (H→I);
+- `contrai_spigolo!`: una terza operazione, che le prove hanno chiesto. Sul contorno libero
+  (lo spigolo fra la cellula, il mezzo laterale e quello apicale o basale) I→H non si può fare,
+  perché creerebbe una faccia fra due mezzi; lo spigolo che si accorcia lì si contrae, l'angolo
+  si fonde nell'altro estremo. È ciò che risolve il risultato negativo #13;
+- `rilassa_con_operazioni!`: Newton e operazioni alternati, fino all'equilibrio.
+
+Numeri (prove di regressione, non bersagli): il foglio di 19 prismi a bordo libero arriva
+all'equilibrio in 10 cicli con 24 contrazioni, energia 7747.9 nN·µm; la cellula isolata in 2
+cicli con 6 contrazioni (l'esagono apicale e quello basale diventano triangoli), energia 455.92
+nN·µm, sotto i 456.03 dove si fermava senza operazioni, con tre spigoli schiacciati alla
+lunghezza minima (`test/guscio.jl`).
 
 Perché: risolvono insieme i risultati negativi #13 (bordo libero), #14 (giunzione che si chiude
 solo all'apice), la cellula isolata che si arrotonda, e lo scutoide che vuole tornare indietro;
@@ -95,9 +114,9 @@ quattro, e le stesse due operazioni valgono sulla superficie, al bordo e nel vol
 apicale di `10_scutoidi.jl` è I→H su uno spigolo apicale (E = mezzo apicale). Vincolo: un'operazione
 non deve mai creare una faccia fra due mezzi (aprirebbe un buco nel foglio).
 
-Prove da scrivere **prima** (rosse):
+Le prove, scritte prima del codice (commit rosso) e ora verdi:
 
-- invarianti dopo ogni operazione, in una funzione `controlla_topologia`: ogni cellula ha
+- invarianti dopo ogni operazione, in `problemi_topologici`: ogni cellula ha
   V − E + F = 2; ogni spigolo ha tre "cellule" attorno; ogni vertice quattro; facce di almeno tre
   vertici; nessuna faccia doppia; monostrato (ogni cellula tocca le due superfici) quando il
   tessuto lo dichiara;
@@ -107,12 +126,17 @@ Prove da scrivere **prima** (rosse):
   versi; forze esatte dopo ogni operazione;
 - **lo scambio intero come due passi**: I→H sullo spigolo apicale, poi H→I sul triangolo A|B
   quando lo spigolo basale si accorcia, dà la stessa topologia dello scambio fra prismi di
-  `08_scambi.jl`;
+  `08_scambi.jl` (sul pezzo di foglio a bordo bloccato: i fogli periodici non sono ancora
+  supportati);
 - lo scutoide forzato in un tessuto uniforme torna indietro e il tessuto ritrova il reticolo
   regolare (con H→I);
-- regressioni da rivedere: #13, #14 e la cellula isolata devono ora arrivare a un equilibrio.
+- regressioni riviste: il foglio a bordo libero (#13) e la cellula isolata arrivano a un
+  equilibrio. Il #14 (la giunzione che si chiude solo all'apice) è coperto dallo scambio in due
+  passi e dallo scutoide che torna indietro; una prova dinamica, con l'anello apicale che
+  stringe, verrà con R4.
 
-Poi: estendere alle immagini periodiche (oggi `10` è solo non periodico), congelare.
+Poi: estendere alle immagini periodiche (oggi `10` e `11` sono solo non periodici; nei fogli
+periodici le operazioni rispondono `nothing`), congelare `10` e `11`.
 
 ### R2 — Aggiornare la specifica sul 3D pieno (fatto)
 
