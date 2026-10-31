@@ -40,7 +40,7 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `10_scutoidi.jl` | scambio apicale con scutoide (vertice interno al foglio) | **in corso, non congelato** |
 | `11_operazioni.jl` | operazioni elementari generali: spigolo↔triangolo, contrazione al bordo libero, invarianti | **in corso, non congelato** (R1 verde, solo fogli non periodici) |
 
-Prove: `scripts/prove.sh`, 776 passate e nessuna rotta al 30 ottobre, circa 6 minuti (il grosso è Newton a
+Prove: `scripts/prove.sh`, 776 passate e 5 rotte (le prove rosse dei fogli periodici) al 31 ottobre, circa 6 minuti (il grosso è Newton a
 matrice piena sui tessuti 3D). Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -72,8 +72,9 @@ vuoto** "CONGELATO: MOTORE-…-V1" e dall'impronta in `prove/congelati.txt`.
 ### R1 — Le due operazioni elementari, in forma generale (in corso)
 
 Stato: **commit verde fatto** (30 ottobre). Le dieci prove di `test/operazioni.jl` passano; il
-codice è in `motore/11_operazioni.jl`. Resta: estenderle ai fogli periodici, poi congelare
-`10` e `11` insieme (sotto, "Poi").
+codice è in `motore/11_operazioni.jl`. **Fogli periodici: commit rosso fatto** (31 ottobre), le
+cinque prove in `test/operazioni_periodiche.jl`, marcate `@test_broken`. Poi si congelano `10` e
+`11` insieme (sotto, "Poi").
 
 Che cosa c'è:
 
