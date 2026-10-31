@@ -20,6 +20,7 @@ include("previsioni.jl")
     include("scutoidi.jl")
     include("operazioni.jl")
     include("operazioni_periodiche.jl")
+    include("chimica.jl")
     include("fisica_confronto_3d.jl")
     include("congelati.jl")
 end
