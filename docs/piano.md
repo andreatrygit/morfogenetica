@@ -403,10 +403,25 @@ Risultati (prove in `test/operazioni.jl`):
 | foglio di 19 prismi a bordo libero (#13) | equilibrio in 10 cicli, 24 contrazioni, 7747.9 nN·µm |
 | cellula isolata, σl = 0.9 | equilibrio in 2 cicli, 6 contrazioni (esagoni → triangoli), 455.92 nN·µm, sotto i 456.03 dove si fermava senza operazioni |
 
-Limiti: niente fogli periodici (le operazioni rispondono `nothing`); la contrazione lascia
-fermo l'estremo che resta, quindi il salto di energia è proporzionale alla lunghezza dello
-spigolo, come per le altre due. `10` e `11` non sono congelati: lo saranno insieme, dopo il
-supporto periodico.
+La contrazione lascia fermo l'estremo che resta, quindi il salto di energia è proporzionale
+alla lunghezza dello spigolo, come per le altre due.
+
+**Fogli periodici** (31 ottobre, ancora red-green: cinque prove in
+`test/operazioni_periodiche.jl`, poi il codice). In un foglio periodico un vertice compare in
+ogni faccia con un'immagine. Prima di un'operazione i vertici coinvolti si portano in una
+cornice comune con due ricalibrazioni che non cambiano la geometria: un vertice si sposta di un
+periodo e le sue immagini scendono di uno; una faccia abbassa le sue immagini e alza della
+stessa quantità la sua traslazione in ogni cellula. Dopo, nelle facce toccate i vertici
+coinvolti hanno immagine (0, 0), e l'operazione è quella di prima. Gli spigoli si distinguono
+anche per lo scarto fra le immagini dei due estremi (anche nel conto della tensione di linea);
+un'operazione rifiutata lascia il tessuto com'era. Provato nel foglio 4 × 4, su uno spigolo
+interno alla scatola e su uno che ne attraversa il bordo: andata e ritorno, forze esatte anche
+rispetto alla scatola, continuità, scambio intero in due passi uguale a quello di `08`, scutoide
+forzato che torna indietro all'energia del reticolo regolare. Batteria: 781 prove passate.
+
+`10` e `11` sono congelati insieme (`motore-scutoidi-v1`, `motore-operazioni-v1`).
+`scambio_apicale!` resta solo non periodico: nei fogli periodici fa lo stesso
+`spigolo_a_triangolo!` sullo spigolo apicale.
 
 ## Fonti
 

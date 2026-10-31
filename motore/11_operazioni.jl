@@ -17,7 +17,15 @@
 #
 # Le operazioni non creano mai una faccia fra due mezzi (aprirebbe un buco nel foglio) e, con
 # `monostrato = true`, non tolgono a una cellula la sua faccia apicale o basale. Ogni operazione
-# è registrata. Per ora solo su tessuti non periodici.
+# è registrata.
+#
+# Fogli periodici. Un vertice compare in ogni faccia con un'immagine (quanti periodi aggiungere).
+# Prima di un'operazione i vertici coinvolti si portano in una cornice comune: si ricalibrano
+# i vertici (posizione salvata spostata di un periodo, immagini compensate) e le facce che li
+# contengono (immagini e traslazioni delle cellule compensate), senza cambiare la geometria.
+# Dopo, nelle facce toccate quei vertici hanno immagine (0, 0) e l'operazione lavora come in un
+# tessuto non periodico. Se la scatola è così piccola che la cornice non esiste (lo stesso
+# vertice due volte in una faccia), l'operazione non si fa.
 
 export Operazione, problemi_topologici, spigolo_a_triangolo!, triangolo_a_spigolo!
 export contrai_spigolo!, rilassa_con_operazioni!
@@ -46,18 +54,22 @@ _mezzo(r) = r < 0
 _lati(f::Faccia) = length(f.cellule) == 2 ? (f.cellule[1], f.cellule[2]) :
                                             (f.cellule[1], _MEZZO[f.etichetta])
 
-_chiave(a, b) = minmax(a, b)
+# Uno spigolo si riconosce dagli indici dei due estremi e dallo scarto fra le loro immagini.
+_chiave(a, ia, b, ib) = a < b ? (a, b, ib[1] - ia[1], ib[2] - ia[2]) :
+                                (b, a, ia[1] - ib[1], ia[2] - ib[2])
+_chiave(a, b) = _chiave(a, (0, 0), b, (0, 0))       # due vertici nella stessa cornice
 
 # Mappe di adiacenza, ricalcolate da capo (i tessuti sono piccoli).
 function _adiacenze(t::Tessuto3D)
-    facce_di_spigolo = Dict{Tuple{Int,Int},Vector{Int}}()
+    facce_di_spigolo = Dict{NTuple{4,Int},Vector{Int}}()
     regioni_di_vertice = Dict{Int,Set{Int}}()
     facce_di_vertice = Dict{Int,Vector{Int}}()
     for (fi, f) in enumerate(t.facce)
         w = f.vertici
         r1, r2 = _lati(f)
         for k in eachindex(w)
-            push!(get!(facce_di_spigolo, _chiave(w[k], w[mod1(k + 1, length(w))]), Int[]), fi)
+            k2 = mod1(k + 1, length(w))
+            push!(get!(facce_di_spigolo, _chiave(w[k], f.immagini[k], w[k2], f.immagini[k2]), Int[]), fi)
             union!(get!(regioni_di_vertice, w[k], Set{Int}()), (r1, r2))
             push!(get!(facce_di_vertice, w[k], Int[]), fi)
         end
@@ -65,9 +77,9 @@ function _adiacenze(t::Tessuto3D)
     return facce_di_spigolo, regioni_di_vertice, facce_di_vertice
 end
 
-function _regioni_di_spigolo(t, facce_di_spigolo, a, b)
+function _regioni_di_spigolo(t, facce_di_spigolo, chiave)
     R = Set{Int}()
-    for fi in get(facce_di_spigolo, _chiave(a, b), Int[])
+    for fi in get(facce_di_spigolo, chiave, Int[])
         union!(R, _lati(t.facce[fi]))
     end
     return R
@@ -108,10 +120,9 @@ function problemi_topologici(t::Tessuto3D; monostrato = true)
         r1, r2 = _lati(f)
         for k in eachindex(w)
             k2 = mod1(k + 1, length(w))
-            (a, ia), (b, ib) = (w[k], f.immagini[k]), (w[k2], f.immagini[k2])
-            d = a < b ? (a, b, ib[1] - ia[1], ib[2] - ia[2]) : (b, a, ia[1] - ib[1], ia[2] - ib[2])
+            d = _chiave(w[k], f.immagini[k], w[k2], f.immagini[k2])
             union!(get!(regioni_spigolo, d, Set{Int}()), (r1, r2))
-            union!(get!(regioni_vertice, a, Set{Int}()), (r1, r2))
+            union!(get!(regioni_vertice, w[k], Set{Int}()), (r1, r2))
         end
     end
     for (d, R) in regioni_spigolo
@@ -131,30 +142,35 @@ end
 
 # --- aiuti per le modifiche -------------------------------------------------------------------
 
+# Una faccia come ciclo di coppie (vertice, immagine).
+_ciclo(f::Faccia) = collect(zip(f.vertici, f.immagini))
+
 function _nuova_faccia(f::Faccia, w)
-    return Faccia(collect(w), fill((0, 0), length(w)), f.etichetta, copy(f.cellule), copy(f.segni),
+    return Faccia(first.(w), last.(w), f.etichetta, copy(f.cellule), copy(f.segni),
                   f.etichetta == apicale ? zeros(Int, length(w)) : Int[])
 end
 
-# Sostituisce nel ciclo w il vertice v con la sequenza `nuovi`, scelta in base ai vicini: la
-# funzione `per_vicino(u)` dice quale vertice nuovo eredita lo spigolo v–u.
+# Sostituisce nel ciclo w il vertice v (in cornice, immagine (0, 0)) con uno o due vertici nuovi,
+# scelti in base ai vicini: `per_vicino(u)` dice quale vertice eredita lo spigolo v–u, dove u è
+# la coppia (vertice, immagine) del vicino.
 function _sostituisci(w, v, per_vicino)
-    i = findfirst(==(v), w)
+    i = findfirst(e -> e[1] == v, w)
     n = length(w)
     prec, succ = w[mod1(i - 1, n)], w[mod1(i + 1, n)]
     a, b = per_vicino(prec), per_vicino(succ)
-    nuovi = a == b ? [a] : [a, b]
+    nuovi = a == b ? [(a, (0, 0))] : [(a, (0, 0)), (b, (0, 0))]
     return vcat(w[1:i-1], nuovi, w[i+1:end])
 end
 
-# Sostituisce in w la coppia consecutiva (a, b), in un verso o nell'altro, con il vertice m.
+# Sostituisce nel ciclo w la coppia consecutiva (a, b), in un verso o nell'altro, con il vertice
+# m, in cornice.
 function _fondi_coppia(w, a, b, m)
     n = length(w)
     for i in 1:n
         j = mod1(i + 1, n)
-        if (w[i] == a && w[j] == b) || (w[i] == b && w[j] == a)
+        if (w[i][1] == a && w[j][1] == b) || (w[i][1] == b && w[j][1] == a)
             u = copy(w)
-            u[i] = m
+            u[i] = (m, (0, 0))
             deleteat!(u, j)
             return u
         end
@@ -162,11 +178,24 @@ function _fondi_coppia(w, a, b, m)
     throw(ArgumentError("$a e $b non sono consecutivi"))
 end
 
+# Posizione di un vertice in cornice.
 _P(t, k) = _pos(t, t.x, k, (0, 0))
 
+# Lunghezza dello spigolo k → k+1 della faccia f.
+function _lunghezza(t, f::Faccia, k)
+    k2 = mod1(k + 1, length(f.vertici))
+    return _norma(_meno(_pos(t, t.x, f.vertici[k2], f.immagini[k2]),
+                        _pos(t, t.x, f.vertici[k], f.immagini[k])))
+end
+
+# Un vertice nuovo; nei fogli periodici le ultime due voci di x sono la scatola.
 function _nuovo_vertice!(t::Tessuto3D, pos)
-    append!(t.x, pos); append!(t.ancore, pos); push!(t.fissi, false)
-    return length(t.x) ÷ 3
+    k = 3 * _nvert(t)
+    for (q, v) in enumerate(pos)
+        insert!(t.x, k + q, v); insert!(t.ancore, k + q, v)
+    end
+    push!(t.fissi, false)
+    return _nvert(t)
 end
 
 # Toglie il vertice v (che nessuna faccia usa più) e rinumera quelli dopo.
@@ -180,25 +209,136 @@ function _togli_vertice!(t::Tessuto3D, v)
     return t
 end
 
-# Aggiunge una faccia nuova fra le regioni r1 e r2 (non entrambe mezzi), orientata verso
-# l'esterno della prima cellula vera.
+# Ricalibra il vertice v di d periodi: la posizione salvata si sposta di d periodi e in ogni
+# faccia la sua immagine scende di d. La geometria non cambia.
+function _ricalibra_vertice!(t::Tessuto3D, v, d)
+    d == (0, 0) && return t
+    Lx, Ly = _periodo(t, t.x)
+    for q in (t.x, t.ancore)
+        q[3v-2] += d[1] * Lx; q[3v-1] += d[2] * Ly
+    end
+    for (fi, f) in enumerate(t.facce)
+        v in f.vertici || continue
+        im = [k == v ? _im_meno(m, d) : m for (k, m) in zip(f.vertici, f.immagini)]
+        t.facce[fi] = Faccia(f.vertici, im, f.etichetta, f.cellule, f.segni, f.condivisione)
+    end
+    return t
+end
+
+# Ricalibra la faccia fi di s periodi: le sue immagini scendono di s, la sua traslazione in
+# ogni cellula sale di s. La geometria non cambia.
+function _ricalibra_faccia!(t::Tessuto3D, fi, s)
+    s == (0, 0) && return t
+    f = t.facce[fi]
+    t.facce[fi] = Faccia(f.vertici, [_im_meno(m, s) for m in f.immagini], f.etichetta,
+                         f.cellule, f.segni, f.condivisione)
+    for c in f.cellule
+        cel = t.cellule[c]
+        tr = [g == fi ? _im_piu(τ, s) : τ for (g, τ) in zip(cel.facce, cel.traslazioni)]
+        t.cellule[c] = Cellula3D(cel.facce, cel.segni, tr)
+    end
+    return t
+end
+
+# Porta in cornice i vertici vv, che stanno tutti nella faccia fr: dopo, in ogni faccia che ne
+# contiene qualcuno, compaiono con immagine (0, 0). Falso se la cornice non esiste (scatola
+# troppo piccola).
+function _in_cornice!(t::Tessuto3D, vv, fr)
+    f = t.facce[fr]
+    im(k) = f.immagini[findfirst(==(k), f.vertici)]
+    scarti = [_im_meno(im(v), im(vv[1])) for v in vv]
+    for (v, d) in zip(vv, scarti)
+        _ricalibra_vertice!(t, v, d)
+    end
+    for (fi, F) in enumerate(t.facce)
+        dentro = [k for k in eachindex(F.vertici) if F.vertici[k] in vv]
+        isempty(dentro) && continue
+        length(unique(F.vertici[dentro])) == length(dentro) || return false
+        s = F.immagini[dentro[1]]
+        all(F.immagini[k] == s for k in dentro) || return false
+        _ricalibra_faccia!(t, fi, s)
+    end
+    return true
+end
+
+# Una faccia che contiene i e j consecutivi.
+function _faccia_dello_spigolo(t, i, j)
+    return findfirst(t.facce) do f
+        n = length(f.vertici)
+        any(k -> minmax(f.vertici[k], f.vertici[mod1(k + 1, n)]) == minmax(i, j), 1:n)
+    end
+end
+
+# Esegue `operazione()`; se risponde `nothing` il tessuto torna com'era (la cornice cambia la
+# rappresentazione, non la geometria, ma un rifiuto non deve lasciare tracce).
+function _o_niente!(operazione, t::Tessuto3D)
+    copia = deepcopy(t)
+    r = operazione()
+    if r === nothing
+        t.x = copia.x; t.facce = copia.facce; t.cellule = copia.cellule
+        t.fissi = copia.fissi; t.ancore = copia.ancore
+    end
+    return r
+end
+
+# La traslazione della cellula c nella cornice: quella di una sua faccia che contiene uno dei
+# vertici vv (in cornice, quindi tutte uguali).
+function _traslazione_in_cornice(t::Tessuto3D, c, vv)
+    cel = t.cellule[c]
+    for (fi, τ) in zip(cel.facce, cel.traslazioni)
+        any(in(vv), t.facce[fi].vertici) && return τ
+    end
+    throw(ErrorException("la cellula $c non tocca i vertici $vv"))
+end
+
+# Il centro della cellula c (media dei vertici delle sue facce), nella cornice.
+function _centro_in_cornice(t::Tessuto3D, c, vv)
+    cel = t.cellule[c]
+    τ = _traslazione_in_cornice(t, c, vv)
+    Lx, Ly = _periodo(t, t.x)
+    g = _baricentro([p for (fi, tr) in zip(cel.facce, cel.traslazioni)
+                     for p in _vertici(t, t.x, t.facce[fi], tr)])
+    return (g[1] - τ[1] * Lx, g[2] - τ[2] * Ly, g[3])
+end
+
+# Conta, per ogni spigolo apicale (con le immagini), quante facce apicali lo hanno e lo scrive
+# nelle facce apicali: serve alla tensione di linea.
+function _conta_condivisione!(t::Tessuto3D)
+    conta = Dict{NTuple{4,Int},Int}()
+    chiavi(f) = [_chiave(f.vertici[k], f.immagini[k], f.vertici[mod1(k + 1, length(f.vertici))],
+                         f.immagini[mod1(k + 1, length(f.vertici))]) for k in eachindex(f.vertici)]
+    for f in t.facce
+        f.etichetta == apicale || continue
+        for ch in chiavi(f)
+            conta[ch] = get(conta, ch, 0) + 1
+        end
+    end
+    for f in t.facce
+        f.etichetta == apicale || continue
+        f.condivisione .= [conta[ch] for ch in chiavi(f)]
+    end
+    return t
+end
+
+# Aggiunge una faccia nuova, in cornice, fra le regioni r1 e r2 (non entrambe mezzi), orientata
+# verso l'esterno della prima cellula vera.
 function _aggiungi_faccia!(t::Tessuto3D, w, r1, r2)
     _mezzo(r1) && ((r1, r2) = (r2, r1))
     etichetta = _mezzo(r2) ? _ETICHETTA_MEZZO[r2] : laterale
     P = [_P(t, k) for k in w]
     n = _croce(_meno(P[2], P[1]), _meno(P[3], P[1]))
-    cel = t.cellule[r1]
-    cc = _baricentro([_P(t, k) for fi in cel.facce for k in t.facce[fi].vertici])
+    cc = _centro_in_cornice(t, r1, w)
     w = collect(w)
     _punto(n, _meno(_baricentro(P), cc)) < 0 && reverse!(w)
     cellule = _mezzo(r2) ? [r1] : [r1, r2]
     segni = _mezzo(r2) ? [1] : [1, -1]
+    τ = [_traslazione_in_cornice(t, c, w) for c in cellule]
     push!(t.facce, Faccia(w, fill((0, 0), length(w)), etichetta, cellule, segni,
                           etichetta == apicale ? zeros(Int, length(w)) : Int[]))
     fi = length(t.facce)
-    for (c, s) in zip(cellule, segni)
-        cc = t.cellule[c]
-        t.cellule[c] = Cellula3D(vcat(cc.facce, fi), vcat(cc.segni, s), vcat(cc.traslazioni, (0, 0)))
+    for (c, s, τc) in zip(cellule, segni, τ)
+        cel = t.cellule[c]
+        t.cellule[c] = Cellula3D(vcat(cel.facce, fi), vcat(cel.segni, s), vcat(cel.traslazioni, [τc]))
     end
     return fi
 end
@@ -223,11 +363,16 @@ Lo spigolo i–j diventa un triangolo di lato circa `lunghezza_nuova` (µm), nel
 perpendicolare allo spigolo e centrato nel suo punto medio. Restituisce il registro, o `nothing`
 se l'operazione non è ammessa.
 """
-function spigolo_a_triangolo!(t::Tessuto3D, i::Int, j::Int; lunghezza_nuova, monostrato = true)
-    t.periodico && return nothing
+spigolo_a_triangolo!(t::Tessuto3D, i::Int, j::Int; lunghezza_nuova, monostrato = true) =
+    _o_niente!(() -> _spigolo_a_triangolo!(t, i, j; lunghezza_nuova, monostrato), t)
+
+function _spigolo_a_triangolo!(t::Tessuto3D, i::Int, j::Int; lunghezza_nuova, monostrato)
     (t.fissi[i] || t.fissi[j]) && return nothing
+    fr = _faccia_dello_spigolo(t, i, j)
+    fr === nothing && return nothing
+    _in_cornice!(t, [i, j], fr) || return nothing
     fs, rv, _ = _adiacenze(t)
-    Re = _regioni_di_spigolo(t, fs, i, j)
+    Re = _regioni_di_spigolo(t, fs, _chiave(i, j))
     length(Re) == 3 || return nothing
     Ri, Rj = rv[i], rv[j]
     (length(Ri) == 4 && length(Rj) == 4) || return nothing
@@ -249,7 +394,7 @@ function spigolo_a_triangolo!(t::Tessuto3D, i::Int, j::Int; lunghezza_nuova, mon
     direzioni = Dict{Tuple{Int,Int},NTuple{3,Float64}}()
     for fi in fs[_chiave(i, j)]
         x, y = _lati(t.facce[fi])
-        g = _meno(_baricentro([_P(t, k) for k in t.facce[fi].vertici]), m)
+        g = _meno(_baricentro(_vertici(t, t.x, t.facce[fi])), m)
         g = _meno(g, e .* _punto(g, e))
         direzioni[minmax(x, y)] = g ./ _norma(g)
     end
@@ -271,7 +416,7 @@ function spigolo_a_triangolo!(t::Tessuto3D, i::Int, j::Int; lunghezza_nuova, mon
     # facce che contengono lo spigolo: la coppia (i, j) diventa il vertice della loro coppia
     for fi in fs[_chiave(i, j)]
         x, y = _lati(t.facce[fi])
-        t.facce[fi] = _nuova_faccia(t.facce[fi], _fondi_coppia(t.facce[fi].vertici, i, j, nuovo_di(x, y)))
+        t.facce[fi] = _nuova_faccia(t.facce[fi], _fondi_coppia(_ciclo(t.facce[fi]), i, j, nuovo_di(x, y)))
     end
     # facce che contengono uno solo degli estremi: il vertice diventa i due vertici nuovi che
     # ereditano i suoi spigoli, ciascuno dal lato giusto
@@ -282,17 +427,17 @@ function spigolo_a_triangolo!(t::Tessuto3D, i::Int, j::Int; lunghezza_nuova, mon
             v in w || continue
             (i in w && j in w) && continue
             per_vicino(u) = begin
-                Ru = _regioni_di_spigolo(t, fs, v, u)       # regioni dello spigolo prima
+                Ru = _regioni_di_spigolo(t, fs, _chiave(v, (0, 0), u...))   # regioni di prima
                 ab = setdiff(Ru, (X,))
                 length(ab) == 2 || return v
                 nuovo_di(collect(ab)...)
             end
-            t.facce[fi] = _nuova_faccia(t.facce[fi], _sostituisci(w, v, per_vicino))
+            t.facce[fi] = _nuova_faccia(t.facce[fi], _sostituisci(_ciclo(t.facce[fi]), v, per_vicino))
         end
     end
     # il triangolo nuovo
     tri = _aggiungi_faccia!(t, [vert[minmax(A, B)], vert[minmax(B, E)], vert[minmax(E, A)]], C, D)
-    _ricalcola_condivisione!(t)
+    _conta_condivisione!(t)
     if monostrato && !isempty(problemi_topologici(t; monostrato))
         throw(ErrorException("spigolo_a_triangolo!: invarianti violati, " *
                              join(problemi_topologici(t; monostrato), "; ")))
@@ -307,12 +452,16 @@ La faccia triangolare `f` fra C e D diventa uno spigolo di lunghezza `lunghezza_
 perpendicolare al triangolo e centrato nel suo baricentro, con attorno le altre tre regioni.
 Restituisce il registro, o `nothing` se l'operazione non è ammessa.
 """
-function triangolo_a_spigolo!(t::Tessuto3D, f::Int; lunghezza_nuova, monostrato = true)
-    t.periodico && return nothing
+triangolo_a_spigolo!(t::Tessuto3D, f::Int; lunghezza_nuova, monostrato = true) =
+    _o_niente!(() -> _triangolo_a_spigolo!(t, f; lunghezza_nuova, monostrato), t)
+
+function _triangolo_a_spigolo!(t::Tessuto3D, f::Int; lunghezza_nuova, monostrato)
     T = t.facce[f]
     length(T.vertici) == 3 || return nothing
     any(k -> t.fissi[k], T.vertici) && return nothing
     monostrato && T.etichetta != laterale && return nothing   # la faccia apicale o basale resta
+    _in_cornice!(t, T.vertici, f) || return nothing
+    T = t.facce[f]
     C, D = _lati(T)
     fs, rv, fv = _adiacenze(t)
     v1, v2, v3 = T.vertici
@@ -325,8 +474,7 @@ function triangolo_a_spigolo!(t::Tessuto3D, f::Int; lunghezza_nuova, monostrato 
     P = [_P(t, k) for k in T.vertici]
     g = _baricentro(P)
     n = _croce(_meno(P[2], P[1]), _meno(P[3], P[1])); n = n ./ _norma(n)
-    cel = t.cellule[_mezzo(C) ? D : C]
-    cc = _baricentro([_P(t, k) for fi in cel.facce for k in t.facce[fi].vertici])
+    cc = _centro_in_cornice(t, _mezzo(C) ? D : C, T.vertici)
     verso_C = _punto(n, _meno(cc, g)) > 0
     lato_c = _mezzo(C) ? !verso_C : verso_C           # n punta verso C?
     pc = g .+ n .* (lato_c ? 1 : -1) .* (lunghezza_nuova / 2)
@@ -343,7 +491,7 @@ function triangolo_a_spigolo!(t::Tessuto3D, f::Int; lunghezza_nuova, monostrato 
         length(dentro) == 2 || continue
         x, y = _lati(F)
         nuovo = (x == C || y == C) ? i : j
-        t.facce[fi] = _nuova_faccia(F, _fondi_coppia(F.vertici, dentro..., nuovo))
+        t.facce[fi] = _nuova_faccia(F, _fondi_coppia(_ciclo(F), dentro..., nuovo))
     end
     # le facce che contengono un solo vertice del triangolo stanno fra due delle altre regioni:
     # il vertice diventa i e j, ciascuno dal lato giusto
@@ -353,17 +501,17 @@ function triangolo_a_spigolo!(t::Tessuto3D, f::Int; lunghezza_nuova, monostrato 
         length(dentro) == 1 || continue
         v = only(dentro)
         per_vicino(u) = begin
-            Ru = _regioni_di_spigolo(t, fs, v, u)
+            Ru = _regioni_di_spigolo(t, fs, _chiave(v, (0, 0), u...))
             C in Ru ? i : D in Ru ? j : v
         end
-        nuovo_w = _sostituisci(F.vertici, v, per_vicino)
+        nuovo_w = _sostituisci(_ciclo(F), v, per_vicino)
         t.facce[fi] = _nuova_faccia(F, nuovo_w)
     end
     _togli_faccia!(t, f)
     any(k -> k == morto, (k for F in t.facce for k in F.vertici)) &&
         throw(ErrorException("triangolo_a_spigolo!: il terzo vertice è ancora usato"))
     _togli_vertice!(t, morto)
-    _ricalcola_condivisione!(t)
+    _conta_condivisione!(t)
     if monostrato && !isempty(problemi_topologici(t; monostrato))
         throw(ErrorException("triangolo_a_spigolo!: invarianti violati, " *
                              join(problemi_topologici(t; monostrato), "; ")))
@@ -381,24 +529,29 @@ L'angolo si fonde nell'altro estremo, che non si muove; se sono angoli tutti e d
 che resta è quello medio. Le facce che contengono lo spigolo perdono un vertice. Restituisce il
 registro, o `nothing`.
 """
-function contrai_spigolo!(t::Tessuto3D, i::Int, j::Int; monostrato = true)
-    t.periodico && return nothing
+contrai_spigolo!(t::Tessuto3D, i::Int, j::Int; monostrato = true) =
+    _o_niente!(() -> _contrai_spigolo!(t, i, j; monostrato), t)
+
+function _contrai_spigolo!(t::Tessuto3D, i::Int, j::Int; monostrato)
     (t.fissi[i] || t.fissi[j]) && return nothing
+    fr = _faccia_dello_spigolo(t, i, j)
+    fr === nothing && return nothing
+    _in_cornice!(t, [i, j], fr) || return nothing
     fs, rv, _ = _adiacenze(t)
-    Re = _regioni_di_spigolo(t, fs, i, j)
+    Re = _regioni_di_spigolo(t, fs, _chiave(i, j))
     (length(Re) == 3 && count(_mezzo, Re) == 2) || return nothing
     rv[j] == Re || ((i, j) = (j, i))                 # j è un angolo e sparisce
     rv[j] == Re || return nothing
     all(length(t.facce[fi].vertici) > 3 for fi in fs[_chiave(i, j)]) || return nothing
     rv[i] == Re && (t.x[3i-2:3i] .= (_P(t, i) .+ _P(t, j)) ./ 2)
     for fi in fs[_chiave(i, j)]
-        t.facce[fi] = _nuova_faccia(t.facce[fi], _fondi_coppia(t.facce[fi].vertici, i, j, i))
+        t.facce[fi] = _nuova_faccia(t.facce[fi], _fondi_coppia(_ciclo(t.facce[fi]), i, j, i))
     end
     for (fi, F) in enumerate(t.facce)
-        j in F.vertici && (t.facce[fi] = _nuova_faccia(F, [k == j ? i : k for k in F.vertici]))
+        j in F.vertici && (t.facce[fi] = _nuova_faccia(F, [k == j ? (i, (0, 0)) : (k, m) for (k, m) in _ciclo(F)]))
     end
     _togli_vertice!(t, j)
-    _ricalcola_condivisione!(t)
+    _conta_condivisione!(t)
     if monostrato && !isempty(problemi_topologici(t; monostrato))
         throw(ErrorException("contrai_spigolo!: invarianti violati, " *
                              join(problemi_topologici(t; monostrato), "; ")))
@@ -456,7 +609,7 @@ function _operazioni_dovute!(t; soglia, area_soglia, lunghezza_nuova, monostrato
             a, b = F.vertici[k], F.vertici[mod1(k + 1, length(F.vertici))]
             chiave = (:s, minmax(a, b))
             chiave in tentati && continue
-            L = _norma(_meno(_P(t, b), _P(t, a)))
+            L = _lunghezza(t, F, k)
             L < Lmin && (corto = (a, b); Lmin = L)
         end
         corto === nothing && return fatti
