@@ -50,7 +50,7 @@
 #
 # Ogni meccanismo ha un interruttore (`Interruttori`).
 
-export Vicina, Percezione, Uscita, Fase, Interruttori, StatoCellula, Embrione
+export Vicina, Percezione, Uscita, Fase, SCRIVIBILI, Interruttori, StatoCellula, Embrione
 export passata!, vicine_di
 
 """
@@ -114,16 +114,47 @@ function Uscita(stato, intenzioni, secrezioni, dichiara; deposita = Dict{Symbol,
 end
 
 """
-    Fase(nome, regola, parametri, fine)
+    Fase(nome, regola, parametri, fine; scrive = nothing)
 
 Una riga della tabella di fasi: `regola(p, parametri)` → `Uscita` e `fine(p, parametri)` →
-Bool, funzioni pure della percezione `p`.
+Bool, funzioni pure della percezione `p`. `scrive` dichiara che cosa la regola scrive: le
+intenzioni (:σa, :σb, :σl, :Λa, :V0), :secrezioni, :deposita, :richiesta. Una fase dichiarata
+può essere composta con `insieme`, e la passata rifiuta la sua regola se scrive altro; una
+fase non dichiarata (`nothing`) può scrivere tutto ma non si compone. Il conflitto si vede
+così alla composizione: una scrittura del valore a riposo e un "non tocco" non si
+distinguono dai risultati, solo dalle dichiarazioni.
 """
 struct Fase{R,F,P<:NamedTuple}
     nome::Symbol
     regola::R
     parametri::P
     fine::F
+    scrive::Union{Nothing,Tuple{Vararg{Symbol}}}
+end
+
+const SCRIVIBILI = (:σa, :σb, :σl, :Λa, :V0, :secrezioni, :deposita, :richiesta)
+
+function Fase(nome, regola, parametri, fine; scrive = nothing)
+    scrive === nothing && return Fase(Symbol(nome), regola, parametri, fine, nothing)
+    d = Tuple(Symbol.(scrive))
+    all(in(SCRIVIBILI), d) ||
+        throw(ArgumentError("la fase $nome dichiara $(setdiff(d, SCRIVIBILI)), che non si scrive"))
+    return Fase(Symbol(nome), regola, parametri, fine, d)
+end
+
+# La regola ha scritto soltanto ciò che la sua fase dichiara? (Le intenzioni non dichiarate
+# devono restare quelle a riposo, `p.intenzioni`.)
+function _controlla_dichiarazione(f::Fase, p::Percezione, u::Uscita)
+    f.scrive === nothing && return nothing
+    fuori(cosa) = throw(ArgumentError("la fase $(f.nome) scrive $cosa senza dichiararlo"))
+    for campo in fieldnames(Intenzioni3D)
+        campo in f.scrive && continue
+        getfield(u.intenzioni, campo) == getfield(p.intenzioni, campo) || fuori(campo)
+    end
+    (:secrezioni in f.scrive || all(iszero, values(u.secrezioni))) || fuori(:secrezioni)
+    (:deposita in f.scrive || all(iszero, values(u.deposita))) || fuori(:deposita)
+    (:richiesta in f.scrive || u.richiesta == :nessuna) || fuori(:richiesta)
+    return nothing
 end
 
 """
@@ -301,6 +332,7 @@ function passata!(e::Embrione; ordine = eachindex(e.cellule))
         p = _percezione(e, c, vicine[c])
         fase = s.programma[s.fase]
         uscite[c] = fase.regola(p, fase.parametri)
+        _controlla_dichiarazione(fase, p, uscite[c])
         if s.fase < length(s.programma)
             avanza[c] = fase.fine(p, fase.parametri) ||
                         (e.interruttori.onda && any(v.fase > s.fase for v in p.vicine))

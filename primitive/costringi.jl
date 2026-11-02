@@ -30,4 +30,4 @@ La fase che alza la tensione dell'anello apicale a `Λ` (nN) dove la concentrazi
 """
 costringi(; Λ, sostanza, soglia) =
     Fase(:costringi, _regola_costringi, (Λ = Float64(Λ), sostanza = sostanza, soglia = Float64(soglia)),
-         _fine_costringi)
+         _fine_costringi; scrive = (:Λa,))

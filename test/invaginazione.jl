@@ -137,14 +137,11 @@ function prova_rilasciata_si_riapre()
 end
 
 function prova_insieme_rifiuta_i_conflitti()
+    # due costringi scrivono entrambe Λa: rifiutate quando si compongono (test/composizione.jl)
     a = costringi(; Λ = 1.0, sostanza = :s, soglia = 0.0)
     b = costringi(; Λ = 2.0, sostanza = :s, soglia = 0.0)
-    f = insieme(a, b; nome = :due)
-    p = Percezione(1, 0, 0, 0.5, Dict{Symbol,Float64}(), PRISMA,
-                   (volume = 1.0, area_apicale = 1.0, area_basale = 1.0), Vicina[],
-                   Dict{Symbol,Float64}(), Dict(:s => 1.0))
     conflitto = try
-        f.regola(p, f.parametri); false
+        insieme(a, b; nome = :due); false
     catch err
         err isa ArgumentError
     end

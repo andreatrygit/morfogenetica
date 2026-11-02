@@ -25,4 +25,4 @@ La fase in cui la cellula con stato[marca] == 1 secerne `sostanza` a `tasso` (qu
 """
 secerni(; sostanza, tasso, marca = :sorgente) =
     Fase(:secerni, _regola_secerni, (sostanza = sostanza, tasso = Float64(tasso), marca = marca),
-         _fine_secerni)
+         _fine_secerni; scrive = (:secrezioni,))
