@@ -43,7 +43,7 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `13_programma.jl` | percezione a quattro canali, tabella di fasi, onda, passata | **in corso, non congelato** (mancano popolazione e matrice) |
 | `primitive/costringi.jl` | la prima primitiva: anello apicale teso dove la sostanza supera la soglia | in corso |
 
-Prove: `scripts/prove.sh`, 806 passate e nessuna rotta al 2 novembre, circa 6 minuti (il grosso è Newton a
+Prove: `scripts/prove.sh`, 808 passate e nessuna rotta al 2 novembre, circa 6 minuti (il grosso è Newton a
 matrice piena sui tessuti 3D). Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
