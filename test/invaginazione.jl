@@ -155,9 +155,9 @@ end
 
 @testset "R5 invaginazione" begin
     @test prova_insieme_rifiuta_i_conflitti()
-    @test prova_la_placca_si_invagina()
-    @test prova_senza_costrizione_resta_piatta()
-    @test prova_piu_forte_piu_profonda()
-    @test prova_mantenuta_resta()
-    @test prova_rilasciata_si_riapre()
+    @lenta @test prova_la_placca_si_invagina()
+    @lenta @test prova_senza_costrizione_resta_piatta()
+    @lenta @test prova_piu_forte_piu_profonda()
+    @lenta @test prova_mantenuta_resta()
+    @lenta @test prova_rilasciata_si_riapre()
 end

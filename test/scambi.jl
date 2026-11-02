@@ -89,7 +89,7 @@ volume_totale(t) = sum(volume_cellula(t, c) for c in eachindex(t.cellule))
         @test scambia!(t, w[k][1], w[mod1(k + 1, length(w))][1]; lunghezza_nuova = 1.0) === nothing
     end
 
-    @testset "un difetto da scambio forzato è metastabile" begin
+    @lenta @testset "un difetto da scambio forzato è metastabile" begin
         # Dopo uno scambio forzato nel reticolo regolare, le due cellule a 5 lati e le due a 7
         # restano: il tessuto si ferma in un minimo locale più alto, senza tornare indietro.
         # Tornare indietro con uno scambio esplicito riporta al reticolo regolare.
@@ -108,7 +108,7 @@ volume_totale(t) = sum(volume_cellula(t, c) for c in eachindex(t.cellule))
         @test minimizza_3d!(t).convergito
         @test isapprox(energia(t, P_SCAMBI), Ereg; rtol = 1e-9)
     end
-    @testset "risultato negativo #14: una giunzione solo apicale non si scambia" begin
+    @lenta @testset "risultato negativo #14: una giunzione solo apicale non si scambia" begin
         # Due cellule vicine stringono l'anello apicale: la giunzione apicale fra loro si chiude,
         # quella basale no. Lo scambio non deve partire, perché cambierebbe anche la base.
         P = ParametriMeccanici(K = 0.1, η = 1.0, lunghezza_minima = 0.05,
@@ -127,7 +127,7 @@ volume_totale(t) = sum(volume_cellula(t, c) for c in eachindex(t.cellule))
         @test L(2p, 2q) > 5.0                  # basale lunga
         @test isempty(scambi_di_vicine!(t, P; soglia = 0.3, lunghezza_nuova = 1.0))
     end
-    @testset "scambi spontanei: un tessuto stirato oltre la soglia scorre" begin
+    @lenta @testset "scambi spontanei: un tessuto stirato oltre la soglia scorre" begin
         # Pezzo di 37 prismi, bordo bloccato, tessuto "fluido" (σl = 0.4). Estensione convergente
         # a area costante, x / s e y · s. Fino a s = 2.1 la risposta è elastica, nessuno scambio;
         # a s = 2.15 parte una valanga di scambi e l'energia scende sotto lo stato elastico: il

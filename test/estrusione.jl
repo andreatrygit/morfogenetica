@@ -15,13 +15,13 @@ topologia_estrusione(t) = rilassa_con_topologia!(t, P_ESTRUSIONE; soglia = 0.3,
     lunghezza_nuova = 1.0, area_soglia = 0.5, tolleranza = 1e-9, cicli_massimi = 30)
 
 @testset "estrusione" begin
-    @testset "interruttore: senza topologia la cellula apoptotica si blocca" begin
+    @lenta @testset "interruttore: senza topologia la cellula apoptotica si blocca" begin
         t = foglio_apoptosi()
         @test !minimizza!(t, P_ESTRUSIONE; tolleranza = 1e-9, iterazioni_massime = 300).convergito
         @test length(poligoni(t)[15]) == 6
     end
 
-    @testset "la cellula apoptotica diventa un triangolo ed esce dal foglio" begin
+    @lenta @testset "la cellula apoptotica diventa un triangolo ed esce dal foglio" begin
         t = foglio_apoptosi()
         nv = (length(t.x) - 2) ÷ 6
         r = topologia_estrusione(t)
@@ -38,7 +38,7 @@ topologia_estrusione(t) = rilassa_con_topologia!(t, P_ESTRUSIONE; soglia = 0.3,
         @test errore_gradiente(t, P_ESTRUSIONE) < 1e-7
     end
 
-    @testset "l'estrusione libera energia, poco, e il tessuto si richiude" begin
+    @lenta @testset "l'estrusione libera energia, poco, e il tessuto si richiude" begin
         # Fino al triangolo con i soli scambi, poi l'estrusione a mano. Il triangolo ha apice e
         # base minuscoli ma è ancora alto ~15 µm: con lui spariscono pareti per ~26 nN·µm, e la
         # fusione dei tre vertici sposta anche le tre pareti fra le vicine. È un evento
@@ -64,7 +64,7 @@ topologia_estrusione(t) = rilassa_con_topologia!(t, P_ESTRUSIONE; soglia = 0.3,
         @test length(t.cellule) == 36
     end
 
-    @testset "risultato negativo #15: una cellula che chiude solo l'apice non esce" begin
+    @lenta @testset "risultato negativo #15: una cellula che chiude solo l'apice non esce" begin
         # Anello apicale forte: l'apice si chiude (≈ 0.015 µm²) ma la base si allarga
         # (≈ 175 µm²), la cellula a bottiglia. Nel guscio a prismi non la si può estrudere:
         # sparirebbe di colpo una base grande.
