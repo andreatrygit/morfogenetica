@@ -47,8 +47,10 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `programmi/composizione.jl` | `insieme` (‖, rifiuta i conflitti) e `con_fine` | fatta |
 | `programmi/invaginazione.jl` | la prima forma: l'invaginazione di una placca | fatta (R5) |
 
-Prove: `scripts/prove.sh`, 841 passate e nessuna rotta al 3 novembre (la batteria intera dura ora circa 33 minuti), circa 10 minuti (il
-grosso è Newton a matrice piena sui tessuti 3D); `scripts/prove.sh veloci` salta i 21 gruppi
+Prove: `scripts/prove.sh`, la batteria intera: 837 passate e nessuna rotta l'ultima volta che è
+stata lanciata (3 novembre, prima dell'organizzatore), circa 10 minuti; con le tre corse
+dell'organizzatore ne dura circa 33 (il grosso è Newton a matrice piena sui tessuti 3D e la
+secrezione lenta di `12`); `scripts/prove.sh veloci` salta i 21 gruppi
 marcati `@lenta` e dura circa 2 minuti (780 prove). Quando lanciare quale: `CLAUDE.md`. Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
