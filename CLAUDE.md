@@ -88,9 +88,9 @@ registro da GitHub con `JULIA_PKG_SERVER="" scripts/prove.sh`.
 ## Stato
 
 Lo stato aggiornato, modulo per modulo, è in `docs/roadmap.md` (sezione 2); la storia dettagliata
-e i numeri misurati in `docs/piano.md`. In breve: `motore/01`–`12` sono congelati (impronte in
+e i numeri misurati in `docs/piano.md`. In breve: `motore/01`–`14` sono congelati (impronte in
 `prove/congelati.txt`, la prova "file congelati" fallisce se cambiano; una modifica ammessa
-richiede un test fisico che fallisce e aggiorna l'impronta nello stesso commit); `13_programma.jl`
-(R4) è in corso. I moduli congelati sono segnati da commit vuoti "CONGELATO: MOTORE-…-V1" al posto
+richiede un test fisico che fallisce e aggiorna l'impronta nello stesso commit); il prossimo passo è
+R5, le prime forme. I moduli congelati sono segnati da commit vuoti "CONGELATO: MOTORE-…-V1" al posto
 dei tag, che da questo ambiente non si possono pushare. Ogni file nuovo in `motore/` va aggiunto
 a mano in `src/Morfogenetica.jl`: la cache di Julia non vede i file nuovi in una cartella.

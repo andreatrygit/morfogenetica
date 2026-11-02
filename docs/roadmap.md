@@ -38,12 +38,13 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `08_scambi.jl` | scambi di vicine fra prismi (T1 su tutta la parete) | congelato, `motore-scambi-v1` |
 | `09_estrusione.jl` | estrusione di una cellula triangolare piccola (T2), `rilassa_con_topologia!` | congelato, `motore-estrusione-v1` |
 | `10_scutoidi.jl` | scambio apicale con scutoide (vertice interno al foglio), solo non periodico | congelato, `motore-scutoidi-v1` |
-| `11_operazioni.jl` | operazioni elementari generali: spigolo↔triangolo, contrazione al bordo libero, invarianti; anche nei fogli periodici | congelato, `motore-operazioni-v1` |
+| `11_operazioni.jl` | operazioni elementari generali: spigolo↔triangolo, contrazione al bordo libero, invarianti; anche nei fogli periodici | congelato, `motore-operazioni-v1`; corretto il 2/11 con test che fallivano (facce che restavano con due vertici) |
 | `12_chimica.jl` | una sostanza che diffonde su griglia 3D, con degradazione, secrezione e assorbimento delle cellule; la griglia segue la scatola | congelato, `motore-chimica-v1` |
-| `13_programma.jl` | percezione a quattro canali, tabella di fasi, onda, passata | **in corso, non congelato** (mancano popolazione e matrice) |
-| `primitive/costringi.jl` | la prima primitiva: anello apicale teso dove la sostanza supera la soglia | in corso |
+| `13_programma.jl` | percezione a quattro canali, tabella di fasi, onda, passata completa (popolazione, matrice, casualità con seme) | congelato, `motore-programma-v1` |
+| `14_popolazione.jl` | divisione nel guscio a prismi (angolo dato o regola di Hertwig) | congelato, `motore-popolazione-v1` |
+| `primitive/costringi.jl` | la prima primitiva: anello apicale teso dove la sostanza supera la soglia | fatta (le primitive non si congelano: si ridisegnano) |
 
-Prove: `scripts/prove.sh`, 808 passate e nessuna rotta al 2 novembre, circa 6 minuti (il grosso è Newton a
+Prove: `scripts/prove.sh`, 822 passate e nessuna rotta al 2 novembre, circa 6 minuti (il grosso è Newton a
 matrice piena sui tessuti 3D). Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -185,7 +186,7 @@ la griglia e con il passo. Coefficienti di diffusione e degradazione da letterat
 Regressione: il risultato negativo #1 (la necrosi da limite di diffusione non stabilizza un lume)
 va riprovato con la chimica vera.
 
-### R4 — Percezione e programma (specifica, sezioni 5–8) (in corso)
+### R4 — Percezione e programma (specifica, sezioni 5–8) (fatto)
 
 Stato: **commit verde fatto** (2 novembre). Le undici prove di `test/programma.jl`, scritte
 prima, passano. Il codice è in `motore/13_programma.jl` (percezione, fasi, passata) e
@@ -203,9 +204,40 @@ bordo bloccato, la cellula centrale secerne, le 7 dentro la soglia tendono l'ane
 e dopo 30 passate da 1 minuto il rapporto fra area apicale e basale è 0.31–0.45 dentro e 1.43
 nel secondo anello (le vicine si allargano all'apice).
 
-Resta per chiudere R4: divisione e morte (passo 7 della passata), matrice (passo 8), casualità
-con seme dentro le regole; poi si congela `13`. Il #14 come prova dinamica (l'anello che stringe
-fino a uno scambio) si fa con R5, quando servono le operazioni topologiche dentro la passata.
+**Chiusura di R4: fatta** (2 novembre), `13` e `14` congelati. Commit rosso: Otto prove in `test/popolazione.jl`
+(divisione che conserva il volume e gli invarianti, divisione secondo Hertwig, la figlia che
+eredita fase, stato e programma, popolazione ogni m passate e il suo interruttore, morte come
+estrusione, matrice che persiste, casualità con seme) e una in `test/operazioni.jl`: un difetto
+trovato in `11` congelato (sotto). Il codice va in `13` e in un file nuovo,
+`motore/14_popolazione.jl`. Commit verde: tutte passano.
+
+Nella passata ora ci sono tutti i passi della specifica: vicinato, chimica, percezione e
+programma, meccanica, topologia, popolazione (ogni `ogni` passate), matrice, registro. Dettagli
+che le prove hanno chiesto (`docs/piano.md`, sezione 16):
+
+- la cellula in apoptosi ha il programma fermo e il volume bersaglio che scende con un tempo
+  caratteristico (`tempo_apoptosi`, 5 min, libero), non di colpo: un crollo da 1000 a 1 µm³ in
+  un passo non lascia convergere il passo implicito;
+- nel guscio a prismi la topologia fa uno scambio di vicine per passata, il più corto: più
+  scambi insieme in una cellula minuscola, con pareti nuove più lunghe della cellula, la
+  rovesciano;
+- se il passo implicito non converge (la topologia è in ritardo) la passata va avanti e lo
+  registra fra gli eventi, come fanno le funzioni di rilassamento validate;
+- se il piano di divisione passa per un vertice (la regola di Hertwig su un esagono regolare
+  allungato lo fa) lo si ruota di 0.01 rad.
+
+Scelta: divisione e morte solo nel guscio a prismi (scambi di `08`, estrusione di `09`), che le
+sa già fare. Nel modello generale una cellula che si restringe tutta insieme arriva al prisma
+triangolare, ma passando per un volume negativo, e lì si ferma perché nel modello generale
+non c'è un'estrusione: risultato negativo #16. La morte nel modello generale è un lavoro di R7.
+
+I difetti di `11`, corretti con le prove che fallivano e l'impronta nuova:
+`spigolo_a_triangolo!` non controllava che le facce dello spigolo, che perdono un vertice,
+restassero almeno triangoli (`prova_spigolo_di_una_faccia_triangolare_si_rifiuta`), e lo stesso
+`triangolo_a_spigolo!` per le facce con due vertici del triangolo (trovato dall'esperimento del
+#16, `prova_risultato_negativo_16`). Rompevano gli invarianti e sollevavano un errore invece di
+rifiutare. Il #14 come prova dinamica (l'anello che stringe
+fino a uno scambio) si fa con R5.
 
 
 La struttura di percezione con i soli quattro canali, costruita senza accesso allo stato globale
@@ -228,7 +260,10 @@ Confronto con `prove/attesi.md` sui rapporti e sui comportamenti, non sui valori
   separare prove veloci e lente.
 - **Contatto in 3D**: oggi solo nel modello laterale; senza, un foglio che si piega può
   attraversarsi.
-- Le operazioni topologiche nei fogli periodici.
+- Le operazioni topologiche nei fogli periodici: fatto con R1.
+- Nel modello generale: l'estrusione (la T2 dei modelli a vertici 3D) e pareti nuove
+  proporzionate alla cellula (risultato negativo #16), poi divisione e morte senza il guscio a
+  prismi.
 
 ### R7 — Multistrato e mesenchima
 

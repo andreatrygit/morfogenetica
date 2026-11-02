@@ -374,6 +374,8 @@ function _spigolo_a_triangolo!(t::Tessuto3D, i::Int, j::Int; lunghezza_nuova, mo
     fs, rv, _ = _adiacenze(t)
     Re = _regioni_di_spigolo(t, fs, _chiave(i, j))
     length(Re) == 3 || return nothing
+    # le facce dello spigolo perdono un vertice: devono restare almeno triangoli
+    all(length(t.facce[fi].vertici) > 3 for fi in fs[_chiave(i, j)]) || return nothing
     Ri, Rj = rv[i], rv[j]
     (length(Ri) == 4 && length(Rj) == 4) || return nothing
     (issubset(Re, Ri) && issubset(Re, Rj)) || return nothing
@@ -469,6 +471,9 @@ function _triangolo_a_spigolo!(t::Tessuto3D, f::Int; lunghezza_nuova, monostrato
     altre = setdiff(union(rv[v1], rv[v2], rv[v3]), (C, D))
     length(altre) == 3 || return nothing
     count(_mezzo, altre) >= 2 && return nothing          # lo spigolo starebbe fra due mezzi
+    # le facce con due vertici del triangolo ne perdono uno: devono restare almeno triangoli
+    all(length(F.vertici) > 3 for (fi, F) in enumerate(t.facce)
+        if fi != f && count(in((v1, v2, v3)), F.vertici) == 2) || return nothing
 
     # posizioni: spigolo lungo la normale del triangolo, i dalla parte di C
     P = [_P(t, k) for k in T.vertici]
