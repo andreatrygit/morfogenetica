@@ -2,7 +2,7 @@
 # dice il meccanismo cellulare che la realizza e una fonte che lo documenta. Una primitiva senza
 # meccanismo difendibile non entra.
 #
-# Commit rosso: la prova è marcata @test_broken finché ogni file non ha le due sezioni.
+# Scritta prima (commit rosso); passa da quando ogni file ha le due sezioni.
 
 function prova_ogni_primitiva_ha_meccanismo_e_fonte()
     cartella = joinpath(Morfogenetica.RADICE, "primitive")
@@ -17,5 +17,5 @@ function prova_ogni_primitiva_ha_meccanismo_e_fonte()
 end
 
 @testset "le primitive sono plausibili" begin
-    @test_broken prova_ogni_primitiva_ha_meccanismo_e_fonte()
+    @test prova_ogni_primitiva_ha_meccanismo_e_fonte()
 end

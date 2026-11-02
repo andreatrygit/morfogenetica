@@ -4,9 +4,11 @@
 # Regola, sul canale "dentro di sé": se stato[marca] == 1 secerno `tasso` (quantità/min).
 # Predicato di fine: nessuno.
 #
-# Cosa si chiederebbe a una cellula vera: esprimere e secernere una proteina segnale (come le
-# cellule di un organizzatore). Chi è marcata lo decide una fase precedente, o la condizione
-# iniziale.
+# Meccanismo: le cellule sorgente esprimono e secernono una proteina segnale, che diffonde e si
+#   degrada nel tessuto (Dpp nel disco dell'ala di Drosophila). Chi è marcata lo decide una fase
+#   precedente, o la condizione iniziale.
+# Fonte: Kicheva et al., "Kinetics of morphogen gradient formation", Science 315, 521–525 (2007),
+#   doi:10.1126/science.1135774.
 
 export secerni
 

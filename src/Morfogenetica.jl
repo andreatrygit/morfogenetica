@@ -30,6 +30,7 @@ include(joinpath(RADICE, "motore", "14_popolazione.jl"))
 # Le primitive: una regola per file, ognuna elencata a mano come i file del motore.
 include(joinpath(RADICE, "primitive", "costringi.jl"))
 include(joinpath(RADICE, "primitive", "secerni.jl"))
+include(joinpath(RADICE, "primitive", "attiva_inibisci.jl"))
 
 # I programmi: la composizione delle fasi e le catene.
 include(joinpath(RADICE, "programmi", "composizione.jl"))

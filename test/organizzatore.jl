@@ -16,8 +16,8 @@
 # ore: una sola macchia nasce in un tessuto di circa 1 mm, in giorni. Cellule di 15 µm di lato
 # (26 µm di diametro, come le cellule profonde di una blastula).
 #
-# Ogni prova è una funzione che restituisce un Bool. Commit rosso: marcate @test_broken finché
-# il codice non c'è.
+# Ogni prova è una funzione che restituisce un Bool. Scritte prima del codice (commit rosso, con
+# @test_broken), passano dal commit verde.
 
 const NODAL_LEFTY = (Da = 42.0, ka = 0.0073, Dh = 1134.0, kh = 0.0041, κ = 0.29)
 
@@ -106,7 +106,7 @@ function prova_senza_diffusivita_diversa_niente_macchia()
 end
 
 @testset "R5 organizzatore senza seme (Nodal/Lefty)" begin
-    @lenta @test_broken prova_una_macchia_senza_seme()
-    @lenta @test_broken prova_decide_il_rumore()
-    @lenta @test_broken prova_senza_diffusivita_diversa_niente_macchia()
+    @lenta @test prova_una_macchia_senza_seme()
+    @lenta @test prova_decide_il_rumore()
+    @lenta @test prova_senza_diffusivita_diversa_niente_macchia()
 end
