@@ -582,6 +582,16 @@ meccanico è di 10 minuti invece di 5 (la piega si muove con un tempo di circa 3
 passate da 5 non arrivava a regime); "mantenuta" si misura contro l'equilibrio statico, non
 contro la profondità a metà corsa.
 
+**Il conflitto, alla composizione** (correzione dello stesso giorno). `insieme` decideva il
+conflitto confrontando le intenzioni restituite con quelle a riposo, e così una regola che
+scrive il valore a riposo (`costringi(Λ = 0)`, che spegne) sembrava non toccare niente:
+`costringi(Λ = 0) ‖ costringi(Λ = 3)` dava Λ = 3 senza errore. Ora ogni fase dichiara che cosa
+scrive (`Fase(...; scrive)`: le intenzioni, :secrezioni, :deposita, :richiesta), `insieme`
+rifiuta quando compone due fasi che scrivono la stessa intenzione o la richiesta, e le fasi non
+dichiarate, e la passata rifiuta una regola che scrive fuori dalla dichiarazione. Il conflitto
+diventa una proprietà del programma, non di una corsa: si vede per ogni cellula e qualunque sia
+il segnale. Quattro prove in `test/composizione.jl`; tocca `13` congelato, con l'impronta nuova.
+
 **Che cosa manca.** La forma a due taglie di cellula; il #14 come prova dinamica; una placca
 più larga che si chiude in una coppa (contatto in 3D, R6); l'elezione dell'organizzatore e la
 catena di gastrulazione.

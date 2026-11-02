@@ -18,8 +18,8 @@
 # vinceva in silenzio Λ = 3. Una scrittura del valore a riposo e un "non tocco" non si
 # distinguono dai risultati: si distinguono solo dichiarandoli.
 #
-# Ogni prova è una funzione che restituisce un Bool. Commit rosso: marcate @test_broken finché
-# il codice non c'è.
+# Ogni prova è una funzione che restituisce un Bool. Scritte prima del codice (commit rosso, con
+# @test_broken), passano dal commit verde.
 
 function prova_conflitto_alla_composizione()
     a = costringi(; Λ = 0.0, sostanza = :s, soglia = 0.0)
@@ -66,8 +66,8 @@ function prova_la_passata_controlla_le_dichiarazioni()
 end
 
 @testset "composizione: il conflitto si vede alla composizione" begin
-    @test_broken prova_conflitto_alla_composizione()
-    @test_broken prova_insieme_dichiara_l_unione()
-    @test_broken prova_non_dichiarata_non_si_compone()
-    @test_broken prova_la_passata_controlla_le_dichiarazioni()
+    @test prova_conflitto_alla_composizione()
+    @test prova_insieme_dichiara_l_unione()
+    @test prova_non_dichiarata_non_si_compone()
+    @test prova_la_passata_controlla_le_dichiarazioni()
 end
