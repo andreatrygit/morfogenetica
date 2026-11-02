@@ -87,42 +87,57 @@ struct Percezione
 end
 
 """
-    Uscita(stato, intenzioni, secrezioni, dichiara; deposita, richiesta = :nessuna, piano = NaN)
+    Uscita(; intenzioni, stato, dichiara, secrezioni, deposita, richiesta = nothing, piano = NaN)
 
-Ciò che la regola produce: il nuovo stato interno, le intenzioni meccaniche (tensioni e volume
-bersaglio), le secrezioni (quantità/min per sostanza), ciò che la cellula dichiara alle vicine,
-ciò che depone nella matrice (quantità/min per matrice), e una richiesta: `:nessuna`,
-`:dividiti` (con `piano`, l'angolo in rad della linea di divisione nel piano del foglio, `NaN`
-per la regola di Hertwig) o `:muori`.
+Ciò che la regola produce, come delta: contiene solo ciò che la regola scrive, e la presenza
+di una voce è il registro delle scritture (una scrittura del valore a riposo si distingue da
+un "non tocco"). `intenzioni`: i campi di `Intenzioni3D` scritti, per esempio `(Λa = 3.0,)`;
+quelli non scritti tornano a riposo. `stato`: le voci dello stato interno scritte; le altre
+restano com'erano. `dichiara`: il messaggio di questa passata alle vicine. `secrezioni` e
+`deposita`: quantità/min per sostanza e per matrice. `richiesta`: `:dividiti` (con `piano`,
+l'angolo in rad della linea di divisione nel piano del foglio, `NaN` per la regola di
+Hertwig), `:muori`, `:nessuna`, o `nothing` se non scritta.
 """
 struct Uscita
+    intenzioni::Dict{Symbol,Float64}
     stato::Dict{Symbol,Float64}
-    intenzioni::Intenzioni3D
-    secrezioni::Dict{Symbol,Float64}
     dichiara::Dict{Symbol,Float64}
+    secrezioni::Dict{Symbol,Float64}
     deposita::Dict{Symbol,Float64}
-    richiesta::Symbol
+    richiesta::Union{Nothing,Symbol}
     piano::Float64
 end
 
-function Uscita(stato, intenzioni, secrezioni, dichiara; deposita = Dict{Symbol,Float64}(),
-                richiesta = :nessuna, piano = NaN)
-    richiesta in (:nessuna, :dividiti, :muori) ||
+function Uscita(; intenzioni = NamedTuple(), stato = Dict{Symbol,Float64}(),
+                dichiara = Dict{Symbol,Float64}(), secrezioni = Dict{Symbol,Float64}(),
+                deposita = Dict{Symbol,Float64}(), richiesta = nothing, piano = NaN)
+    ints = Dict{Symbol,Float64}(Symbol(k) => Float64(v) for (k, v) in pairs(intenzioni))
+    all(in(fieldnames(Intenzioni3D)), keys(ints)) ||
+        throw(ArgumentError("intenzioni sconosciute: $(setdiff(keys(ints), fieldnames(Intenzioni3D)))"))
+    (richiesta === nothing || richiesta in (:nessuna, :dividiti, :muori)) ||
         throw(ArgumentError("richiesta sconosciuta: $richiesta"))
-    return Uscita(stato, intenzioni, secrezioni, dichiara, Dict{Symbol,Float64}(deposita),
-                  richiesta, Float64(piano))
+    return Uscita(ints, Dict{Symbol,Float64}(stato), Dict{Symbol,Float64}(dichiara),
+                  Dict{Symbol,Float64}(secrezioni), Dict{Symbol,Float64}(deposita), richiesta,
+                  Float64(piano))
 end
+
+# Le intenzioni di una cellula: quelle a riposo, con i campi che l'uscita scrive.
+_applica(riposo::Intenzioni3D, u::Uscita) =
+    Intenzioni3D((get(u.intenzioni, f, getfield(riposo, f)) for f in fieldnames(Intenzioni3D))...)
+
+_richiede(u::Uscita) = !(u.richiesta === nothing || u.richiesta == :nessuna)
 
 """
     Fase(nome, regola, parametri, fine; scrive = nothing)
 
 Una riga della tabella di fasi: `regola(p, parametri)` → `Uscita` e `fine(p, parametri)` →
-Bool, funzioni pure della percezione `p`. `scrive` dichiara che cosa la regola scrive: le
-intenzioni (:σa, :σb, :σl, :Λa, :V0), :secrezioni, :deposita, :richiesta. Una fase dichiarata
-può essere composta con `insieme`, e la passata rifiuta la sua regola se scrive altro; una
-fase non dichiarata (`nothing`) può scrivere tutto ma non si compone. Il conflitto si vede
-così alla composizione: una scrittura del valore a riposo e un "non tocco" non si
-distinguono dai risultati, solo dalle dichiarazioni.
+Bool, funzioni pure della percezione `p`. La fase dichiara che cosa la regola scrive:
+`scrive`, fra le intenzioni (:σa, :σb, :σl, :Λa, :V0), :secrezioni, :deposita, :richiesta;
+`stato`, le voci dello stato interno; `dichiara`, le voci del messaggio alle vicine. Una fase
+dichiarata si compone con `insieme`, che rifiuta i conflitti quando compone (per ogni cellula,
+qualunque sia la corsa), e la passata confronta l'uscita, che è un delta, con la
+dichiarazione: una voce scritta e non dichiarata è un errore. Una fase non dichiarata
+(`scrive = nothing`) può scrivere tutto ma non si compone.
 """
 struct Fase{R,F,P<:NamedTuple}
     nome::Symbol
@@ -130,30 +145,38 @@ struct Fase{R,F,P<:NamedTuple}
     parametri::P
     fine::F
     scrive::Union{Nothing,Tuple{Vararg{Symbol}}}
+    scrive_stato::Union{Nothing,Tuple{Vararg{Symbol}}}
+    scrive_dichiara::Union{Nothing,Tuple{Vararg{Symbol}}}
 end
 
 const SCRIVIBILI = (:σa, :σb, :σl, :Λa, :V0, :secrezioni, :deposita, :richiesta)
 
-function Fase(nome, regola, parametri, fine; scrive = nothing)
-    scrive === nothing && return Fase(Symbol(nome), regola, parametri, fine, nothing)
+function Fase(nome, regola, parametri, fine; scrive = nothing, stato = (), dichiara = ())
+    scrive === nothing && return Fase(Symbol(nome), regola, parametri, fine, nothing, nothing, nothing)
     d = Tuple(Symbol.(scrive))
     all(in(SCRIVIBILI), d) ||
         throw(ArgumentError("la fase $nome dichiara $(setdiff(d, SCRIVIBILI)), che non si scrive"))
-    return Fase(Symbol(nome), regola, parametri, fine, d)
+    return Fase(Symbol(nome), regola, parametri, fine, d, Tuple(Symbol.(stato)),
+                Tuple(Symbol.(dichiara)))
 end
 
-# La regola ha scritto soltanto ciò che la sua fase dichiara? (Le intenzioni non dichiarate
-# devono restare quelle a riposo, `p.intenzioni`.)
+# La regola ha scritto soltanto ciò che la sua fase dichiara? L'uscita è un delta: ogni voce
+# presente è una scrittura, anche se vale quanto prima.
 function _controlla_dichiarazione(f::Fase, p::Percezione, u::Uscita)
     f.scrive === nothing && return nothing
     fuori(cosa) = throw(ArgumentError("la fase $(f.nome) scrive $cosa senza dichiararlo"))
-    for campo in fieldnames(Intenzioni3D)
-        campo in f.scrive && continue
-        getfield(u.intenzioni, campo) == getfield(p.intenzioni, campo) || fuori(campo)
+    for campo in keys(u.intenzioni)
+        campo in f.scrive || fuori(campo)
     end
-    (:secrezioni in f.scrive || all(iszero, values(u.secrezioni))) || fuori(:secrezioni)
-    (:deposita in f.scrive || all(iszero, values(u.deposita))) || fuori(:deposita)
-    (:richiesta in f.scrive || u.richiesta == :nessuna) || fuori(:richiesta)
+    (:secrezioni in f.scrive || isempty(u.secrezioni)) || fuori(:secrezioni)
+    (:deposita in f.scrive || isempty(u.deposita)) || fuori(:deposita)
+    (:richiesta in f.scrive || u.richiesta === nothing) || fuori(:richiesta)
+    for k in keys(u.stato)
+        k in f.scrive_stato || fuori("stato[:$k]")
+    end
+    for k in keys(u.dichiara)
+        k in f.scrive_dichiara || fuori("dichiara[:$k]")
+    end
     return nothing
 end
 
@@ -325,8 +348,8 @@ function passata!(e::Embrione; ordine = eachindex(e.cellule))
         s = e.cellule[c]
         if s.morente                    # in apoptosi il programma è fermo e il volume scende
             V0 = max(e.volume_apoptosi, s.intenzioni.V0 * exp(-e.dt / e.tempo_apoptosi))
-            uscite[c] = Uscita(copy(s.stato), _con_volume(s.intenzioni, V0), Dict{Symbol,Float64}(),
-                               Dict{Symbol,Float64}())
+            r = s.intenzioni
+            uscite[c] = Uscita(; intenzioni = (σa = r.σa, σb = r.σb, σl = r.σl, Λa = r.Λa, V0 = V0))
             continue
         end
         p = _percezione(e, c, vicine[c])
@@ -340,8 +363,8 @@ function passata!(e::Embrione; ordine = eachindex(e.cellule))
     end
     for (c, s) in enumerate(e.cellule)
         u = uscite[c]
-        s.stato = copy(u.stato); s.dichiara = copy(u.dichiara)
-        s.intenzioni = u.intenzioni; s.secrezioni = copy(u.secrezioni)
+        merge!(s.stato, u.stato); s.dichiara = copy(u.dichiara)
+        s.intenzioni = _applica(s.riposo, u); s.secrezioni = copy(u.secrezioni)
         if avanza[c]
             s.fase += 1
             s.ingresso = e.passata + 1
@@ -397,7 +420,7 @@ end
 function _popolazione!(e::Embrione, uscite)
     t = e.tessuto
     richieste = [c for c in eachindex(e.cellule)
-                 if uscite[c].richiesta != :nessuna && !e.cellule[c].morente]
+                 if _richiede(uscite[c]) && !e.cellule[c].morente]
     isempty(richieste) && return e
     e.topologia == :prismi ||
         throw(ArgumentError("dividersi e morire chiedono il guscio a prismi (topologia = :prismi)"))
@@ -425,7 +448,7 @@ function _popolazione!(e::Embrione, uscite)
         e.prossima_identita += 1
         push!(e.cellule, figlia)
         t.intenzioni[c] = s.intenzioni; t.intenzioni[f] = figlia.intenzioni
-        push!(uscite, Uscita(copy(s.stato), s.intenzioni, Dict{Symbol,Float64}(), Dict{Symbol,Float64}()))
+        push!(uscite, Uscita())
         push!(e.eventi, (passata = e.passata, tipo = :divisione, identita = figlia.identita))
     end
     return e

@@ -5,7 +5,7 @@
 #     .vicine::Vector{Vicina}  (fase e dichiarazioni)     dalle vicine
 #     .matrice                                            dalla matrice (vuota per ora)
 #     .concentrazioni                                     misura assoluta
-#   Uscita(stato, intenzioni, secrezioni, dichiara)       ciò che una regola produce
+#   Uscita(; intenzioni, stato, secrezioni, dichiara)    ciò che una regola produce (un delta)
 #   Fase(nome, regola, parametri, fine)                   una riga della tabella di fasi;
 #                                                         regola(p, parametri) → Uscita,
 #                                                         fine(p, parametri) → Bool
@@ -46,7 +46,7 @@ function distanze(t, da)
 end
 
 uscita_ferma(p; stato = p.stato, dichiara = Dict{Symbol,Float64}()) =
-    Uscita(copy(stato), p.intenzioni, Dict{Symbol,Float64}(), dichiara)
+    Uscita(; stato = copy(stato), dichiara)
 
 # Nessun campo della percezione può portare lo stato globale: si percorrono i tipi.
 function _tipi_raggiungibili(T, visti = Set{Any}())
@@ -177,8 +177,7 @@ end
 function prova_interruttori()
     t = foglio_programma(1)
     campo = Campo(Sostanza(:s, 6.0, 0.1); origine = (-15.0, -15.0, -5.0), h = 2.0, n = (15, 15, 13))
-    regola(p, par) = Uscita(copy(p.stato), Intenzioni3D(1.0, 1.0, 1.0, 1.0, 1000.0),
-                            Dict(:s => 1.0), Dict{Symbol,Float64}())
+    regola(p, par) = Uscita(; intenzioni = (Λa = 1.0,), secrezioni = Dict(:s => 1.0))
     programma = [Fase(:f, regola, NamedTuple(), (p, par) -> false)]
     e = Embrione(t, programma; parametri = P_PROGRAMMA, dt = 1.0, campi = Dict(:s => campo),
                  interruttori = Interruttori(chimica = false, onda = true, meccanica = false,
@@ -199,7 +198,8 @@ function programma_costringi(Λ, soglia, durata_sorgente)
     function regola(p, par)
         u = base.regola(p, base.parametri)
         q = get(p.stato, :sorgente, 0.0) == 1 && p.eta < durata_sorgente ? 20.0 : 0.0
-        return Uscita(u.stato, u.intenzioni, merge(u.secrezioni, Dict(:segnale => q)), u.dichiara)
+        return Uscita(; intenzioni = u.intenzioni, stato = u.stato, dichiara = u.dichiara,
+                      secrezioni = merge(u.secrezioni, Dict(:segnale => q)))
     end
     return [Fase(:costringi, regola, base.parametri, base.fine)]
 end

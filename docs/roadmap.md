@@ -47,7 +47,7 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `programmi/composizione.jl` | `insieme` (‖, rifiuta i conflitti) e `con_fine` | fatta |
 | `programmi/invaginazione.jl` | la prima forma: l'invaginazione di una placca | fatta (R5) |
 
-Prove: `scripts/prove.sh`, 832 passate e 5 rotte (le prove rosse delle uscite a delta) al 2 novembre, circa 10 minuti (il grosso è Newton a
+Prove: `scripts/prove.sh`, 837 passate e nessuna rotta al 2 novembre, circa 10 minuti (il grosso è Newton a
 matrice piena sui tessuti 3D). Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -282,15 +282,17 @@ con l'impronta nuova e la ragione in `prove/congelati.txt`. `costringi` dichiara
 `secerni` `(:secrezioni,)`; una fase senza dichiarazione può scrivere tutto ma non si compone.
 Lo stato interno e le dichiarazioni alle vicine restano controllati sui valori, alla corsa.
 
-**Uscite a delta e dichiarazioni di stato e vicine: commit rosso fatto** (2 novembre). Lo
+**Uscite a delta e dichiarazioni di stato e vicine: fatto** (2 novembre). Lo
 stato interno e le dichiarazioni alle vicine si univano ancora per valori, e ogni regola
 restituiva lo stato intero: un contatore composto con `costringi` dava un conflitto falso, e
 una scrittura del valore a riposo restava invisibile. Analisi delle alternative (lock, MVCC,
 proxy) in `docs/piano.md`, sezione 18. Scelta: dichiarazioni statiche anche per le voci di
 stato e dichiarazione (il conflitto alla composizione, per ogni cellula) più uscite a delta,
 che contengono solo ciò che la regola scrive (il registro esatto delle scritture, che la
-passata confronta con la dichiarazione). Cinque prove in `test/composizione.jl`, marcate
-`@test_broken`; tocca `13` congelato.
+passata confronta con la dichiarazione). Cinque prove in `test/composizione.jl`, scritte prima;
+tocca `13` congelato, con l'impronta nuova. Una regola ora restituisce solo ciò che scrive:
+`Uscita(; intenzioni = (Λa = 3.0,), stato = Dict(:n => 1.0))`; lo stato non scritto resta, le
+intenzioni non scritte tornano a riposo, la dichiarazione è il messaggio della passata.
 
 Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
 `prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);

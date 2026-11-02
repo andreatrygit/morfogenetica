@@ -19,7 +19,8 @@
 # distinguono dai risultati: si distinguono solo dichiarandoli.
 #
 # Ogni prova è una funzione che restituisce un Bool. Scritte prima del codice (commit rosso, con
-# @test_broken), passano dal commit verde.
+# @test_broken), passano dal commit verde. Le prove della seconda parte, più sotto, hanno
+# seguito lo stesso percorso.
 
 function prova_conflitto_alla_composizione()
     a = costringi(; Λ = 0.0, sostanza = :s, soglia = 0.0)
@@ -52,9 +53,7 @@ end
 
 function prova_la_passata_controlla_le_dichiarazioni()
     # una regola che scrive Λa: dichiarata passa, non dichiarata no
-    regola(p, par) = Uscita(copy(p.stato), Intenzioni3D(p.intenzioni.σa, p.intenzioni.σb,
-                                                         p.intenzioni.σl, 2.0, p.intenzioni.V0),
-                            Dict{Symbol,Float64}(), Dict{Symbol,Float64}())
+    regola(p, par) = Uscita(; intenzioni = (Λa = 2.0,))
     fai(scrive) = Embrione(foglio_programma(1), [Fase(:f, regola, NamedTuple(), (p, par) -> false; scrive)];
                            parametri = P_PROGRAMMA, dt = 1.0, interruttori = Interruttori(; SPENTO...))
     passata!(fai((:Λa,)))
@@ -143,9 +142,9 @@ end
     @test prova_insieme_dichiara_l_unione()
     @test prova_non_dichiarata_non_si_compone()
     @test prova_la_passata_controlla_le_dichiarazioni()
-    @test_broken prova_stato_senza_falsi_conflitti()
-    @test_broken prova_conflitto_su_stato_e_dichiara_alla_composizione()
-    @test_broken prova_la_scrittura_del_valore_a_riposo_si_vede()
-    @test_broken prova_lo_stato_non_dichiarato_non_si_scrive()
-    @test_broken prova_lo_stato_e_un_delta()
+    @test prova_stato_senza_falsi_conflitti()
+    @test prova_conflitto_su_stato_e_dichiara_alla_composizione()
+    @test prova_la_scrittura_del_valore_a_riposo_si_vede()
+    @test prova_lo_stato_non_dichiarato_non_si_scrive()
+    @test prova_lo_stato_e_un_delta()
 end
