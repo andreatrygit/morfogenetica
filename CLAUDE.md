@@ -61,12 +61,17 @@ confronto/            lo stesso esperimento in un motore maturo
 
 ## Le prove
 
-Non ci sono test automatici su GitHub: la batteria si lancia a mano dalle sessioni, **prima di
-ogni commit che tocca `motore/`, `primitive/` o `programmi/`**, e sempre quando l'utente lo chiede.
+Non ci sono test automatici su GitHub: la batteria si lancia a mano dalle sessioni.
 
 ```
-scripts/prove.sh
+scripts/prove.sh          tutte le prove, circa 10 minuti
+scripts/prove.sh veloci   salta i gruppi marcati @lenta (test/lente.jl), circa 2 minuti
 ```
+
+Le veloci **prima di ogni commit che tocca `primitive/`, `programmi/` o `test/`**; la batteria
+intera **prima di ogni commit che tocca `motore/`, prima di aprire o aggiornare una PR**, e
+sempre quando l'utente lo chiede. Una prova nuova che porta un tessuto 3D all'equilibrio molte
+volte si marca `@lenta`.
 
 Se una prova fallisce, lo si dice chiaramente all'utente: non si commenta, non si salta, non si
 allenta la tolleranza per farla passare.

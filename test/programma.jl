@@ -292,8 +292,8 @@ end
     @test prova_cono_di_luce()
     @test prova_ordine_irrilevante()
     @test prova_interruttori()
-    @test prova_costringi_fa_i_cunei()
+    @lenta @test prova_costringi_fa_i_cunei()
     @test prova_la_marca_e_un_ipotesi_sul_presente()
     @test prova_griglia_segue_la_scatola()
-    @test prova_riproducibile()
+    @lenta @test prova_riproducibile()
 end

@@ -219,9 +219,9 @@ end
     @test prova_dividi_secondo_hertwig()
     @test prova_la_figlia_eredita()
     @test prova_popolazione_ogni_m_passate()
-    @test prova_la_morte_e_un_estrusione()
+    @lenta @test prova_la_morte_e_un_estrusione()
     @test prova_la_popolazione_chiede_i_prismi()
     @test prova_la_matrice_persiste()
     @test prova_casualita_con_seme()
-    @test prova_risultato_negativo_16()
+    @lenta @test prova_risultato_negativo_16()
 end

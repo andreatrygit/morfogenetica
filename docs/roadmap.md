@@ -47,8 +47,9 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `programmi/composizione.jl` | `insieme` (‖, rifiuta i conflitti) e `con_fine` | fatta |
 | `programmi/invaginazione.jl` | la prima forma: l'invaginazione di una placca | fatta (R5) |
 
-Prove: `scripts/prove.sh`, 837 passate e nessuna rotta al 2 novembre, circa 10 minuti (il grosso è Newton a
-matrice piena sui tessuti 3D). Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
+Prove: `scripts/prove.sh`, 837 passate e nessuna rotta al 3 novembre, circa 10 minuti (il
+grosso è Newton a matrice piena sui tessuti 3D); `scripts/prove.sh veloci` salta i 18 gruppi
+marcati `@lenta` e dura circa 2 minuti (779 prove). Quando lanciare quale: `CLAUDE.md`. Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
 vuoto** "CONGELATO: MOTORE-…-V1" e dall'impronta in `prove/congelati.txt`.
@@ -308,8 +309,8 @@ Confronto con `prove/attesi.md` sui rapporti e sui comportamenti, non sui valori
 ### R6 — Infrastruttura (quando una forma la chiede)
 
 - **Solutore sparso**: Newton con matrice piena non regge migliaia di cellule; servono la matrice
-  delle derivate seconde sparsa e un solutore adatto. Già ora la batteria dura 5 minuti:
-  separare prove veloci e lente.
+  delle derivate seconde sparsa e un solutore adatto.
+- Prove veloci e lente separate: fatto il 3 novembre (`test/lente.jl`, `scripts/prove.sh veloci`).
 - **Contatto in 3D**: oggi solo nel modello laterale; senza, un foglio che si piega può
   attraversarsi.
 - Le operazioni topologiche nei fogli periodici: fatto con R1.

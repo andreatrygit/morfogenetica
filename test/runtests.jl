@@ -1,9 +1,11 @@
-# Batteria delle prove. Si lancia con `scripts/prove.sh` (vedi CLAUDE.md).
+# Batteria delle prove. Si lancia con `scripts/prove.sh` (tutte) o `scripts/prove.sh veloci`
+# (salta i gruppi marcati @lenta; vedi test/lente.jl e CLAUDE.md).
 using Test
 using Random
 using Morfogenetica
 
 include("previsioni.jl")
+include("lente.jl")
 
 @testset "Morfogenetica" begin
     @testset "il pacchetto si carica" begin
@@ -28,3 +30,5 @@ include("previsioni.jl")
     include("fisica_confronto_3d.jl")
     include("congelati.jl")
 end
+
+SOLO_VELOCI && @info "Prove veloci: saltati $(LENTE_SALTATE[]) gruppi lenti. La batteria intera è scripts/prove.sh."

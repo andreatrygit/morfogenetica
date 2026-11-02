@@ -168,8 +168,8 @@ end
     @test prova_continuita()
     @test prova_forze_esatte_dopo_le_operazioni()
     @test prova_scambio_intero_in_due_passi()
-    @test prova_scutoide_forzato_torna_indietro()
-    @test prova_bordo_libero_trova_equilibrio()
+    @lenta @test prova_scutoide_forzato_torna_indietro()
+    @lenta @test prova_bordo_libero_trova_equilibrio()
     @test prova_cellula_isolata_si_arrotonda()
     @test prova_spigolo_di_una_faccia_triangolare_si_rifiuta()
 end
