@@ -43,7 +43,7 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `13_programma.jl` | percezione a quattro canali, tabella di fasi, onda, passata | **in corso, non congelato** (mancano popolazione e matrice) |
 | `primitive/costringi.jl` | la prima primitiva: anello apicale teso dove la sostanza supera la soglia | in corso |
 
-Prove: `scripts/prove.sh`, 808 passate e nessuna rotta al 2 novembre, circa 6 minuti (il grosso è Newton a
+Prove: `scripts/prove.sh`, 819 passate e 9 rotte (le prove rosse della chiusura di R4) al 2 novembre, circa 6 minuti (il grosso è Newton a
 matrice piena sui tessuti 3D). Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -203,8 +203,23 @@ bordo bloccato, la cellula centrale secerne, le 7 dentro la soglia tendono l'ane
 e dopo 30 passate da 1 minuto il rapporto fra area apicale e basale è 0.31–0.45 dentro e 1.43
 nel secondo anello (le vicine si allargano all'apice).
 
-Resta per chiudere R4: divisione e morte (passo 7 della passata), matrice (passo 8), casualità
-con seme dentro le regole; poi si congela `13`. Il #14 come prova dinamica (l'anello che stringe
+**Chiusura di R4: commit rosso fatto** (2 novembre). Otto prove in `test/popolazione.jl`
+(divisione che conserva il volume e gli invarianti, divisione secondo Hertwig, la figlia che
+eredita fase, stato e programma, popolazione ogni m passate e il suo interruttore, morte come
+estrusione, matrice che persiste, casualità con seme) e una in `test/operazioni.jl`: un difetto
+trovato in `11` congelato (sotto). Il codice va in `13` e in un file nuovo,
+`motore/14_popolazione.jl`. Poi si congelano `13` e `14`.
+
+Scelta: divisione e morte solo nel guscio a prismi (scambi di `08`, estrusione di `09`), che le
+sa già fare. Nel modello generale una cellula che si restringe tutta insieme non arriva al
+triangolo: gli spigoli apicali e basali diventano triangoli (scutoidi) e restano pareti alte
+15 µm, poi la meccanica non converge. Va fra i risultati negativi; la morte nel modello generale
+è un lavoro di R7.
+
+Il difetto di `11`: `spigolo_a_triangolo!` non controllava che le facce dello spigolo, che perdono
+un vertice, restassero almeno triangoli; su uno spigolo di una faccia triangolare rompeva gli
+invarianti e sollevava un errore invece di rifiutare. La prova che fallisce è
+`prova_spigolo_di_una_faccia_triangolare_si_rifiuta`; la correzione verrà con l'impronta nuova. Il #14 come prova dinamica (l'anello che stringe
 fino a uno scambio) si fa con R5, quando servono le operazioni topologiche dentro la passata.
 
 

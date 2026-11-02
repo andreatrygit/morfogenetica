@@ -139,6 +139,27 @@ function prova_cellula_isolata_si_arrotonda()
     return r.convergito && isempty(problemi_topologici(t)) && energia(t, P_3D) < 456.03
 end
 
+function prova_spigolo_di_una_faccia_triangolare_si_rifiuta()
+    # Dopo I→H sullo spigolo apicale, la parete fra A e B è un triangolo. Il suo spigolo basale
+    # non può diventare a sua volta un triangolo: la parete resterebbe con due vertici.
+    # L'operazione deve rifiutare (`nothing`) e lasciare il tessuto com'era, non rompere gli
+    # invarianti (trovato il 2 novembre: una cellula che si restringe tutta insieme ci arriva).
+    t = foglio_operazioni()
+    r = spigolo_a_triangolo!(t, spigolo_apicale_12(t)...; lunghezza_nuova = 1.0)
+    r === nothing && return false
+    A, B = r.perdono
+    f = t.facce[findfirst(f -> f.etichetta == laterale && A in f.cellule && B in f.cellule, t.facce)]
+    length(f.vertici) == 3 || return false
+    basali = [v for v in f.vertici if v != r.vertici[3]]
+    prima = deepcopy(t)
+    s = try
+        spigolo_a_triangolo!(t, basali...; lunghezza_nuova = 1.0)
+    catch
+        :errore
+    end
+    return s === nothing && t.x == prima.x && firma(t) == firma(prima) && isempty(problemi_topologici(t))
+end
+
 @testset "R1 operazioni elementari" begin
     @test prova_invarianti_dei_fogli()
     @test prova_invarianti_violati_si_vedono()
@@ -150,4 +171,5 @@ end
     @test prova_scutoide_forzato_torna_indietro()
     @test prova_bordo_libero_trova_equilibrio()
     @test prova_cellula_isolata_si_arrotonda()
+    @test_broken prova_spigolo_di_una_faccia_triangolare_si_rifiuta()
 end
