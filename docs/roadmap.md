@@ -41,7 +41,7 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `11_operazioni.jl` | operazioni elementari generali: spigolo↔triangolo, contrazione al bordo libero, invarianti; anche nei fogli periodici | congelato, `motore-operazioni-v1` |
 | `12_chimica.jl` | una sostanza che diffonde su griglia 3D, con degradazione, secrezione e assorbimento delle cellule | **in corso, non congelato** (R3 verde) |
 
-Prove: `scripts/prove.sh`, 795 passate e nessuna rotta al 31 ottobre, circa 6 minuti (il grosso è Newton a
+Prove: `scripts/prove.sh`, 795 passate e 11 rotte (le prove rosse di R4) al 2 novembre, circa 6 minuti (il grosso è Newton a
 matrice piena sui tessuti 3D). Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -182,7 +182,23 @@ la griglia e con il passo. Coefficienti di diffusione e degradazione da letterat
 Regressione: il risultato negativo #1 (la necrosi da limite di diffusione non stabilizza un lume)
 va riprovato con la chimica vera.
 
-### R4 — Percezione e programma (specifica, sezioni 5–8)
+### R4 — Percezione e programma (specifica, sezioni 5–8) (in corso)
+
+Stato: **commit rosso fatto** (2 novembre). Undici prove in `test/programma.jl`, marcate
+`@test_broken`; i nomi che il codice deve avere sono in testa al file. Il codice va in
+`motore/13_programma.jl` (percezione, fasi, passata) e `primitive/costringi.jl` (la prima
+primitiva); `adatta_alla_scatola!` in `motore/12_chimica.jl`, che così si potrà congelare. Le
+prove: la percezione non può portare lo stato globale (si percorrono i tipi); la regola riceve
+solo la percezione; l'onda delle fasi è monotona e avanza di un contatto per passata, e spenta
+lascia avanzare solo chi ha visto la fine da sé; l'orologio è della cellula (burattinaio 3);
+il cono di luce, cioè nessuna decisione globale (burattinai 1 e 2); l'ordine delle cellule non
+conta; gli interruttori; `costringi` fa i cunei dove la sostanza secreta dalla cellula centrale
+supera la soglia; la marca è un'ipotesi sul presente (spenta la sorgente, le cellule smettono
+da sé); la griglia segue la scatola; le corse sono riproducibili.
+
+Fuori da questo primo passo: divisione e morte (passo 7 della passata), matrice (passo 8),
+casualità con seme dentro le regole.
+
 
 La struttura di percezione con i soli quattro canali, costruita senza accesso allo stato globale
 (il tipo lo impedisce); la tabella di fasi copiata in ogni cellula; l'avanzamento monotono
