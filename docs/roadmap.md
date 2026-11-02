@@ -44,7 +44,7 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `14_popolazione.jl` | divisione nel guscio a prismi (angolo dato o regola di Hertwig) | congelato, `motore-popolazione-v1` |
 | `primitive/costringi.jl` | la prima primitiva: anello apicale teso dove la sostanza supera la soglia | fatta (le primitive non si congelano: si ridisegnano) |
 
-Prove: `scripts/prove.sh`, 822 passate e nessuna rotta al 2 novembre, circa 6 minuti (il grosso è Newton a
+Prove: `scripts/prove.sh`, 822 passate e 6 rotte (le prove rosse di R5) al 2 novembre, circa 6 minuti (il grosso è Newton a
 matrice piena sui tessuti 3D). Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -247,7 +247,21 @@ come uscita di una fase (tensioni, volume bersaglio, richieste di dividersi, mor
 differenziare). Prima primitiva: `costringi` come anello apicale. I tre burattinai del codice
 vecchio (sezione 8 della specifica) diventano prove che non devono ripresentarsi.
 
-### R5 — Prime forme
+### R5 — Prime forme (in corso)
+
+Stato: **commit rosso fatto** (2 novembre) per la prima forma, l'invaginazione di una placca.
+Sei prove in `test/invaginazione.jl`, marcate `@test_broken`. Il codice va in `programmi/`
+(il programma `invaginazione` e l'operatore `insieme`, il ‖ dell'algebra) e in
+`primitive/secerni.jl`; il motore è congelato e non si tocca. Le prove sono comportamenti
+(`prove/attesi.md`, quaderno): la placca che costringe scende dal lato basale, senza
+costrizione resta piatta, più forte la costrizione più profonda, mantenuta resta, rilasciata si
+riapre (la piega è elastica); `insieme` rifiuta due regole che toccano la stessa intenzione
+(la legge del conflitto manca ancora, specifica sezione 5). Un esperimento prima delle prove:
+nel foglio periodico 8 × 8, sette cellule con Λ = 3 nN abbassano l'apice di 4.8 µm.
+
+L'organizzatore è per ora una condizione iniziale; l'elezione che lo sceglie senza seme viene
+con la catena di gastrulazione.
+
 
 L'invaginazione 3D di una placca che stringe l'anello apicale (oggi possibile: l'apice si
 stringe e il foglio si piega), poi la catena di gastrulazione compilata (specifica, sezione 5).
