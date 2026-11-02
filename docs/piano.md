@@ -458,9 +458,58 @@ D ≈ 20 µm²/s, con assorbimento dai recettori): per il motore conta λ, che �
 | convergenza nel tempo | primo ordine: errore 2.07 volte più grande al passo doppio; un passo oltre il limite è rifiutato |
 | cellule del guscio che secernono | massa N·q·T, anche nel foglio periodico, dove i centri stanno nella scatola |
 
-**Che cosa manca.** La griglia non segue la scatola, che nei fogli periodici è un'incognita
-della meccanica: da decidere con R4, quando chimica e meccanica girano nella stessa passata.
-`12` non è ancora congelato per questo.
+**Che cosa mancava.** La griglia non seguiva la scatola: fatto con R4 (sezione 15), e `12` è
+congelato.
+
+## 15. Percezione e programma (roadmap R4)
+
+`motore/13_programma.jl` e `primitive/costringi.jl`, in red-green: prima le undici prove di
+`test/programma.jl`, poi il codice (2 novembre).
+
+**La percezione.** Un tipo, `Percezione`, con i quattro canali e nient'altro: dentro di sé
+(fase, orologio nella fase, età, stato interno, intenzioni a riposo, volume e aree del proprio
+corpo), dalle vicine (fase e dichiarazioni di ogni cellula a contatto, alla passata
+precedente), dalla matrice (vuoto per ora), misura assoluta (la concentrazione di ogni sostanza
+alla propria posizione). Una prova percorre i tipi raggiungibili dalla percezione: non ci sono
+`Tessuto3D`, `Campo`, `Embrione`, `Any` né funzioni, quindi una regola non ha modo di leggere lo
+stato globale. Tutto è copiato: una regola non può nemmeno modificarlo.
+
+**Il programma.** Una tabella di `Fase` (regola, parametri, predicato di fine) copiata in ogni
+cellula. Avanzamento monotono: alla propria fine, o per l'onda (una vicina è già oltre). La
+passata fa vicinato, chimica, percezione e programma (sincroni: tutte le cellule leggono lo
+stato precedente), meccanica (un passo implicito di dt), topologia (le operazioni elementari) e
+registro dell'osservatore. Un interruttore per chimica, onda, meccanica e topologia.
+
+**I burattinai della specifica (sezione 8) come prove.** L'orologio è della cellula (passate da
+quando è entrata nella fase), non della simulazione. Il cono di luce: due embrioni che
+differiscono nello stato di una sola cellula restano identici, dopo k passate, a distanza
+maggiore di k − 1 contatti, e differiscono a distanza minore. Una quiete o una stabilità
+decise su tutte le cellule (i burattinai 1 e 2) romperebbero il cono. L'onda avanza di un
+contatto per passata; spenta, avanza solo chi ha visto la fine da sé.
+
+**`costringi`.** Dove la concentrazione alla propria posizione supera la soglia, la tensione
+dell'anello apicale è Λ; altrimenti quella a riposo. Pezzo di foglio di 37 cellule a bordo
+bloccato, la cellula centrale secerne (D = 6 µm²/min, k = 0.1/min), soglia fra il primo e il
+secondo anello (letta dall'osservatore in una corsa preparatoria), Λ = 3 nN, passo meccanico
+1 min:
+
+| passata | cellule attive | apice/base, centro | apice/base, primo anello (max) | apice/base, secondo anello (min) |
+| --- | --- | --- | --- | --- |
+| 5 | 1 | 0.29 | 1.18 | 1.02 |
+| 10 | 7 | 0.57 | 0.56 | 1.28 |
+| 20 | 7 | 0.51 | 0.35 | 1.42 |
+| 30 | 7 | 0.45 | 0.31 | 1.43 |
+
+Spento (Λ = 0) il rapporto resta 1 entro il 2%. Con la sorgente che tace dopo 15 passate, le
+cellule smettono di costringere da sé quando la sostanza si degrada: la condizione si rivaluta
+a ogni passata ("una marca è un'ipotesi sul presente", specifica, sezione 8).
+
+**La griglia segue la scatola** (`adatta_alla_scatola!` in `12`): nei fogli periodici i passi
+x e y sono Lx/nx e Ly/ny, e le concentrazioni si scalano con il volume del voxel (massa
+conservata). Con questo `12` è congelato (`motore-chimica-v1`).
+
+**Che cosa manca.** Divisione e morte, matrice, casualità con seme nelle regole: poi si congela
+`13`.
 
 ## Fonti
 

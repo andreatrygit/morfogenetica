@@ -20,8 +20,9 @@
 #                                tensione dell'anello apicale dove la sostanza supera la soglia
 #   adatta_alla_scatola!(campo, Lx, Ly)   la griglia periodica segue la scatola
 #
-# Ogni prova è una funzione che restituisce un Bool. Commit rosso: marcate @test_broken finché
-# il codice (motore/13_programma.jl, primitive/costringi.jl) non c'è.
+# Ogni prova è una funzione che restituisce un Bool. Scritte prima del codice
+# (motore/13_programma.jl, primitive/costringi.jl; commit rosso, con @test_broken), passano dal
+# commit verde.
 
 const P_PROGRAMMA = ParametriMeccanici(K = 0.1, η = 1.0, lunghezza_minima = 0.05,
                                        k_contatto = 0.0, d_contatto = 0.5)
@@ -210,7 +211,7 @@ function embrione_costringi(Λ, soglia; durata_sorgente = 10^6, meccanica = true
     stati = [Dict{Symbol,Float64}(:sorgente => (c == 1 ? 1.0 : 0.0)) for c in eachindex(t.cellule)]
     return Embrione(t, programma_costringi(Λ, soglia, durata_sorgente); parametri = P_PROGRAMMA,
                     dt = 1.0, campi = Dict(:segnale => campo), stati,
-                    interruttori = Interruttori(chimica = true, onda = true, meccanica,
+                    interruttori = Interruttori(; chimica = true, onda = true, meccanica,
                                                 topologia = false))
 end
 
@@ -284,15 +285,15 @@ function prova_riproducibile()
 end
 
 @testset "R4 percezione e programma" begin
-    @test_broken prova_percezione_senza_stato_globale()
-    @test_broken prova_la_regola_riceve_solo_la_percezione()
-    @test_broken prova_onda_monotona()
-    @test_broken prova_orologio_proprio()
-    @test_broken prova_cono_di_luce()
-    @test_broken prova_ordine_irrilevante()
-    @test_broken prova_interruttori()
-    @test_broken prova_costringi_fa_i_cunei()
-    @test_broken prova_la_marca_e_un_ipotesi_sul_presente()
-    @test_broken prova_griglia_segue_la_scatola()
-    @test_broken prova_riproducibile()
+    @test prova_percezione_senza_stato_globale()
+    @test prova_la_regola_riceve_solo_la_percezione()
+    @test prova_onda_monotona()
+    @test prova_orologio_proprio()
+    @test prova_cono_di_luce()
+    @test prova_ordine_irrilevante()
+    @test prova_interruttori()
+    @test prova_costringi_fa_i_cunei()
+    @test prova_la_marca_e_un_ipotesi_sul_presente()
+    @test prova_griglia_segue_la_scatola()
+    @test prova_riproducibile()
 end

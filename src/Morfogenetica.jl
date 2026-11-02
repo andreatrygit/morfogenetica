@@ -24,5 +24,9 @@ include(joinpath(RADICE, "motore", "09_estrusione.jl"))
 include(joinpath(RADICE, "motore", "10_scutoidi.jl"))
 include(joinpath(RADICE, "motore", "11_operazioni.jl"))
 include(joinpath(RADICE, "motore", "12_chimica.jl"))
+include(joinpath(RADICE, "motore", "13_programma.jl"))
+
+# Le primitive: una regola per file, ognuna elencata a mano come i file del motore.
+include(joinpath(RADICE, "primitive", "costringi.jl"))
 
 end # module
