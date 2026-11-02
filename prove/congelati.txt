@@ -31,3 +31,6 @@ a3b2a08c7e07d3121d09beb47a1bbe59b7c24881de674517c3155b604e7f871f  motore/03_rila
 
 # motore-operazioni-v1 — commit "CONGELATO: MOTORE-OPERAZIONI-V1", 31 ottobre 2026
 cafe7dc031b44e9e0d73c9a7fb154847c3b2df59a97616fa9a83dd73d2264928  motore/11_operazioni.jl
+
+# motore-chimica-v1 — commit "CONGELATO: MOTORE-CHIMICA-V1", 2 novembre 2026
+9f15f90bc1c47f345e9069fe0eb675f01086b07127706de757aaf13a336b67d6  motore/12_chimica.jl

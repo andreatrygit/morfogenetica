@@ -22,6 +22,7 @@
 
 export Bordo, bordo_chiuso, bordo_periodico, Sostanza, Campo, Scambio
 export centro_voxel, massa, concentrazione, passo_massimo, avanza!, centro_cellula
+export adatta_alla_scatola!
 
 @enum Bordo bordo_chiuso bordo_periodico
 
@@ -210,4 +211,21 @@ function centro_cellula(t::Tessuto3D, c::Int)
     Lx, Ly = _periodo(t, t.x)
     riporta(x, L) = (y = mod(x, L); y == L ? 0.0 : y)     # mod di −1e-16 dà L, arrotondato
     return (riporta(g[1], Lx), riporta(g[2], Ly), g[3])
+end
+
+"""
+    adatta_alla_scatola!(campo, Lx, Ly)
+
+Nei fogli periodici la scatola è un'incognita della meccanica e cambia: la griglia la segue.
+I due assi periodici (x e y) prendono il passo Lx/nx e Ly/ny; le concentrazioni si scalano
+con il volume del voxel, così la quantità di sostanza in ogni voxel, e la massa, non cambiano
+(il mezzo si stira con il foglio).
+"""
+function adatta_alla_scatola!(campo::Campo, Lx, Ly)
+    (campo.bordi[1] == bordo_periodico && campo.bordi[2] == bordo_periodico) ||
+        throw(ArgumentError("la griglia segue la scatola solo sugli assi periodici x e y"))
+    nuovo = (Lx / size(campo.c, 1), Ly / size(campo.c, 2), campo.h[3])
+    campo.c .*= (campo.h[1] * campo.h[2]) / (nuovo[1] * nuovo[2])
+    campo.h = nuovo
+    return campo
 end

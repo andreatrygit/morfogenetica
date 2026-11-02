@@ -39,9 +39,11 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `09_estrusione.jl` | estrusione di una cellula triangolare piccola (T2), `rilassa_con_topologia!` | congelato, `motore-estrusione-v1` |
 | `10_scutoidi.jl` | scambio apicale con scutoide (vertice interno al foglio), solo non periodico | congelato, `motore-scutoidi-v1` |
 | `11_operazioni.jl` | operazioni elementari generali: spigolo↔triangolo, contrazione al bordo libero, invarianti; anche nei fogli periodici | congelato, `motore-operazioni-v1` |
-| `12_chimica.jl` | una sostanza che diffonde su griglia 3D, con degradazione, secrezione e assorbimento delle cellule | **in corso, non congelato** (R3 verde) |
+| `12_chimica.jl` | una sostanza che diffonde su griglia 3D, con degradazione, secrezione e assorbimento delle cellule; la griglia segue la scatola | congelato, `motore-chimica-v1` |
+| `13_programma.jl` | percezione a quattro canali, tabella di fasi, onda, passata | **in corso, non congelato** (mancano popolazione e matrice) |
+| `primitive/costringi.jl` | la prima primitiva: anello apicale teso dove la sostanza supera la soglia | in corso |
 
-Prove: `scripts/prove.sh`, 795 passate e nessuna rotta al 31 ottobre, circa 6 minuti (il grosso è Newton a
+Prove: `scripts/prove.sh`, 808 passate e nessuna rotta al 2 novembre, circa 6 minuti (il grosso è Newton a
 matrice piena sui tessuti 3D). Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -154,9 +156,10 @@ La specifica (sezione 3) escludeva il modello 3D pieno. Decisione del 29 ottobre
 **rimandato**, con la strada preparata da R1. Scritto nella specifica; resta da riportarlo nel
 quaderno dell'algebra quando lo si riprende.
 
-### R3 — Chimica (specifica, decisione 5) (in corso)
+### R3 — Chimica (specifica, decisione 5) (fatto)
 
-Stato: **commit verde fatto** (31 ottobre). Le dieci prove di `test/chimica.jl`, scritte prima,
+Stato: **fatto e congelato** (2 novembre, con `adatta_alla_scatola!` venuta da R4). Commit verde
+del 31 ottobre. Le dieci prove di `test/chimica.jl`, scritte prima,
 passano; il codice è in `motore/12_chimica.jl`: griglia cartesiana 3D a voxel (passo per asse, bordi chiusi o
 periodici), schema esplicito con sotto-passi scelti per la stabilità, degradazione e secrezione
 integrate esattamente nel passo (così il bilancio stazionario non ha errore di passo), secrezione e assorbimento alla posizione con pesi trilineari (assorbimento
@@ -168,10 +171,10 @@ Numeri (`docs/piano.md`, sezione 14): λ misurata con errore 2·10⁻⁴ a h = 1
 h = 2 µm (secondo ordine); varianza 6Dt esatta; sorgente puntiforme entro il 3% a 5–8 µm;
 errore nel tempo del primo ordine (rapporto 2.07 dimezzando il passo).
 
-Resta, prima di congelare `12`: la griglia deve seguire la scatola quando la scatola cambia
-(oggi il periodo è fissato alla costruzione; nei fogli periodici la scatola è un'incognita di
-Newton). Si decide con R4, quando chimica e meccanica girano nella stessa passata. La
-regressione del #1 chiede la percezione e le fasi (R4).
+La griglia segue la scatola dei fogli periodici (`adatta_alla_scatola!`, prova in
+`test/programma.jl`): i passi x e y diventano Lx/nx e Ly/ny e le concentrazioni si scalano con
+il volume del voxel, così la massa non cambia. La passata lo fa prima della chimica. Resta la
+regressione del #1 (necrosi da limite di diffusione), che chiede la morte delle cellule.
 
 
 Almeno una sostanza che diffonde, con sorgenti, consumo e degradazione, risolta come PDE su
@@ -182,7 +185,28 @@ la griglia e con il passo. Coefficienti di diffusione e degradazione da letterat
 Regressione: il risultato negativo #1 (la necrosi da limite di diffusione non stabilizza un lume)
 va riprovato con la chimica vera.
 
-### R4 — Percezione e programma (specifica, sezioni 5–8)
+### R4 — Percezione e programma (specifica, sezioni 5–8) (in corso)
+
+Stato: **commit verde fatto** (2 novembre). Le undici prove di `test/programma.jl`, scritte
+prima, passano. Il codice è in `motore/13_programma.jl` (percezione, fasi, passata) e
+`primitive/costringi.jl` (la prima primitiva); `adatta_alla_scatola!` in `motore/12_chimica.jl`,
+ora congelato. Le prove: la percezione non può portare lo stato globale (si percorrono i tipi); la regola riceve
+solo la percezione; l'onda delle fasi è monotona e avanza di un contatto per passata, e spenta
+lascia avanzare solo chi ha visto la fine da sé; l'orologio è della cellula (burattinaio 3);
+il cono di luce, cioè nessuna decisione globale (burattinai 1 e 2); l'ordine delle cellule non
+conta; gli interruttori; `costringi` fa i cunei dove la sostanza secreta dalla cellula centrale
+supera la soglia; la marca è un'ipotesi sul presente (spenta la sorgente, le cellule smettono
+da sé); la griglia segue la scatola; le corse sono riproducibili.
+
+Il numero di `costringi` (regressione, `docs/piano.md` sezione 15): sul pezzo di 37 cellule a
+bordo bloccato, la cellula centrale secerne, le 7 dentro la soglia tendono l'anello (Λ = 3 nN),
+e dopo 30 passate da 1 minuto il rapporto fra area apicale e basale è 0.31–0.45 dentro e 1.43
+nel secondo anello (le vicine si allargano all'apice).
+
+Resta per chiudere R4: divisione e morte (passo 7 della passata), matrice (passo 8), casualità
+con seme dentro le regole; poi si congela `13`. Il #14 come prova dinamica (l'anello che stringe
+fino a uno scambio) si fa con R5, quando servono le operazioni topologiche dentro la passata.
+
 
 La struttura di percezione con i soli quattro canali, costruita senza accesso allo stato globale
 (il tipo lo impedisce); la tabella di fasi copiata in ogni cellula; l'avanzamento monotono
