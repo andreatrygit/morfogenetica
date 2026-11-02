@@ -546,6 +546,46 @@ un'estrusione. L'esperimento ha trovato due difetti di `11` congelato (`spigolo_
 prove che fallivano e l'impronta nuova. Per questo divisione e morte, nella passata, chiedono il
 guscio a prismi.
 
+## 17. La prima forma: l'invaginazione di una placca (roadmap R5)
+
+In red-green: sei prove in `test/invaginazione.jl`, poi il codice (2 novembre). Il motore,
+congelato, non è stato toccato: la forma è un programma (`programmi/invaginazione.jl`) fatto di
+primitive (`secerni`, `costringi`) composte con `insieme`, il ‖ dell'algebra.
+
+**Il programma.** Fase 1, `secerni ‖ costringi`: l'organizzatore secerne il segnale (D = 6
+µm²/min, k = 0.1/min); ogni cellula che lo legge sopra soglia alla propria posizione tende
+l'anello apicale. Senza rilascio la fase non finisce (`sempre mantieni`); con rilascio, dopo T
+passate sull'orologio di ogni cellula la costrizione si spegne. La placca non è disegnata: sono
+le cellule a cui arriva abbastanza segnale (la soglia sta fra il primo e il secondo anello
+attorno all'organizzatore: la placca sono 7 cellule).
+
+**`insieme` e il conflitto.** La legge del conflitto fra due regole attive insieme manca
+(specifica, sezione 5). `insieme` accetta solo regole che non si contraddicono: se toccano la
+stessa intenzione con valori diversi (due `costringi` con Λ diversi) si rifiuta, invece di
+inventare una legge. Secrezioni e deposizioni si sommano.
+
+**Risultati** (foglio periodico 8 × 8 di prismi, all'equilibrio prima di cominciare; passo
+meccanico 10 min):
+
+| prova | esito |
+| --- | --- |
+| la placca si invagina (Λ = 3 nN) | l'apice della placca scende verso il lato basale: −4.26 µm in 12 passate, −4.47 µm all'equilibrio |
+| senza costrizione | resta piatta (|Δz| < 0.005 µm) |
+| più forte, più profonda | Λ = 1.5 nN: −2.34 µm; Λ = 3 nN: −4.26 µm, a 12 passate |
+| mantenuta | non torna mai indietro e arriva all'equilibrio statico entro il 5% |
+| rilasciata dopo 12 passate | torna da −4.26 a −0.27 µm in 12 passate: la piega è elastica, come nel motore vecchio (`prove/attesi.md`) |
+
+**Corretto nel verde, nelle prove.** Tre scelte delle prove rosse erano sbagliate e sono state
+cambiate, dichiarandolo: il foglio deve partire all'equilibrio (i prismi costruiti hanno 974 µm³
+contro un bersaglio di 1000, e il primo assestamento si confondeva con la forma); il passo
+meccanico è di 10 minuti invece di 5 (la piega si muove con un tempo di circa 35 minuti, e in 12
+passate da 5 non arrivava a regime); "mantenuta" si misura contro l'equilibrio statico, non
+contro la profondità a metà corsa.
+
+**Che cosa manca.** La forma a due taglie di cellula; il #14 come prova dinamica; una placca
+più larga che si chiude in una coppa (contatto in 3D, R6); l'elezione dell'organizzatore e la
+catena di gastrulazione.
+
 ## Fonti
 
 - Krajnc e Ziherl, *Theory of epithelial elasticity*, Phys. Rev. E 92, 052713 (2015):
