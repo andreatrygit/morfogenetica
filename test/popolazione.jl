@@ -18,8 +18,9 @@
 #                                   l'indice della figlia, o `nothing`
 #   centro_basale(t, c)             dove la cellula depone e legge la matrice
 #
-# Ogni prova è una funzione che restituisce un Bool. Commit rosso: marcate @test_broken finché
-# il codice (motore/13_programma.jl, motore/14_popolazione.jl) non c'è.
+# Ogni prova è una funzione che restituisce un Bool. Scritte prima del codice
+# (motore/13_programma.jl, motore/14_popolazione.jl; commit rosso, con @test_broken), passano
+# dal commit verde.
 
 volume_tessuto(t) = sum(volume_cellula(t, c) for c in eachindex(t.cellule))
 
@@ -39,6 +40,20 @@ function prova_dividi_conserva_e_rispetta_gli_invarianti()
     return true
 end
 
+# Il baricentro d'area della faccia apicale nel piano del foglio (la posizione della cellula;
+# la media dei vertici, `centro_cellula`, pende verso dove i vertici sono più fitti).
+function baricentro_apicale(t, c)
+    f = t.facce[Morfogenetica._faccia_apicale_indice(t, c)]
+    P = [Morfogenetica._pos(t, t.x, v, im) for (v, im) in zip(f.vertici, f.immagini)]
+    A = 0.0; gx = 0.0; gy = 0.0
+    for k in eachindex(P)
+        p, q = P[k], P[mod1(k + 1, length(P))]
+        a = p[1] * q[2] - q[1] * p[2]
+        A += a; gx += (p[1] + q[1]) * a; gy += (p[2] + q[2]) * a
+    end
+    return (gx / 3A, gy / 3A)
+end
+
 function prova_dividi_secondo_hertwig()
     # una cellula allungata in x si divide con una linea lungo y: le figlie stanno ai due lati
     # in x
@@ -48,7 +63,7 @@ function prova_dividi_secondo_hertwig()
     end
     f = dividi!(t, 1; angolo = NaN)
     f === nothing && return false
-    a = centro_cellula(t, 1); b = centro_cellula(t, f)
+    a = baricentro_apicale(t, 1); b = baricentro_apicale(t, f)
     return abs(a[1] - b[1]) > 5 * abs(a[2] - b[2])
 end
 
@@ -172,13 +187,42 @@ function prova_casualita_con_seme()
     return abs(sum(v) / length(v) - 0.5) < 0.01
 end
 
+# Risultato negativo #16 (docs/risultati-negativi.md): nel modello generale l'apoptosi arriva al
+# prisma triangolare, ma non esce. Il volume bersaglio della cellula centrale scende con tempo
+# 8 passate (passo implicito di 1 minuto, tollerante come nella passata): alla 43 sei
+# operazioni fanno triangoli la faccia apicale e quella basale, alla 44 il volume è
+# transitoriamente negativo, alla 47 la cellula è un prisma triangolare (tre pareti). Lì si
+# ferma: nel modello generale non c'è un'estrusione, e la meccanica resta bloccata alla
+# lunghezza minima. È anche la prova delle due correzioni di 11 del 2 novembre: senza, le
+# operazioni rompono gli invarianti alle passate 43 e 45.
+function prova_risultato_negativo_16()
+    t = foglio_programma(2)
+    V0 = volume_cellula(t, 1)
+    negativo = false
+    for k in 1:48
+        i = t.intenzioni[1]
+        t.intenzioni[1] = Intenzioni3D(i.σa, i.σb, i.σl, i.Λa, V0 * exp(-k / 8))
+        minimizza!(t, P_PROGRAMMA; tolleranza = 1e-8, iterazioni_massime = 200,
+                   ancora = copy(t.x), peso = P_PROGRAMMA.η / 1.0)
+        Morfogenetica._operazioni_dovute!(t; soglia = 0.3, area_soglia = 0.3, lunghezza_nuova = 1.0,
+                                          monostrato = true)
+        negativo |= volume_cellula(t, 1) < 0
+    end
+    ap = t.facce[Morfogenetica._faccia_apicale_indice(t, 1)]
+    laterali = [t.facce[fi] for fi in t.cellule[1].facce if t.facce[fi].etichetta == laterale]
+    return negativo && length(ap.vertici) == 3 && length(laterali) == 3 &&
+           all(length(f.vertici) == 4 for f in laterali) && length(t.cellule) == 19 &&
+           isempty(problemi_topologici(t))
+end
+
 @testset "R4 popolazione, matrice, caso" begin
-    @test_broken prova_dividi_conserva_e_rispetta_gli_invarianti()
-    @test_broken prova_dividi_secondo_hertwig()
-    @test_broken prova_la_figlia_eredita()
-    @test_broken prova_popolazione_ogni_m_passate()
-    @test_broken prova_la_morte_e_un_estrusione()
-    @test_broken prova_la_popolazione_chiede_i_prismi()
-    @test_broken prova_la_matrice_persiste()
-    @test_broken prova_casualita_con_seme()
+    @test prova_dividi_conserva_e_rispetta_gli_invarianti()
+    @test prova_dividi_secondo_hertwig()
+    @test prova_la_figlia_eredita()
+    @test prova_popolazione_ogni_m_passate()
+    @test prova_la_morte_e_un_estrusione()
+    @test prova_la_popolazione_chiede_i_prismi()
+    @test prova_la_matrice_persiste()
+    @test prova_casualita_con_seme()
+    @test prova_risultato_negativo_16()
 end

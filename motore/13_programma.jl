@@ -8,11 +8,12 @@
 # tipo lo impedisce (nessun campo di tipo Tessuto3D, Campo, Any o Function).
 #
 # I quattro canali (specifica, sezione 8):
-#   1. dentro di sé: fase, orologio (passate nella fase), età (passate di vita), stato interno,
-#      intenzioni a riposo, misure del proprio corpo (volume, area apicale, area basale);
+#   1. dentro di sé: fase, orologio (passate nella fase), età (passate di vita), il proprio
+#      numero a caso, stato interno, intenzioni a riposo, misure del proprio corpo (volume, area
+#      apicale, area basale);
 #   2. dalle vicine: per ogni cellula a contatto la sua fase e ciò che ha dichiarato alla
 #      passata precedente;
-#   3. dalla matrice: vuoto, finché la matrice non c'è;
+#   3. dalla matrice: la densità di ogni matrice al proprio lato basale;
 #   4. misura assoluta: la concentrazione di ogni sostanza alla propria posizione.
 #
 # Avanzamento di fase, monotono e senza orologio centrale: una cellula passa da k a k+1 quando
@@ -26,10 +27,26 @@
 #   3. percezione di ogni cellula, dallo stato della passata precedente;
 #   4. programma: regola e avanzamento di fase, per tutte le cellule sullo stesso stato
 #      (sincrono: l'ordine delle cellule non conta);
-#   5. meccanica: le intenzioni diventano le tensioni del tessuto, un passo implicito di dt;
-#   6. topologia: le operazioni elementari dovute (11_operazioni.jl);
-#   9. registro: l'osservatore annota le fasi. Può guardare tutto; nessuna cellula lo legge.
-# Mancano la popolazione (divisione e morte, passo 7) e la matrice (passo 8).
+#   5. meccanica: le intenzioni diventano le tensioni del tessuto, un passo implicito di dt
+#      (se non converge si registra e si va avanti: vedi sotto);
+#   6. topologia: le operazioni elementari dovute, nel modello generale (11_operazioni.jl),
+#      oppure nel guscio a prismi uno scambio di vicine (08), il più corto, e le estrusioni
+#      (09). Uno solo per passata, con la meccanica in mezzo: una cellula in apoptosi arriva
+#      alla soglia con tutti i lati insieme, e più scambi nella stessa volta, ognuno con una
+#      parete nuova più lunga della cellula, la rovesciano (volume negativo);
+#   7. popolazione, ogni `ogni` passate: si accolgono le richieste del passo 4. Chi chiede di
+#      morire entra in apoptosi (programma fermo, volume bersaglio che scende con tempo
+#      caratteristico `tempo_apoptosi` fino a `volume_apoptosi`) e uscirà dal foglio con
+#      un'estrusione; chi chiede di dividersi si divide (14_popolazione.jl), e la figlia
+#      eredita fase, stato e programma, con un'identità sua. Solo nel guscio a prismi;
+#   8. matrice: ogni cellula depone sul proprio lato basale; il deposto non diffonde e resta
+#      anche dopo di lei;
+#   9. registro: l'osservatore annota le fasi e gli eventi. Può guardare tutto; nessuna cellula
+#      lo legge.
+#
+# Casualità: ogni cellula riceve a ogni passata un numero in [0, 1) che dipende solo dal seme
+# dell'embrione, dalla sua identità e dalla passata. Le corse sono riproducibili e l'ordine delle
+# cellule non conta.
 #
 # Ogni meccanismo ha un interruttore (`Interruttori`).
 
@@ -53,12 +70,14 @@ const Misure = NamedTuple{(:volume, :area_apicale, :area_basale),NTuple{3,Float6
 
 Ciò che la regola di una fase riceve: i quattro canali, e nient'altro (vedi l'intestazione di
 `motore/13_programma.jl`). `intenzioni` sono quelle a riposo della cellula; `orologio` conta le
-passate nella fase corrente (0 alla prima), `eta` quelle vissute prima di questa.
+passate nella fase corrente (0 alla prima), `eta` quelle vissute prima di questa; `caso` è un
+numero in [0, 1) dal seme, proprio della cellula e della passata.
 """
 struct Percezione
     fase::Int
     orologio::Int
     eta::Int
+    caso::Float64
     stato::Dict{Symbol,Float64}
     intenzioni::Intenzioni3D
     misure::Misure
@@ -68,16 +87,30 @@ struct Percezione
 end
 
 """
-    Uscita(stato, intenzioni, secrezioni, dichiara)
+    Uscita(stato, intenzioni, secrezioni, dichiara; deposita, richiesta = :nessuna, piano = NaN)
 
 Ciò che la regola produce: il nuovo stato interno, le intenzioni meccaniche (tensioni e volume
-bersaglio), le secrezioni (quantità/min per sostanza) e ciò che la cellula dichiara alle vicine.
+bersaglio), le secrezioni (quantità/min per sostanza), ciò che la cellula dichiara alle vicine,
+ciò che depone nella matrice (quantità/min per matrice), e una richiesta: `:nessuna`,
+`:dividiti` (con `piano`, l'angolo in rad della linea di divisione nel piano del foglio, `NaN`
+per la regola di Hertwig) o `:muori`.
 """
 struct Uscita
     stato::Dict{Symbol,Float64}
     intenzioni::Intenzioni3D
     secrezioni::Dict{Symbol,Float64}
     dichiara::Dict{Symbol,Float64}
+    deposita::Dict{Symbol,Float64}
+    richiesta::Symbol
+    piano::Float64
+end
+
+function Uscita(stato, intenzioni, secrezioni, dichiara; deposita = Dict{Symbol,Float64}(),
+                richiesta = :nessuna, piano = NaN)
+    richiesta in (:nessuna, :dividiti, :muori) ||
+        throw(ArgumentError("richiesta sconosciuta: $richiesta"))
+    return Uscita(stato, intenzioni, secrezioni, dichiara, Dict{Symbol,Float64}(deposita),
+                  richiesta, Float64(piano))
 end
 
 """
@@ -94,7 +127,8 @@ struct Fase{R,F,P<:NamedTuple}
 end
 
 """
-    Interruttori(; chimica = true, onda = true, meccanica = true, topologia = true)
+    Interruttori(; chimica = true, onda = true, meccanica = true, topologia = true,
+                   popolazione = true, matrice = true)
 
 Un interruttore per meccanismo: spento, il passo corrispondente della passata non si fa
 (`onda` spenta: si avanza di fase solo per la propria fine).
@@ -104,17 +138,22 @@ Base.@kwdef struct Interruttori
     onda::Bool = true
     meccanica::Bool = true
     topologia::Bool = true
+    popolazione::Bool = true
+    matrice::Bool = true
 end
 
 """
     StatoCellula
 
-Ciò che il motore tiene per ogni cellula: la sua copia del programma, la fase e la passata in
-cui vi è entrata (`ingresso`), la passata di nascita, lo stato interno, ciò che dichiara, le
-intenzioni a riposo e quelle correnti, le secrezioni correnti.
+Ciò che il motore tiene per ogni cellula: la sua copia del programma, l'identità (non cambia
+quando le cellule si rinumerano), la fase e la passata in cui vi è entrata (`ingresso`), la
+passata di nascita, se è in apoptosi, lo stato interno, ciò che dichiara, le intenzioni a
+riposo e quelle correnti, le secrezioni correnti.
 """
 mutable struct StatoCellula
     programma::Tuple
+    identita::Int
+    morente::Bool
     fase::Int
     ingresso::Int
     nascita::Int
@@ -126,39 +165,71 @@ mutable struct StatoCellula
 end
 
 """
-    Embrione(t, programma; parametri, dt, campi = Dict(), stati = nothing,
-             interruttori = Interruttori(), tolleranza = 1e-8,
+    Embrione(t, programma; parametri, dt, campi = Dict(), matrici = Dict(), stati = nothing,
+             interruttori = Interruttori(), seme = 0, ogni = 1, topologia = :generale,
+             volume_apoptosi = 1.0, tempo_apoptosi = 5.0, tolleranza = 1e-8,
              operazioni = (soglia = 0.3, area_soglia = 0.3, lunghezza_nuova = 1.0))
 
-Un tessuto con un programma copiato in ogni cellula, i campi chimici per nome di sostanza, i
+Un tessuto con un programma copiato in ogni cellula, i campi chimici e le matrici per nome, i
 parametri meccanici e il passo meccanico `dt` (min). `stati[c]` è lo stato interno iniziale
-della cellula c (vuoto se non dato). Le intenzioni a riposo sono quelle del tessuto.
+della cellula c (vuoto se non dato). Le intenzioni a riposo sono quelle del tessuto. `seme`
+fissa la casualità; la popolazione si aggiorna ogni `ogni` passate; `topologia` è `:generale`
+(11_operazioni.jl) o `:prismi` (scambi di 08 ed estrusioni di 09: serve per dividersi e
+morire). Una cellula in apoptosi ha il volume bersaglio che scende esponenzialmente, con tempo
+`tempo_apoptosi` (min, libero), fino a `volume_apoptosi` (µm³, libero).
 """
 mutable struct Embrione
     tessuto::Tessuto3D
     cellule::Vector{StatoCellula}
     campi::Dict{Symbol,Campo}
+    matrici::Dict{Symbol,Campo}
     parametri::ParametriMeccanici
     dt::Float64
     passata::Int
     interruttori::Interruttori
+    seme::Int
+    ogni::Int
+    topologia::Symbol
+    volume_apoptosi::Float64
+    tempo_apoptosi::Float64
     tolleranza::Float64
     operazioni::NamedTuple
+    prossima_identita::Int
     registro::Vector{NamedTuple{(:passata, :fasi),Tuple{Int,Vector{Int}}}}
+    eventi::Vector{NamedTuple{(:passata, :tipo, :identita),Tuple{Int,Symbol,Int}}}
 end
 
 function Embrione(t::Tessuto3D, programma; parametri, dt, campi = Dict{Symbol,Campo}(),
-                  stati = nothing, interruttori = Interruttori(), tolleranza = 1e-8,
+                  matrici = Dict{Symbol,Campo}(), stati = nothing, interruttori = Interruttori(),
+                  seme = 0, ogni = 1, topologia = :generale, volume_apoptosi = 1.0,
+                  tempo_apoptosi = 5.0, tolleranza = 1e-8,
                   operazioni = (soglia = 0.3, area_soglia = 0.3, lunghezza_nuova = 1.0))
     tabella = Tuple(programma)
     isempty(tabella) && throw(ArgumentError("il programma non ha fasi"))
-    cellule = [StatoCellula(tabella, 1, 1, 1,
+    topologia in (:generale, :prismi) || throw(ArgumentError("topologia :generale o :prismi"))
+    ogni >= 1 || throw(ArgumentError("ogni deve essere almeno 1"))
+    cellule = [StatoCellula(tabella, c, false, 1, 1, 1,
                             stati === nothing ? Dict{Symbol,Float64}() : Dict{Symbol,Float64}(stati[c]),
                             Dict{Symbol,Float64}(), t.intenzioni[c], t.intenzioni[c],
                             Dict{Symbol,Float64}()) for c in eachindex(t.cellule)]
-    return Embrione(t, cellule, Dict{Symbol,Campo}(campi), parametri, Float64(dt), 0,
-                    interruttori, tolleranza, operazioni, NamedTuple{(:passata, :fasi),Tuple{Int,Vector{Int}}}[])
+    return Embrione(t, cellule, Dict{Symbol,Campo}(campi), Dict{Symbol,Campo}(matrici), parametri,
+                    Float64(dt), 0, interruttori, seme, ogni, topologia, Float64(volume_apoptosi),
+                    Float64(tempo_apoptosi), tolleranza, operazioni, length(cellule) + 1,
+                    NamedTuple{(:passata, :fasi),Tuple{Int,Vector{Int}}}[],
+                    NamedTuple{(:passata, :tipo, :identita),Tuple{Int,Symbol,Int}}[])
 end
+
+# Un numero in [0, 1) da (seme, identità, passata): SplitMix64, stabile fra versioni di Julia.
+function _mescola(x::UInt64)
+    x += 0x9e3779b97f4a7c15
+    x = (x ⊻ (x >> 30)) * 0xbf58476d1ce4e5b9
+    x = (x ⊻ (x >> 27)) * 0x94d049bb133111eb
+    return x ⊻ (x >> 31)
+end
+_caso(seme, identita, passata) =
+    (_mescola(_mescola(_mescola(seme % UInt64) ⊻ (identita % UInt64)) ⊻ (passata % UInt64)) >> 11) * 2.0^-53
+
+_con_volume(r::Intenzioni3D, V0) = Intenzioni3D(r.σa, r.σb, r.σl, r.Λa, V0)
 
 """
     vicine_di(t, c)
@@ -185,10 +256,12 @@ function _percezione(e::Embrione, c::Int, vicine)
     posizione = isempty(e.campi) ? (0.0, 0.0, 0.0) : centro_cellula(t, c)
     concentrazioni = Dict{Symbol,Float64}(nome => concentrazione(campo, posizione)
                                           for (nome, campo) in e.campi)
-    return Percezione(s.fase, e.passata - s.ingresso, e.passata - s.nascita, copy(s.stato),
-                      s.riposo, misure,
+    base = isempty(e.matrici) ? (0.0, 0.0, 0.0) : centro_basale(t, c)
+    matrice = Dict{Symbol,Float64}(nome => concentrazione(campo, base) for (nome, campo) in e.matrici)
+    return Percezione(s.fase, e.passata - s.ingresso, e.passata - s.nascita,
+                      _caso(e.seme, s.identita, e.passata), copy(s.stato), s.riposo, misure,
                       [Vicina(e.cellule[v].fase, copy(e.cellule[v].dichiara)) for v in vicine],
-                      Dict{Symbol,Float64}(), concentrazioni)
+                      matrice, concentrazioni)
 end
 
 """
@@ -219,6 +292,12 @@ function passata!(e::Embrione; ordine = eachindex(e.cellule))
     avanza = falses(length(e.cellule))
     for c in ordine
         s = e.cellule[c]
+        if s.morente                    # in apoptosi il programma è fermo e il volume scende
+            V0 = max(e.volume_apoptosi, s.intenzioni.V0 * exp(-e.dt / e.tempo_apoptosi))
+            uscite[c] = Uscita(copy(s.stato), _con_volume(s.intenzioni, V0), Dict{Symbol,Float64}(),
+                               Dict{Symbol,Float64}())
+            continue
+        end
         p = _percezione(e, c, vicine[c])
         fase = s.programma[s.fase]
         uscite[c] = fase.regola(p, fase.parametri)
@@ -241,13 +320,100 @@ function passata!(e::Embrione; ordine = eachindex(e.cellule))
         for (c, s) in enumerate(e.cellule)
             t.intenzioni[c] = s.intenzioni
         end
-        passo_implicito!(t, e.parametri, e.dt; tolleranza = e.tolleranza)
+        # il passo implicito di 06_integratore.jl, senza fermarsi se non converge: succede
+        # quando la topologia è in ritardo (una cellula in apoptosi che stringe i lati sotto
+        # la lunghezza minima prima degli scambi); come in rilassa_con_topologia!, si va avanti
+        # e la topologia, al passo 6, sblocca. Resta registrato.
+        r = minimizza!(t, e.parametri; tolleranza = e.tolleranza, iterazioni_massime = 200,
+                       ancora = copy(t.x), peso = e.parametri.η / e.dt)
+        r.convergito || push!(e.eventi, (passata = e.passata, tipo = :meccanica_non_risolta,
+                                         identita = 0))
     end
     # 6. topologia
     if e.interruttori.topologia
-        _operazioni_dovute!(t; e.operazioni..., monostrato = true)
+        if e.topologia == :generale
+            _operazioni_dovute!(t; e.operazioni..., monostrato = true)
+        else
+            _uno_scambio!(t; soglia = e.operazioni.soglia,
+                          lunghezza_nuova = e.operazioni.lunghezza_nuova)
+            for r in estrusioni!(t; area_soglia = e.operazioni.area_soglia)
+                push!(e.eventi, (passata = e.passata, tipo = :estrusione,
+                                 identita = e.cellule[r.cellula].identita))
+                deleteat!(e.cellule, r.cellula); deleteat!(uscite, r.cellula)
+            end
+        end
+    end
+    # 7. popolazione
+    if e.interruttori.popolazione && e.passata % e.ogni == 0
+        _popolazione!(e, uscite)
+    end
+    # 8. matrice
+    if e.interruttori.matrice
+        for (nome, campo) in e.matrici
+            scambi = [Scambio(centro_basale(t, c), get(uscite[c].deposita, nome, 0.0), 0.0)
+                      for c in eachindex(e.cellule) if get(uscite[c].deposita, nome, 0.0) != 0]
+            avanza!(campo, e.dt, scambi)
+        end
     end
     # 9. registro dell'osservatore
     push!(e.registro, (passata = e.passata, fasi = [s.fase for s in e.cellule]))
     return e
+end
+
+# Passo 7: le richieste accolte. Prima le morti, poi le divisioni (le figlie vanno in fondo, così
+# gli indici delle madri non cambiano).
+function _popolazione!(e::Embrione, uscite)
+    t = e.tessuto
+    richieste = [c for c in eachindex(e.cellule)
+                 if uscite[c].richiesta != :nessuna && !e.cellule[c].morente]
+    isempty(richieste) && return e
+    e.topologia == :prismi ||
+        throw(ArgumentError("dividersi e morire chiedono il guscio a prismi (topologia = :prismi)"))
+    for c in richieste
+        uscite[c].richiesta == :muori || continue
+        s = e.cellule[c]
+        s.morente = true
+        s.riposo = _con_volume(s.riposo, e.volume_apoptosi)
+        push!(e.eventi, (passata = e.passata, tipo = :apoptosi, identita = s.identita))
+    end
+    for c in richieste
+        uscite[c].richiesta == :dividiti || continue
+        s = e.cellule[c]
+        t.intenzioni[c] = s.intenzioni
+        f = dividi!(t, c; angolo = uscite[c].piano)
+        if f === nothing
+            push!(e.eventi, (passata = e.passata, tipo = :divisione_rifiutata, identita = s.identita))
+            continue
+        end
+        s.riposo = _con_volume(s.riposo, s.riposo.V0 / 2)
+        s.intenzioni = _con_volume(s.intenzioni, s.intenzioni.V0 / 2)
+        figlia = StatoCellula(s.programma, e.prossima_identita, false, s.fase, s.ingresso,
+                              e.passata + 1, copy(s.stato), copy(s.dichiara), s.riposo,
+                              s.intenzioni, copy(s.secrezioni))
+        e.prossima_identita += 1
+        push!(e.cellule, figlia)
+        t.intenzioni[c] = s.intenzioni; t.intenzioni[f] = figlia.intenzioni
+        push!(uscite, Uscita(copy(s.stato), s.intenzioni, Dict{Symbol,Float64}(), Dict{Symbol,Float64}()))
+        push!(e.eventi, (passata = e.passata, tipo = :divisione, identita = figlia.identita))
+    end
+    return e
+end
+
+# Nel guscio a prismi: lo scambio di vicine sulla parete più corta, se sta sotto soglia in alto
+# e in basso (come `scambi_di_vicine!` di 08_scambi.jl, ma uno solo).
+function _uno_scambio!(t::Tessuto3D; soglia, lunghezza_nuova)
+    W = poligoni(t)
+    corto = nothing
+    Lmin = soglia
+    for w in W, k in eachindex(w)
+        (j1, i1), (j2, i2) = w[k], w[mod1(k + 1, length(w))]
+        La = _norma(_meno(_pos(t, t.x, 2j2 - 1, i2), _pos(t, t.x, 2j1 - 1, i1)))
+        Lb = _norma(_meno(_pos(t, t.x, 2j2, i2), _pos(t, t.x, 2j1, i1)))
+        L = max(La, Lb)
+        if L < Lmin && _quartetto(t, W, j1, j2) !== nothing
+            corto, Lmin = (j1, j2), L
+        end
+    end
+    corto === nothing && return nothing
+    return scambia!(t, corto...; lunghezza_nuova)
 end

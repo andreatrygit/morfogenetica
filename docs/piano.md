@@ -508,8 +508,43 @@ a ogni passata ("una marca è un'ipotesi sul presente", specifica, sezione 8).
 x e y sono Lx/nx e Ly/ny, e le concentrazioni si scalano con il volume del voxel (massa
 conservata). Con questo `12` è congelato (`motore-chimica-v1`).
 
-**Che cosa manca.** Divisione e morte, matrice, casualità con seme nelle regole: poi si congela
-`13`.
+**Che cosa mancava.** Divisione e morte, matrice, casualità con seme: fatti (sezione 16).
+
+## 16. Popolazione, matrice e caso: R4 chiuso
+
+`motore/13_programma.jl` completato e `motore/14_popolazione.jl` nuovo, in red-green: otto prove
+in `test/popolazione.jl` più una in `test/operazioni.jl`, poi il codice (2 novembre). `13` e
+`14` sono congelati.
+
+**La passata completa** (specifica, sezione 6): vicinato, chimica, percezione e programma,
+meccanica, topologia, popolazione ogni `ogni` passate, matrice, registro.
+
+- **Caso.** Ogni cellula riceve a ogni passata un numero in [0, 1) (canale "dentro di sé") che
+  dipende solo dal seme dell'embrione, dall'identità della cellula e dalla passata (SplitMix64):
+  corse riproducibili, indipendenti dall'ordine di visita. Media su 11 400 valori entro 0.01 da
+  1/2.
+- **Matrice.** Un campo per matrice senza diffusione né degradazione; la cellula depone e legge
+  al centro della sua faccia basale; il deposto resta dopo che la cellula smette (e dopo che
+  muore).
+- **Divisione** (`dividi!`, solo nel guscio a prismi): piano verticale per il centro della
+  faccia apicale, con angolo dato o perpendicolare all'asse lungo (Hertwig); i punti nuovi sugli
+  spigoli tagliati, nello stesso punto relativo in alto e in basso, quindi nessun vertice si
+  muove e in un foglio piatto il volume si conserva a 10⁻¹² (anche nel foglio periodico). Madre e
+  figlia hanno metà del volume bersaglio; la figlia eredita fase, ingresso, stato e programma,
+  con un'identità sua. Se il piano passa per un vertice lo si ruota di 0.01 rad.
+- **Morte**: apoptosi (programma fermo, volume bersaglio che scende con tempo 5 min fino a
+  1 µm³, liberi) ed estrusione di `09`. Nel pezzo di 19 cellule la cellula centrale esce alla
+  passata 30: tre scambi di vicine alle passate 28–30, uno per passata, poi l'estrusione. Il
+  passo implicito non converge alle passate 29 e 30, quando la cellula stringe i lati sotto la
+  lunghezza minima prima degli scambi: la passata lo registra e va avanti, come
+  `rilassa_con_topologia!`.
+
+**Il risultato negativo #16.** Nel modello generale la stessa apoptosi arriva al prisma
+triangolare alla passata 47, passando per un volume negativo alla 44, e lì si ferma: non c'è
+un'estrusione. L'esperimento ha trovato due difetti di `11` congelato (`spigolo_a_triangolo!` e
+`triangolo_a_spigolo!` lasciavano facce di due vertici invece di rifiutare), corretti con le
+prove che fallivano e l'impronta nuova. Per questo divisione e morte, nella passata, chiedono il
+guscio a prismi.
 
 ## Fonti
 

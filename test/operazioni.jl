@@ -171,5 +171,5 @@ end
     @test prova_scutoide_forzato_torna_indietro()
     @test prova_bordo_libero_trova_equilibrio()
     @test prova_cellula_isolata_si_arrotonda()
-    @test_broken prova_spigolo_di_una_faccia_triangolare_si_rifiuta()
+    @test prova_spigolo_di_una_faccia_triangolare_si_rifiuta()
 end

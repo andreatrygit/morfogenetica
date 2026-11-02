@@ -264,3 +264,28 @@ riduce il suo volume, perde lati con gli scambi di vicine fino al triangolo ed e
 
 **Regressione:** `test/estrusione.jl`.
 
+### 16. Nel modello generale l'apoptosi arriva al prisma triangolare, ma non esce
+
+**Cosa:** la cellula centrale di un pezzo di foglio a bordo bloccato (19 cellule) entra in
+apoptosi nel modello generale (`11_operazioni.jl`, scutoidi ammessi): il volume bersaglio scende
+con tempo 8 minuti, passo implicito di 1 minuto, operazioni elementari dopo ogni passo.
+
+**Esito:** la cellula si restringe tutta insieme e i sei lati arrivano alla soglia nello stesso
+momento. Alla passata 43 sei operazioni da spigolo a triangolo fanno triangoli la faccia apicale
+e quella basale, ma la cellula ha ancora sei pareti alte 15 µm (scutoidi); alla 44 il volume è
+transitoriamente negativo (−0.27 µm³); alla 47 la cellula è un prisma triangolare. Lì si ferma:
+nel modello generale non c'è un'estrusione, e la meccanica resta bloccata alla lunghezza minima.
+L'esperimento ha anche trovato due difetti delle operazioni di `11` (facce che restavano con due
+vertici), corretti con le loro prove.
+
+**Perché:** le operazioni scelgono lo spigolo più corto; in una cellula che si restringe in modo
+uniforme sono tutti corti insieme, e le pareti nuove, di 1 µm, sono più grandi della cellula.
+Manca l'operazione che toglie una cellula piccola (la T2 dei modelli a vertici 3D), e una regola
+che tenga le pareti nuove proporzionate alla cellula.
+
+**Cosa invece funziona:** nel guscio a prismi la stessa apoptosi esce dal foglio alla passata 30,
+con uno scambio di vicine per passata e l'estrusione di `09` (`test/popolazione.jl`,
+`prova_la_morte_e_un_estrusione`). Divisione e morte nella passata chiedono per ora il guscio a
+prismi (`topologia = :prismi`).
+
+**Regressione:** `test/popolazione.jl`, `prova_risultato_negativo_16`.
