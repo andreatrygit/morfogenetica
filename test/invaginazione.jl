@@ -150,7 +150,7 @@ function prova_insieme_rifiuta_i_conflitti()
     u = g.regola(Percezione(1, 0, 0, 0.5, Dict(:sorgente => 1.0), PRISMA,
                             (volume = 1.0, area_apicale = 1.0, area_basale = 1.0), Vicina[],
                             Dict{Symbol,Float64}(), Dict(:s => 1.0)), g.parametri)
-    return conflitto && u.secrezioni[:s] == 3.0 && u.intenzioni.Λa == 1.0
+    return conflitto && u.secrezioni[:s] == 3.0 && u.intenzioni[:Λa] == 1.0
 end
 
 @testset "R5 invaginazione" begin

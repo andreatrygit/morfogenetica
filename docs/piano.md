@@ -596,6 +596,47 @@ il segnale. Quattro prove in `test/composizione.jl`; tocca `13` congelato, con l
 più larga che si chiude in una coppa (contatto in 3D, R6); l'elezione dell'organizzatore e la
 catena di gastrulazione.
 
+## 18. Il conflitto fra regole: dichiarazioni e uscite a delta
+
+Il problema (due giri, 2 novembre). `insieme` (il ‖) deve accorgersi quando due regole attive
+insieme scrivono la stessa cosa, perché la legge che dice chi vince non c'è. Primo giro: lo
+faceva confrontando i valori delle intenzioni con quelli a riposo, e una regola che scrive il
+valore a riposo (`costringi(Λ = 0)`) non si distingueva da una che non tocca niente. Corretto
+con le dichiarazioni sulle intenzioni. Secondo giro: lo stato interno e le dichiarazioni alle
+vicine si univano ancora per valori, e ogni regola restituiva lo stato intero, quindi un
+contatore composto con `costringi` dava un conflitto falso (4 contro il 3 ricopiato).
+
+**Le alternative esaminate.**
+
+- *Lock.* Servono quando più esecutori scrivono davvero in parallelo. Qui non succede, e un
+  lock fissa un ordine, cioè "vince l'ultimo": proprio la legge del conflitto che manca.
+- *MVCC (versioni).* La passata lo è già: tutte le cellule leggono la versione n e scrivono la
+  n + 1, e ogni cellula scrive solo il proprio stato, quindi fra cellule non ci sono conflitti
+  per costruzione. L'unica concorrenza è fra regole composte nella stessa cellula sulla stessa
+  istantanea, e lì MVCC si riduce a intersecare gli insiemi delle scritture.
+- *Proxy (registro delle scritture).* È ciò che mancava: dai valori non si distingue "ho
+  scritto il valore di prima" da "non ho toccato", da un registro sì. Con regole pure,
+  l'equivalente senza oggetti intercettati è un'uscita a delta, che contiene solo ciò che la
+  regola scrive: la presenza di una voce è la scrittura.
+- *Il limite comune ai tre:* sono controlli alla corsa, e vedono solo i rami eseguiti. Una
+  regola che scrive Λa solo sopra soglia rivela il conflitto solo quando qualche cellula supera
+  la soglia, magari mai nelle prove e poi in una corsa lunga.
+
+**La scelta.** Le due cose insieme: dichiarazioni statiche (`Fase(...; scrive, stato,
+dichiara)`), con cui `insieme` rifiuta i conflitti quando compone, per ogni cellula e qualunque
+sia la corsa; e uscite a delta, il registro esatto delle scritture, che la passata confronta
+con la dichiarazione (una voce scritta e non dichiarata è un errore, anche se vale quanto
+prima). L'unione delle uscite non confronta più valori: le voci sono disgiunte per
+costruzione, e secrezioni e deposizioni si sommano. È la forma che chiede la specifica: il
+programma si compila in una tabella, e il conflitto è una proprietà del programma, non di una
+corsa.
+
+**Che cosa cambia per chi scrive una regola.** `Uscita(; intenzioni = (Λa = 3.0,),
+stato = Dict(:n => 1.0), dichiara = ..., secrezioni = ..., deposita = ..., richiesta = ...)`,
+con le sole voci scritte; lo stato non scritto resta com'era, le intenzioni non scritte
+tornano a riposo, la dichiarazione è il messaggio di questa passata. Prove: nove in
+`test/composizione.jl`.
+
 ## Fonti
 
 - Krajnc e Ziherl, *Theory of epithelial elasticity*, Phys. Rev. E 92, 052713 (2015):

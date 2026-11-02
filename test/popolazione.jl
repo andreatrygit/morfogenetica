@@ -3,7 +3,7 @@
 #
 #   p.caso                          un numero in [0, 1) per cellula e per passata, dal seme
 #                                   dell'embrione e dall'identità della cellula
-#   Uscita(stato, intenzioni, secrezioni, dichiara; deposita, richiesta, piano)
+#   Uscita(; ..., deposita, richiesta, piano)
 #                                   richiesta :nessuna, :dividiti o :muori; piano è l'angolo
 #                                   (rad, nel piano del foglio) della linea di divisione, NaN
 #                                   per la regola di Hertwig (perpendicolare all'asse lungo)
@@ -68,8 +68,7 @@ function prova_dividi_secondo_hertwig()
 end
 
 regola_linea(; richiesta = :dividiti) =
-    (p, par) -> Uscita(copy(p.stato), p.intenzioni, Dict{Symbol,Float64}(), Dict{Symbol,Float64}();
-                       richiesta = get(p.stato, :linea, 0.0) == 1 ? richiesta : :nessuna)
+    (p, par) -> Uscita(; richiesta = get(p.stato, :linea, 0.0) == 1 ? richiesta : :nessuna)
 
 function embrione_linea(; ogni = 1, popolazione = true, meccanica = false, topologia = :prismi,
                         richiesta = :dividiti, t = foglio_programma(2))
@@ -143,8 +142,8 @@ function prova_la_matrice_persiste()
                     n = (30, 30, 4))
     function regola(p, par)
         q = get(p.stato, :linea, 0.0) == 1 && p.eta < 5 ? 1.0 : 0.0
-        return Uscita(merge(p.stato, Dict(:letta => get(p.matrice, :collagene, 0.0))), p.intenzioni,
-                      Dict{Symbol,Float64}(), Dict{Symbol,Float64}(); deposita = Dict(:collagene => q))
+        return Uscita(; stato = Dict(:letta => get(p.matrice, :collagene, 0.0)),
+                      deposita = Dict(:collagene => q))
     end
     stati = [Dict{Symbol,Float64}(:linea => (c == 1 ? 1.0 : 0.0)) for c in eachindex(t.cellule)]
     e = Embrione(t, [Fase(:f, regola, NamedTuple(), (p, par) -> false)]; parametri = P_PROGRAMMA,

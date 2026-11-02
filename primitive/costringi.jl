@@ -15,9 +15,7 @@ export costringi
 
 function _regola_costringi(p::Percezione, par)
     attiva = get(p.concentrazioni, par.sostanza, 0.0) > par.soglia
-    r = p.intenzioni
-    intenzioni = Intenzioni3D(r.σa, r.σb, r.σl, attiva ? par.Λ : r.Λa, r.V0)
-    return Uscita(copy(p.stato), intenzioni, Dict{Symbol,Float64}(), Dict{Symbol,Float64}())
+    return Uscita(; intenzioni = (Λa = attiva ? par.Λ : p.intenzioni.Λa,))
 end
 
 _fine_costringi(p::Percezione, par) = false

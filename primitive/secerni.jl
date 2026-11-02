@@ -12,8 +12,7 @@ export secerni
 
 function _regola_secerni(p::Percezione, par)
     q = get(p.stato, par.marca, 0.0) == 1 ? par.tasso : 0.0
-    return Uscita(copy(p.stato), p.intenzioni, Dict{Symbol,Float64}(par.sostanza => q),
-                  Dict{Symbol,Float64}())
+    return Uscita(; secrezioni = Dict{Symbol,Float64}(par.sostanza => q))
 end
 
 _fine_secerni(p::Percezione, par) = false
