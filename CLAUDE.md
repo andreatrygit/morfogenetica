@@ -31,8 +31,12 @@ non si aggiornano. Lo stato del lavoro è in `docs/piano.md`.
 2. **Ogni grandezza che una cellula usa è uno dei quattro canali**: dentro di sé, dalle vicine,
    dalla matrice, misura assoluta. Se una regola ha bisogno di altro, la regola non è ammissibile:
    non si aggiunge una scorciatoia.
-3. **Ogni comportamento deve essere chiedibile a una cellula vera.** Se è un dispositivo del
-   simulatore (come lo `stampo` o l'`impalcatura`), non entra.
+3. **Ogni comportamento deve essere plausibile: un meccanismo cellulare difendibile, con una
+   fonte.** Non basta dire che cosa si chiederebbe a una cellula vera: il file di ogni primitiva
+   ha una riga `# Meccanismo:` (il meccanismo cellulare) e una `# Fonte:` (la letteratura che lo
+   documenta), e una prova lo controlla. Un dispositivo del simulatore (come lo `stampo` o
+   l'`impalcatura`) o un protocollo di calcolo senza meccanismo noto non entra. Anche i numeri
+   devono essere plausibili: con i parametri misurati, scala e tempi sono quelli che vengono.
 
 ## Regole di metodo
 

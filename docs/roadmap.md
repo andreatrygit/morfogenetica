@@ -47,7 +47,7 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `programmi/composizione.jl` | `insieme` (‖, rifiuta i conflitti) e `con_fine` | fatta |
 | `programmi/invaginazione.jl` | la prima forma: l'invaginazione di una placca | fatta (R5) |
 
-Prove: `scripts/prove.sh`, 837 passate e nessuna rotta al 3 novembre, circa 10 minuti (il
+Prove: `scripts/prove.sh`, 837 passate e 4 rotte (le prove rosse dell'organizzatore) al 3 novembre, circa 10 minuti (il
 grosso è Newton a matrice piena sui tessuti 3D); `scripts/prove.sh veloci` salta i 18 gruppi
 marcati `@lenta` e dura circa 2 minuti (779 prove). Quando lanciare quale: `CLAUDE.md`. Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
@@ -294,6 +294,19 @@ passata confronta con la dichiarazione). Cinque prove in `test/composizione.jl`,
 tocca `13` congelato, con l'impronta nuova. Una regola ora restituisce solo ciò che scrive:
 `Uscita(; intenzioni = (Λa = 3.0,), stato = Dict(:n => 1.0))`; lo stato non scritto resta, le
 intenzioni non scritte tornano a riposo, la dichiarazione è il messaggio della passata.
+
+**L'organizzatore senza seme: commit rosso fatto** (3 novembre). Il criterio di ammissione è
+ora più stretto (`CLAUDE.md`, regola 3): ogni primitiva ha un meccanismo cellulare con una fonte,
+e `test/primitive.jl` lo controlla. L'elezione a biglietti del quaderno è un protocollo di
+calcolo senza meccanismo noto: la sostituisce l'attivazione locale e inibizione a lungo raggio
+(Gierer e Meinhardt; Nodal/Lefty). Con i parametri misurati (Müller et al. 2012: Cyclops e
+Lefty2) c'è un regime di Turing solo con una saturazione dell'autoattivazione (κ ≈ 0.29), e
+l'instabilità ha lunghezza d'onda di circa 1.1 mm e tempo di crescita di circa 13 ore: una sola
+macchia nasce senza seme in un tessuto di circa 1 mm, in giorni (come negli aggregati di Hydra e
+nei gastruloidi; nel pesce zebra la posizione la fissa invece un pre-pattern materno). Scelta
+dell'utente (3 novembre): la primitiva provata a scala vera, sola chimica (`test/organizzatore.jl`,
+tre prove `@lenta`, marcate `@test_broken`); per la catena sul foglio piccolo, un pre-pattern
+dichiarato. La catena completa a scala vera chiede il solutore sparso (R6).
 
 Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
 `prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);
