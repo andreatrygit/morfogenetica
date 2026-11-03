@@ -158,7 +158,10 @@ function avanza!(campo::Campo, Δt, scambi = Scambio[]; passo = passo_massimo(ca
     passi = isfinite(passo) ? max(1, ceil(Int, Δt / passo - 1e-9)) : 1
     dt = Δt / passi
     V = _volume_voxel(campo)
-    pesi = [_pesi(campo, s.posizione) for s in scambi]
+    # il tipo dei pesi è scritto per esteso: `_pesi` ha un tipo di ritorno che il compilatore non
+    # deduce (un asse dà uno o due pesi secondo la posizione), e senza questa riga ogni operazione
+    # sulla griglia nei cicli qui sotto cercava il metodo a tempo di esecuzione (test/prestazioni.jl)
+    pesi = Vector{Tuple{CartesianIndex{3},Float64}}[_pesi(campo, s.posizione) for s in scambi]
     nuovo = similar(campo.c)
     k = campo.sostanza.k
     fattore = exp(-k * dt)

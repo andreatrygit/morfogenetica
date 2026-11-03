@@ -129,6 +129,13 @@ Il motore offre questi comportamenti e **nessun altro**. Una primitiva che ne ri
 
 **Criterio di ammissione, unico:** si deve poter dire cosa si chiederebbe a una cellula vera o a un organoide per ottenerlo. Se la risposta è "nulla, è un dispositivo del simulatore", il comportamento non entra.
 
+> **Aggiornamento, 3 novembre 2026.** Il criterio è più stretto: ogni primitiva deve avere un
+> **meccanismo cellulare difendibile, con una fonte** (righe `# Meccanismo:` e `# Fonte:` nel
+> suo file, controllate da una prova). Un protocollo di calcolo senza meccanismo noto non entra,
+> anche se funziona: per questo l'elezione a biglietti (sezione 5) è sostituita da attivazione
+> locale e inibizione a lungo raggio (Nodal/Lefty), con i parametri misurati e la scala e i
+> tempi che ne vengono (docs/roadmap.md, R5).
+
 Due precedenti utili, da ricordare come esempi di ciò che è stato giustamente espulso: lo **stampo** (una griglia di voxel che ricordava la forma finale: nessuna cellula la possedeva) e l'**impalcatura** (uno stato cellulare dedicato, con privilegi di crescita propri, che teneva aperto un lume). Entrambi funzionavano; entrambi erano dispositivi del simulatore.
 
 ## 8. Nessun burattinaio

@@ -47,9 +47,9 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `programmi/composizione.jl` | `insieme` (‖, rifiuta i conflitti) e `con_fine` | fatta |
 | `programmi/invaginazione.jl` | la prima forma: l'invaginazione di una placca | fatta (R5) |
 
-Prove: `scripts/prove.sh`, 837 passate e nessuna rotta al 3 novembre, circa 10 minuti (il
-grosso è Newton a matrice piena sui tessuti 3D); `scripts/prove.sh veloci` salta i 18 gruppi
-marcati `@lenta` e dura circa 2 minuti (779 prove). Quando lanciare quale: `CLAUDE.md`. Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
+Prove: `scripts/prove.sh`, la batteria intera: 843 passate e nessuna rotta al 3 novembre, circa
+8 minuti e mezzo (il grosso è Newton a matrice piena sui tessuti 3D); `scripts/prove.sh veloci` salta i 21 gruppi
+marcati `@lenta` e dura circa 2 minuti (780 prove). Quando lanciare quale: `CLAUDE.md`. Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
 vuoto** "CONGELATO: MOTORE-…-V1" e dall'impronta in `prove/congelati.txt`.
@@ -294,6 +294,29 @@ passata confronta con la dichiarazione). Cinque prove in `test/composizione.jl`,
 tocca `13` congelato, con l'impronta nuova. Una regola ora restituisce solo ciò che scrive:
 `Uscita(; intenzioni = (Λa = 3.0,), stato = Dict(:n => 1.0))`; lo stato non scritto resta, le
 intenzioni non scritte tornano a riposo, la dichiarazione è il messaggio della passata.
+
+**L'organizzatore senza seme: fatto** (3 novembre), `primitive/attiva_inibisci.jl`. Il criterio di ammissione è
+ora più stretto (`CLAUDE.md`, regola 3): ogni primitiva ha un meccanismo cellulare con una fonte,
+e `test/primitive.jl` lo controlla. L'elezione a biglietti del quaderno è un protocollo di
+calcolo senza meccanismo noto: la sostituisce l'attivazione locale e inibizione a lungo raggio
+(Gierer e Meinhardt; Nodal/Lefty). Con i parametri misurati (Müller et al. 2012: Cyclops e
+Lefty2) c'è un regime di Turing solo con una saturazione dell'autoattivazione (κ ≈ 0.29), e
+l'instabilità ha lunghezza d'onda di circa 1.1 mm e tempo di crescita di circa 13 ore: una sola
+macchia nasce senza seme in un tessuto di circa 1 mm, in giorni (come negli aggregati di Hydra e
+nei gastruloidi; nel pesce zebra la posizione la fissa invece un pre-pattern materno). Scelta
+dell'utente (3 novembre): la primitiva provata a scala vera, sola chimica (`test/organizzatore.jl`,
+tre prove `@lenta`, scritte prima, verdi); per la catena sul foglio piccolo, un pre-pattern
+dichiarato. La catena completa a scala vera chiede il solutore sparso (R6). Numeri (foglio
+periodico di 1672 cellule, circa 1 × 1 mm, passata di 30 min): con il seme 1 il contrasto
+dell'attivatore è 1.18 dopo un giorno, 8 dopo tre, 57 dopo quattro, una sola macchia; con il
+seme 2 una sola macchia altrove, più lenta (2.1 a quattro giorni); con le diffusività uguali
+nessuna macchia (1.003). Costo: 23 minuti per le tre corse, quasi tutto nella secrezione dentro
+`avanza!` di `12` (pesi della griglia con tipo instabile). Decisione dell'utente (3 novembre):
+eccezione dichiarata per le prestazioni (`CLAUDE.md`, regola 1). Fatto in red-green:
+`test/prestazioni.jl`, una prova d'identità (l'impronta delle concentrazioni di un caso fisso con
+1672 sorgenti, presa prima) e una di tempo (meno di 0.5 s). La correzione è una riga in `12`
+(il tipo dei pesi scritto per esteso): da 2.4 a 0.06 s, stessa impronta; la batteria intera,
+con l'organizzatore, scende a 8 minuti e mezzo.
 
 Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
 `prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);

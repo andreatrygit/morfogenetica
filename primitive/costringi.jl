@@ -8,8 +8,11 @@
 # presente, non un ricordo (specifica, sezione 8). Predicato di fine: nessuno (la fase dura
 # finché un'altra fase non la segue per l'onda).
 #
-# Cosa si chiederebbe a una cellula vera: contrarre l'anello di actomiosina apicale dove legge
-# il segnale sopra una soglia (come nel solco ventrale di Drosophila).
+# Meccanismo: la rete di actomiosina apicale (miosina II) si contrae a impulsi e riduce l'area
+#   apicale della cellula, come nel solco ventrale di Drosophila; l'attivazione dipende da un
+#   segnale letto dalla cellula.
+# Fonte: Martin, Kaschube e Wieschaus, "Pulsed contractions of an actin–myosin network drive
+#   apical constriction", Nature 457, 495–499 (2009), doi:10.1038/nature07522.
 
 export costringi
 
