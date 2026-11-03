@@ -323,6 +323,14 @@ eccezione dichiarata per le prestazioni (`CLAUDE.md`, regola 1). Fatto in red-gr
 (il tipo dei pesi scritto per esteso): da 2.4 a 0.06 s, stessa impronta; la batteria intera,
 con l'organizzatore, scende a 8 minuti e mezzo.
 
+**Il gene bersaglio: commit rosso fatto** (3 novembre). A regime la macchia di Nodal arriva a
+circa 1.75 volte il livello di base, e una soglia sulla concentrazione istantanea accende e spegne
+le cellule al bordo. La forma plausibile è un gene bersaglio che si accumula con il segnale e
+decade senza (Dubrulle et al., eLife 2015: contano la cinetica e la durata dell'induzione, non
+una soglia sulla concentrazione). Tre prove in `test/induci.jl`, marcate `@test_broken`; il
+codice va in `primitive/induci.jl`, e `costringi` potrà leggere il prodotto del gene invece
+della concentrazione.
+
 Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
 `prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);
 la placca più larga che si chiude in una coppa (servirà il contatto in 3D, R6); poi la catena di
