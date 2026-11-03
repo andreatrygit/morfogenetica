@@ -49,7 +49,10 @@ aa0961841468d32efd993f15a70fa4d8ca9ad8ab0412c3ea76b90d6041799e34  motore/12_chim
 # 13 modificato ancora il 2 novembre: l'uscita è un delta (registro esatto delle scritture) e
 # le fasi dichiarano anche le voci di stato e di dichiarazione; test che fallivano:
 # test/composizione.jl, seconda parte ("prova_stato_senza_falsi_conflitti" e le altre quattro)
-66262d08cf16591ce7e7392d4f2bd3f2d443d8054ee6100fb4d4819038c0b93a  motore/13_programma.jl
+# 13 esteso il 3 novembre (CLAUDE.md, regola 1, estensione compatibile): l'opzione
+# `solutore = :pieno o :sparso` dell'Embrione; con :pieno, il predefinito, i risultati sono
+# identici bit per bit: test/estensioni.jl ("prova_passata_predefinita_identica")
+3b1852a245d1512a500f690afb4fc5f9a025d71f96d706612f0c62cc720cf96e  motore/13_programma.jl
 
 # motore-popolazione-v1 — commit "CONGELATO: MOTORE-POPOLAZIONE-V1", 2 novembre 2026
 2657f478e974976ced391a567c4326e146cdccd189e455f3bc0654a00fdadb1d  motore/14_popolazione.jl

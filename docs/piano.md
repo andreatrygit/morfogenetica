@@ -637,6 +637,35 @@ con le sole voci scritte; lo stato non scritto resta com'era, le intenzioni non 
 tornano a riposo, la dichiarazione è il messaggio di questa passata. Prove: nove in
 `test/composizione.jl`.
 
+## 19. Il solutore sparso (roadmap R6)
+
+`motore/15_sparso.jl`, in red-green (3 novembre). Lo chiede la catena di gastrulazione a scala
+vera (circa 1 mm, 1700 cellule, circa 20 000 incognite), dove `minimizza!` di `06`, con la
+matrice delle derivate seconde piena, non regge.
+
+**Il metodo.** Lo stesso di `minimizza!` (Newton smorzato, passo accettato solo se l'energia
+scende, spostamento limitato per vertice), con due differenze. La matrice è sparsa: due vertici
+sono accoppiati solo se stanno in una stessa cellula, e la si calcola per differenze del
+gradiente esatto perturbando insieme i vertici che non hanno vicini in comune (colorazione greedy
+a distanza due); le due voci della scatola dei fogli periodici si perturbano da sole e le loro
+righe vengono per simmetria. La fattorizzazione è il Cholesky sparso di CHOLMOD.
+
+**Prove** (`test/sparso.jl`): la matrice sparsa coincide con quella piena entro 10⁻⁶; lo stesso
+minimo di `minimizza!` (bloccato e periodico, con e senza ancora) entro 10⁻⁶ µm e con l'energia
+uguale a 10⁻¹⁰; tre passate con `solutore = :sparso` danno le stesse posizioni di quelle piene
+entro 10⁻⁶ µm; il foglio di 1672 cellule (6688 vertici, 44 colori: 264 gradienti per matrice
+invece di circa 40 000) con una regione larga 300 µm che costringe (Λ = 8 nN) va all'equilibrio
+in circa 4 minuti.
+
+**Da ricordare.** Un foglio grande deve partire all'equilibrio: con proporzioni sbagliate la
+scatola periodica sente migliaia di nN e, con lo spostamento limitato a 1 µm per iterazione,
+impiega centinaia di iterazioni. Per prismi di lato e altezza 15 µm con σa = σb = 1 serve
+σl = 2√3 (altezza/lato = √3·(σa + σb)/σl).
+
+**La regola.** La passata ha l'opzione `solutore`, aggiunta a `13` congelato con la seconda
+eccezione della regola 1 (estensione compatibile): con `:pieno`, il predefinito, i risultati
+sono identici bit per bit (`test/estensioni.jl`).
+
 ## Fonti
 
 - Krajnc e Ziherl, *Theory of epithelial elasticity*, Phys. Rev. E 92, 052713 (2015):

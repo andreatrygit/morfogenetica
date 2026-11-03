@@ -31,6 +31,10 @@ non si aggiornano. Lo stato del lavoro è in `docs/piano.md`.
    modifica fatta solo per la velocità è ammessa se una prova di tempo fallisce prima e passa
    dopo, e se i numeri restano identici bit per bit (un'impronta dei risultati presa prima della
    modifica, in `test/prestazioni.jl`); l'impronta nuova del file ha accanto la ragione.
+   **Seconda eccezione, l'estensione compatibile:** un file congelato può guadagnare un'opzione
+   nuova se, con l'opzione al valore predefinito, i risultati restano identici bit per bit
+   (un'impronta presa prima della modifica, in `test/estensioni.jl`) e la batteria intera passa;
+   anche qui l'impronta nuova del file ha accanto la ragione.
 2. **Ogni grandezza che una cellula usa è uno dei quattro canali**: dentro di sé, dalle vicine,
    dalla matrice, misura assoluta. Se una regola ha bisogno di altro, la regola non è ammissibile:
    non si aggiunge una scorciatoia.
@@ -71,7 +75,7 @@ confronto/            lo stesso esperimento in un motore maturo
 Non ci sono test automatici su GitHub: la batteria si lancia a mano dalle sessioni.
 
 ```
-scripts/prove.sh          tutte le prove, circa 10 minuti
+scripts/prove.sh          tutte le prove, circa 13 minuti
 scripts/prove.sh veloci   salta i gruppi marcati @lenta (test/lente.jl), circa 2 minuti
 ```
 
@@ -100,7 +104,7 @@ registro da GitHub con `JULIA_PKG_SERVER="" scripts/prove.sh`.
 ## Stato
 
 Lo stato aggiornato, modulo per modulo, è in `docs/roadmap.md` (sezione 2); la storia dettagliata
-e i numeri misurati in `docs/piano.md`. In breve: `motore/01`–`14` sono congelati (impronte in
+e i numeri misurati in `docs/piano.md`. In breve: `motore/01`–`14` sono congelati, `15_sparso.jl` (R6) è in corso (impronte in
 `prove/congelati.txt`, la prova "file congelati" fallisce se cambiano; una modifica ammessa
 richiede un test fisico che fallisce e aggiorna l'impronta nello stesso commit); R5, le prime
 forme, è in corso (fatta l'invaginazione di una placca). I moduli congelati sono segnati da commit vuoti "CONGELATO: MOTORE-…-V1" al posto
