@@ -10,8 +10,8 @@
 #   Morfogenetica._hessiana_sparsa(t, p, x)      la matrice, per le prove
 #   Embrione(...; solutore = :pieno o :sparso)  il solutore della passata (predefinito :pieno)
 #
-# Ogni prova è una funzione che restituisce un Bool. Commit rosso: marcate @test_broken finché
-# il codice (motore/15_sparso.jl) non c'è.
+# Ogni prova è una funzione che restituisce un Bool. Scritte prima del codice
+# (motore/15_sparso.jl; commit rosso, con @test_broken), passano dal commit verde.
 
 # La matrice delle derivate seconde piena, per differenze del gradiente esatto (come in 06).
 function hessiana_piena(t, p, x)
@@ -72,21 +72,26 @@ end
 
 function prova_scala_vera()
     # il foglio dell'organizzatore (1672 cellule, circa 1 × 1 mm) con una regione larga 300 µm che
-    # costringe: il solutore sparso lo porta all'equilibrio
-    t = foglio_periodico(fill(Intenzioni3D(1.0, 1.0, 1.0, 0.0, 8768.0), 38 * 44), 38, 44;
+    # costringe: il solutore sparso lo porta all'equilibrio. Il foglio parte all'equilibrio: con
+    # σa = σb = 1 un foglio di prismi sta in piedi con altezza/lato = √3·(σa + σb)/σl, quindi per
+    # lato e altezza di 15 µm serve σl = 2√3 (tensioni libere). Corretto nel verde: con σl = 1 il
+    # foglio voleva cambiare proporzioni, la scatola sentiva migliaia di nN e, a 1 µm per
+    # iterazione, non arrivava in 100 iterazioni.
+    σl = 2sqrt(3)
+    t = foglio_periodico(fill(Intenzioni3D(1.0, 1.0, σl, 0.0, 8768.0), 38 * 44), 38, 44;
                          lato = 15.0, altezza = 15.0)
     Lx, Ly = t.x[end-1], t.x[end]
     for c in eachindex(t.cellule)
         g = centro_cellula(t, c)
-        hypot(g[1] - Lx / 2, g[2] - Ly / 2) < 150 && (t.intenzioni[c] = Intenzioni3D(1.0, 1.0, 1.0, 8.0, 8768.0))
+        hypot(g[1] - Lx / 2, g[2] - Ly / 2) < 150 && (t.intenzioni[c] = Intenzioni3D(1.0, 1.0, σl, 8.0, 8768.0))
     end
     r = minimizza_sparso!(t, P_PROGRAMMA; tolleranza = 1e-6, iterazioni_massime = 100)
     return r.convergito
 end
 
 @testset "R6 solutore sparso" begin
-    @test_broken prova_hessiana_sparsa_uguale_alla_piena()
-    @test_broken prova_stesso_minimo()
-    @test_broken prova_passata_sparsa_come_piena()
-    @lenta @test_broken prova_scala_vera()
+    @test prova_hessiana_sparsa_uguale_alla_piena()
+    @test prova_stesso_minimo()
+    @test prova_passata_sparsa_come_piena()
+    @lenta @test prova_scala_vera()
 end
