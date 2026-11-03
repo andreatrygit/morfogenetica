@@ -7,8 +7,8 @@
 #   costringi(; Λ, soglia, voce)           la stessa costrizione, comandata da stato[voce] invece
 #                                          che da una concentrazione
 #
-# Ogni prova è una funzione che restituisce un Bool. Commit rosso: marcate @test_broken finché
-# il codice non c'è.
+# Ogni prova è una funzione che restituisce un Bool. Scritte prima del codice (commit rosso, con
+# @test_broken), passano dal commit verde.
 
 const GENE = (β = 0.02, γ = log(2) / 60, K = 1.3, n = 4)     # 1/min; t½ = 60 min
 
@@ -56,7 +56,7 @@ function prova_costringi_dal_gene()
 end
 
 @testset "R5 induci: il gene bersaglio" begin
-    @test_broken prova_accumula_e_decade_esattamente()
-    @test_broken prova_un_impulso_breve_non_basta()
-    @test_broken prova_costringi_dal_gene()
+    @test prova_accumula_e_decade_esattamente()
+    @test prova_un_impulso_breve_non_basta()
+    @test prova_costringi_dal_gene()
 end

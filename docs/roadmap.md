@@ -45,6 +45,8 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `15_sparso.jl` | il solutore sparso per i tessuti di migliaia di cellule | **in corso, non congelato** (R6) |
 | `primitive/costringi.jl` | la prima primitiva: anello apicale teso dove la sostanza supera la soglia | fatta (le primitive non si congelano: si ridisegnano) |
 | `primitive/secerni.jl` | secernere un segnale se marcata | fatta |
+| `primitive/attiva_inibisci.jl` | attivatore e inibitore (Nodal/Lefty): l'organizzatore senza seme | fatta |
+| `primitive/induci.jl` | un gene bersaglio che si accumula con il segnale | fatta |
 | `programmi/composizione.jl` | `insieme` (‖, rifiuta i conflitti) e `con_fine` | fatta |
 | `programmi/invaginazione.jl` | la prima forma: l'invaginazione di una placca | fatta (R5) |
 
@@ -323,13 +325,13 @@ eccezione dichiarata per le prestazioni (`CLAUDE.md`, regola 1). Fatto in red-gr
 (il tipo dei pesi scritto per esteso): da 2.4 a 0.06 s, stessa impronta; la batteria intera,
 con l'organizzatore, scende a 8 minuti e mezzo.
 
-**Il gene bersaglio: commit rosso fatto** (3 novembre). A regime la macchia di Nodal arriva a
+**Il gene bersaglio: fatto** (3 novembre), `primitive/induci.jl`, integrato in modo esatto nella
+passata (quindi senza il problema del passo esplicito del #17). A regime la macchia di Nodal arriva a
 circa 1.75 volte il livello di base, e una soglia sulla concentrazione istantanea accende e spegne
 le cellule al bordo. La forma plausibile è un gene bersaglio che si accumula con il segnale e
 decade senza (Dubrulle et al., eLife 2015: contano la cinetica e la durata dell'induzione, non
-una soglia sulla concentrazione). Tre prove in `test/induci.jl`, marcate `@test_broken`; il
-codice va in `primitive/induci.jl`, e `costringi` potrà leggere il prodotto del gene invece
-della concentrazione.
+una soglia sulla concentrazione). Tre prove in `test/induci.jl`, scritte prima, verdi; `costringi`
+può leggere il prodotto del gene (`voce`) invece della concentrazione.
 
 Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
 `prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);

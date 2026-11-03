@@ -32,6 +32,7 @@ include(joinpath(RADICE, "motore", "15_sparso.jl"))
 include(joinpath(RADICE, "primitive", "costringi.jl"))
 include(joinpath(RADICE, "primitive", "secerni.jl"))
 include(joinpath(RADICE, "primitive", "attiva_inibisci.jl"))
+include(joinpath(RADICE, "primitive", "induci.jl"))
 
 # I programmi: la composizione delle fasi e le catene.
 include(joinpath(RADICE, "programmi", "composizione.jl"))
