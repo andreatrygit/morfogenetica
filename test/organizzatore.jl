@@ -9,19 +9,30 @@
 #
 # Parametri (Müller et al., Science 336, 721, 2012, doi:10.1126/science.1221920): Cyclops
 # (attivatore) D = 0.7 µm²/s = 42 µm²/min, k = 1.22e-4/s = 0.0073/min; Lefty2 (inibitore)
-# D = 18.9 µm²/s = 1134 µm²/min, k = 0.69e-4/s = 0.0041/min. Liberi: κ = 0.29 (saturazione
+# D = 18.9 µm²/s = 1134 µm²/min, k = 0.69e-4/s = 0.0041/min. Liberi: κ = 0.35 (saturazione
 # dell'autoattivazione: senza, poiché Lefty si elimina più lentamente di Nodal, lo stato uniforme
-# oscilla; 0.29 massimizza la crescita), rumore 20%, c0. Con questi numeri l'instabilità ha
-# lunghezze d'onda fra 0.7 e 1.9 mm (massimo 1.13 mm) e cresce al più di un fattore e ogni 13
-# ore: una sola macchia nasce in un tessuto di circa 1 mm, in giorni. Cellule di 15 µm di lato
-# (26 µm di diametro, come le cellule profonde di una blastula).
+# oscilla), rumore 20%, c0. Con questi numeri lo stato uniforme è un oscillatore smorzato (periodo
+# circa 16 ore, smorzamento in circa 57 ore) e l'instabilità ha lunghezze d'onda fra 0.8 e 1.6 mm
+# e cresce di un fattore e ogni 23 ore: una sola macchia nasce in un tessuto di circa 1 mm, in
+# giorni. Cellule di 15 µm di lato (26 µm di diametro, come le cellule profonde di una blastula).
+#
+# La passata è di 5 minuti. Le secrezioni sono decise all'inizio di ogni passata e restano fisse
+# fino alla successiva: per il circuito di retroazione è un passo esplicito, stabile solo se la
+# passata è più corta di 2δ/ω² (δ lo smorzamento, ω la frequenza dello stato uniforme), 12.9
+# minuti con κ = 0.35. Risultato negativo #17: con κ = 0.29 il limite è 1.9 minuti, e con passate
+# di 30 minuti lo stato uniforme oscilla per un difetto numerico (prova in fondo al file).
+#
+# Corretto il 3 novembre: le prove verdi della prima versione usavano κ = 0.29 e passate di 30
+# minuti. Le loro conclusioni (una macchia, decide il rumore, niente macchia a diffusività uguali)
+# reggono anche così, ma i numeri del contrasto erano gonfiati dall'oscillazione numerica.
 #
 # Ogni prova è una funzione che restituisce un Bool. Scritte prima del codice (commit rosso, con
 # @test_broken), passano dal commit verde.
 
-const NODAL_LEFTY = (Da = 42.0, ka = 0.0073, Dh = 1134.0, kh = 0.0041, κ = 0.29)
+const NODAL_LEFTY = (Da = 42.0, ka = 0.0073, Dh = 1134.0, kh = 0.0041, κ = 0.35)
 
-function embrione_organizzatore(; seme = 1, rumore = 0.2, Dh = NODAL_LEFTY.Dh)
+function embrione_organizzatore(; seme = 1, rumore = 0.2, Dh = NODAL_LEFTY.Dh, κ = NODAL_LEFTY.κ,
+                                dt = 5.0)
     t = foglio_periodico(fill(Intenzioni3D(1.0, 1.0, 1.0, 0.0, 8768.0), 38 * 44), 38, 44;
                          lato = 15.0, altezza = 15.0)
     Lx, Ly = t.x[end-1], t.x[end]
@@ -35,8 +46,8 @@ function embrione_organizzatore(; seme = 1, rumore = 0.2, Dh = NODAL_LEFTY.Dh)
         campo.c .= c0
     end
     f = attiva_inibisci(; attivatore = :nodal, inibitore = :lefty, ka = NODAL_LEFTY.ka,
-                        kh = NODAL_LEFTY.kh, κ = NODAL_LEFTY.κ, rumore, c0)
-    return Embrione(t, [f]; parametri = P_PROGRAMMA, dt = 30.0, campi, seme,
+                        kh = NODAL_LEFTY.kh, κ, rumore, c0)
+    return Embrione(t, [f]; parametri = P_PROGRAMMA, dt, campi, seme,
                     interruttori = Interruttori(; chimica = true, meccanica = false,
                                                 topologia = false, popolazione = false))
 end
@@ -69,7 +80,7 @@ function corsa_organizzatore(; kw...)
     return get!(_ORGANIZZATORI, sort(collect(kw))) do
         e = embrione_organizzatore(; kw...)
         contrasti = Float64[]
-        for _ in 1:200                                # 100 ore
+        for _ in 1:round(Int, 168 * 60 / e.dt)       # 7 giorni
             passata!(e)
             push!(contrasti, contrasto(e))
         end
@@ -80,7 +91,7 @@ end
 function prova_una_macchia_senza_seme()
     # una sola macchia, che nasce in giorni: nessun organizzatore nel primo giorno
     e, k = corsa_organizzatore(; seme = 1)
-    return k[48] < 1.5 && k[end] > 3 && macchie(e) == 1
+    return k[round(Int, 24 * 60 / e.dt)] < 1.5 && k[end] > 3 && macchie(e) == 1
 end
 
 function prova_decide_il_rumore()
@@ -105,8 +116,27 @@ function prova_senza_diffusivita_diversa_niente_macchia()
     return k[end] < 1.2
 end
 
+# Risultato negativo #17: con κ = 0.29 lo stato uniforme è appena smorzato (periodo circa 16
+# ore, limite di stabilità della passata 1.9 minuti); con passate di 30 minuti il livello medio di
+# Nodal oscilla, per un difetto numerico, del ±30% in 60 ore; con passate di 5 minuti resta
+# entro pochi per cento.
+function prova_risultato_negativo_17()
+    escursione(dt) = begin
+        e = embrione_organizzatore(; seme = 1, κ = 0.29, dt)
+        medie = Float64[]
+        for _ in 1:round(Int, 60 * 60 / dt)
+            passata!(e)
+            a = attivatore(e)
+            push!(medie, sum(a) / length(a))
+        end
+        maximum(medie) - minimum(medie)
+    end
+    return escursione(30.0) > 0.4 && escursione(5.0) < 0.15
+end
+
 @testset "R5 organizzatore senza seme (Nodal/Lefty)" begin
     @lenta @test prova_una_macchia_senza_seme()
     @lenta @test prova_decide_il_rumore()
     @lenta @test prova_senza_diffusivita_diversa_niente_macchia()
+    @lenta @test prova_risultato_negativo_17()
 end

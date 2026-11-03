@@ -312,7 +312,11 @@ periodico di 1672 cellule, circa 1 × 1 mm, passata di 30 min): con il seme 1 il
 dell'attivatore è 1.18 dopo un giorno, 8 dopo tre, 57 dopo quattro, una sola macchia; con il
 seme 2 una sola macchia altrove, più lenta (2.1 a quattro giorni); con le diffusività uguali
 nessuna macchia (1.003). Costo: 23 minuti per le tre corse, quasi tutto nella secrezione dentro
-`avanza!` di `12` (pesi della griglia con tipo instabile). Decisione dell'utente (3 novembre):
+`avanza!` di `12` (pesi della griglia con tipo instabile). **Rifatto il 3 novembre** con κ = 0.35
+e passate di 5 minuti (risultato negativo #17: con 30 minuti il circuito oscillava per un difetto
+numerico; la passata deve stare sotto 2δ/ω²): una sola macchia verso il quinto o sesto giorno,
+contrasto 17 (seme 1) e 14 (seme 2) a 7 giorni, in posti diversi; a diffusività uguali niente
+(1.04). Decisione dell'utente (3 novembre):
 eccezione dichiarata per le prestazioni (`CLAUDE.md`, regola 1). Fatto in red-green:
 `test/prestazioni.jl`, una prova d'identità (l'impronta delle concentrazioni di un caso fisso con
 1672 sorgenti, presa prima) e una di tempo (meno di 0.5 s). La correzione è una riga in `12`

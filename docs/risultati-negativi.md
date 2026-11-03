@@ -289,3 +289,26 @@ con uno scambio di vicine per passata e l'estrusione di `09` (`test/popolazione.
 prismi (`topologia = :prismi`).
 
 **Regressione:** `test/popolazione.jl`, `prova_risultato_negativo_16`.
+
+### 17. Una passata troppo lunga fa oscillare un circuito di retroazione
+
+**Cosa:** l'organizzatore senza seme (`attiva_inibisci`, Nodal/Lefty con i numeri di Müller et
+al. 2012, κ = 0.29) su un foglio di 1672 cellule, con passate di 30 minuti.
+
+**Esito:** il livello medio di Nodal in tutto il tessuto oscilla con un periodo di circa 20 ore
+e un'ampiezza che cresce (fra 0.7 e 1.4 volte lo stato uniforme in 50 ore); una macchia nasce
+lo stesso, ma la catena che ne legge la soglia si accende e si spegne. Con passate di 5 minuti
+lo stesso livello resta fra 0.95 e 1.04.
+
+**Perché:** le secrezioni di ogni cellula sono decise all'inizio della passata e restano fisse
+fino alla successiva, mentre la chimica avanza in sotto-passi. Per un circuito di retroazione è
+un passo di Eulero esplicito: lo stato uniforme linearizzato ha autovalori −δ ± iω, e il passo è
+stabile solo se la passata è più corta di 2δ/ω². Con κ = 0.29 lo stato uniforme è appena
+smorzato (δ = 4·10⁻⁵/min, ω = 0.0066/min, periodo 16 ore) e il limite è 1.9 minuti; con 30
+minuti ogni passata amplifica dell'1.8%. La specifica voleva passate di decine di secondi.
+
+**Cosa invece funziona:** κ = 0.35 (lo stato uniforme si smorza in circa 57 ore, limite 12.9
+minuti) e passate di 5 minuti. Le prove dell'organizzatore della prima versione (κ = 0.29, 30
+minuti) sono state rifatte: le conclusioni reggono, i numeri del contrasto erano gonfiati.
+
+**Regressione:** `test/organizzatore.jl`, `prova_risultato_negativo_17`.
