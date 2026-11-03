@@ -313,7 +313,10 @@ periodico di 1672 cellule, circa 1 × 1 mm, passata di 30 min): con il seme 1 il
 dell'attivatore è 1.18 dopo un giorno, 8 dopo tre, 57 dopo quattro, una sola macchia; con il
 seme 2 una sola macchia altrove, più lenta (2.1 a quattro giorni); con le diffusività uguali
 nessuna macchia (1.003). Costo: 23 minuti per le tre corse, quasi tutto nella secrezione dentro
-`avanza!` di `12` (pesi della griglia con tipo instabile): da risolvere.
+`avanza!` di `12` (pesi della griglia con tipo instabile). Decisione dell'utente (3 novembre):
+eccezione dichiarata per le prestazioni (`CLAUDE.md`, regola 1). **Commit rosso fatto**:
+`test/prestazioni.jl`, una prova d'identità (l'impronta delle concentrazioni di un caso fisso con
+1672 sorgenti, presa prima) e una di tempo (meno di 0.5 s; oggi 2.4 s), marcata `@test_broken`.
 
 Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
 `prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);

@@ -27,7 +27,10 @@ non si aggiornano. Lo stato del lavoro è in `docs/piano.md`.
 
 1. **Il motore si congela quando è validato.** Dopo il tag di validazione, una modifica a
    `motore/` richiede un *test fisico* che fallisce. Una forma che si comporta male non è un motivo
-   per cambiare il motore: si ridisegna la primitiva.
+   per cambiare il motore: si ridisegna la primitiva. **Unica eccezione, le prestazioni:** una
+   modifica fatta solo per la velocità è ammessa se una prova di tempo fallisce prima e passa
+   dopo, e se i numeri restano identici bit per bit (un'impronta dei risultati presa prima della
+   modifica, in `test/prestazioni.jl`); l'impronta nuova del file ha accanto la ragione.
 2. **Ogni grandezza che una cellula usa è uno dei quattro canali**: dentro di sé, dalle vicine,
    dalla matrice, misura assoluta. Se una regola ha bisogno di altro, la regola non è ammissibile:
    non si aggiunge una scorciatoia.
