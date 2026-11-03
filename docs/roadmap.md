@@ -47,10 +47,8 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `programmi/composizione.jl` | `insieme` (‖, rifiuta i conflitti) e `con_fine` | fatta |
 | `programmi/invaginazione.jl` | la prima forma: l'invaginazione di una placca | fatta (R5) |
 
-Prove: `scripts/prove.sh`, la batteria intera: 837 passate e nessuna rotta l'ultima volta che è
-stata lanciata (3 novembre, prima dell'organizzatore), circa 10 minuti; con le tre corse
-dell'organizzatore ne dura circa 33 (il grosso è Newton a matrice piena sui tessuti 3D e la
-secrezione lenta di `12`); `scripts/prove.sh veloci` salta i 21 gruppi
+Prove: `scripts/prove.sh`, la batteria intera: 843 passate e nessuna rotta al 3 novembre, circa
+8 minuti e mezzo (il grosso è Newton a matrice piena sui tessuti 3D); `scripts/prove.sh veloci` salta i 21 gruppi
 marcati `@lenta` e dura circa 2 minuti (780 prove). Quando lanciare quale: `CLAUDE.md`. Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -314,9 +312,11 @@ dell'attivatore è 1.18 dopo un giorno, 8 dopo tre, 57 dopo quattro, una sola ma
 seme 2 una sola macchia altrove, più lenta (2.1 a quattro giorni); con le diffusività uguali
 nessuna macchia (1.003). Costo: 23 minuti per le tre corse, quasi tutto nella secrezione dentro
 `avanza!` di `12` (pesi della griglia con tipo instabile). Decisione dell'utente (3 novembre):
-eccezione dichiarata per le prestazioni (`CLAUDE.md`, regola 1). **Commit rosso fatto**:
+eccezione dichiarata per le prestazioni (`CLAUDE.md`, regola 1). Fatto in red-green:
 `test/prestazioni.jl`, una prova d'identità (l'impronta delle concentrazioni di un caso fisso con
-1672 sorgenti, presa prima) e una di tempo (meno di 0.5 s; oggi 2.4 s), marcata `@test_broken`.
+1672 sorgenti, presa prima) e una di tempo (meno di 0.5 s). La correzione è una riga in `12`
+(il tipo dei pesi scritto per esteso): da 2.4 a 0.06 s, stessa impronta; la batteria intera,
+con l'organizzatore, scende a 8 minuti e mezzo.
 
 Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
 `prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);

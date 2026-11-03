@@ -7,7 +7,8 @@
 # Il caso: la secrezione di molte cellule in `avanza!` (12_chimica.jl). Con 1672 sorgenti e 937
 # sotto-passi (l'inibitore dell'organizzatore, test/organizzatore.jl) durava 3 secondi per
 # passata: i pesi della griglia avevano un tipo che il compilatore non riesce a dedurre, e ogni
-# operazione sulla griglia passava per una ricerca del metodo a tempo di esecuzione.
+# operazione sulla griglia passava per una ricerca del metodo a tempo di esecuzione. Corretto il
+# 3 novembre scrivendo il tipo per esteso: da 2.4 a 0.06 s, stessa impronta.
 
 using SHA
 
@@ -43,5 +44,5 @@ end
 
 @testset "prestazioni del motore congelato" begin
     @test prova_secrezione_identica()
-    @test_broken prova_secrezione_veloce()
+    @test prova_secrezione_veloce()
 end
