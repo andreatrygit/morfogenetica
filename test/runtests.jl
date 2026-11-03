@@ -30,6 +30,8 @@ include("lente.jl")
     include("primitive.jl")
     include("organizzatore.jl")
     include("prestazioni.jl")
+    include("estensioni.jl")
+    include("sparso.jl")
     include("fisica_confronto_3d.jl")
     include("congelati.jl")
 end

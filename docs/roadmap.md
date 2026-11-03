@@ -47,7 +47,7 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `programmi/composizione.jl` | `insieme` (‖, rifiuta i conflitti) e `con_fine` | fatta |
 | `programmi/invaginazione.jl` | la prima forma: l'invaginazione di una placca | fatta (R5) |
 
-Prove: `scripts/prove.sh`, la batteria intera: 843 passate e nessuna rotta al 3 novembre, circa
+Prove: `scripts/prove.sh`, la batteria intera: 843 passate e nessuna rotta al 3 novembre prima del solutore sparso, circa
 8 minuti e mezzo (il grosso è Newton a matrice piena sui tessuti 3D); `scripts/prove.sh veloci` salta i 21 gruppi
 marcati `@lenta` e dura circa 2 minuti (780 prove). Quando lanciare quale: `CLAUDE.md`. Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
@@ -330,6 +330,19 @@ stringe e il foglio si piega), poi la catena di gastrulazione compilata (specifi
 Confronto con `prove/attesi.md` sui rapporti e sui comportamenti, non sui valori.
 
 ### R6 — Infrastruttura (quando una forma la chiede)
+
+**Il solutore sparso: commit rosso fatto** (3 novembre). Lo chiede la catena di gastrulazione a
+scala vera: la catena sul foglio piccolo con un pre-pattern non è plausibile nei numeri (Nodal
+ha una portata di circa 76 µm e Lefty di circa 450, il foglio piccolo misura 60 µm: il segnale lo
+riempirebbe tutto), quindi si va a circa 1 mm e 1700 cellule, dove Newton a matrice piena non
+regge (circa 20 000 incognite). Il codice va in `motore/15_sparso.jl` (`minimizza_sparso!`:
+lo stesso metodo di `minimizza!`, con la matrice delle derivate seconde sparsa, calcolata per
+differenze del gradiente esatto con una colorazione a distanza due, e una fattorizzazione
+sparsa); la passata guadagna l'opzione `solutore = :pieno o :sparso` con la seconda eccezione
+della regola 1, l'estensione compatibile (decisione dell'utente, 3 novembre). Prove:
+`test/sparso.jl` (quattro, marcate `@test_broken`: matrice uguale alla piena, stesso minimo,
+passata sparsa come la piena, un foglio di 1672 cellule all'equilibrio) e `test/estensioni.jl`
+(l'impronta della passata predefinita, presa prima).
 
 - **Solutore sparso**: Newton con matrice piena non regge migliaia di cellule; servono la matrice
   delle derivate seconde sparsa e un solutore adatto.

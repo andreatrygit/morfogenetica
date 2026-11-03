@@ -31,6 +31,10 @@ non si aggiornano. Lo stato del lavoro è in `docs/piano.md`.
    modifica fatta solo per la velocità è ammessa se una prova di tempo fallisce prima e passa
    dopo, e se i numeri restano identici bit per bit (un'impronta dei risultati presa prima della
    modifica, in `test/prestazioni.jl`); l'impronta nuova del file ha accanto la ragione.
+   **Seconda eccezione, l'estensione compatibile:** un file congelato può guadagnare un'opzione
+   nuova se, con l'opzione al valore predefinito, i risultati restano identici bit per bit
+   (un'impronta presa prima della modifica, in `test/estensioni.jl`) e la batteria intera passa;
+   anche qui l'impronta nuova del file ha accanto la ragione.
 2. **Ogni grandezza che una cellula usa è uno dei quattro canali**: dentro di sé, dalle vicine,
    dalla matrice, misura assoluta. Se una regola ha bisogno di altro, la regola non è ammissibile:
    non si aggiunge una scorciatoia.
