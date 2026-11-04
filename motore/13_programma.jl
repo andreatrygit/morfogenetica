@@ -222,6 +222,7 @@ end
     Embrione(t, programma; parametri, dt, campi = Dict(), matrici = Dict(), stati = nothing,
              interruttori = Interruttori(), seme = 0, ogni = 1, topologia = :generale,
              volume_apoptosi = 1.0, tempo_apoptosi = 5.0, tolleranza = 1e-8, solutore = :pieno,
+             meccanica_ogni = 1,
              operazioni = (soglia = 0.3, area_soglia = 0.3, lunghezza_nuova = 1.0))
 
 Un tessuto con un programma copiato in ogni cellula, i campi chimici e le matrici per nome, i
@@ -232,7 +233,10 @@ fissa la casualità; la popolazione si aggiorna ogni `ogni` passate; `topologia`
 morire). Una cellula in apoptosi ha il volume bersaglio che scende esponenzialmente, con tempo
 `tempo_apoptosi` (min, libero), fino a `volume_apoptosi` (µm³, libero). `solutore` è il metodo
 del passo meccanico: `:pieno` (`minimizza!`, 06_integratore.jl) o `:sparso`
-(`minimizza_sparso!`, 15_sparso.jl, per i tessuti di migliaia di cellule).
+(`minimizza_sparso!`, 15_sparso.jl, per i tessuti di migliaia di cellule). Con
+`meccanica_ogni` = m la meccanica avanza solo ogni m passate, con un passo di m·dt (specifica,
+decisione 6: scale di tempo separate; la chimica di un circuito di retroazione chiede passate
+brevi, la meccanica no).
 """
 mutable struct Embrione
     tessuto::Tessuto3D
@@ -250,6 +254,7 @@ mutable struct Embrione
     tempo_apoptosi::Float64
     tolleranza::Float64
     solutore::Symbol
+    meccanica_ogni::Int
     operazioni::NamedTuple
     prossima_identita::Int
     registro::Vector{NamedTuple{(:passata, :fasi),Tuple{Int,Vector{Int}}}}
@@ -259,20 +264,21 @@ end
 function Embrione(t::Tessuto3D, programma; parametri, dt, campi = Dict{Symbol,Campo}(),
                   matrici = Dict{Symbol,Campo}(), stati = nothing, interruttori = Interruttori(),
                   seme = 0, ogni = 1, topologia = :generale, volume_apoptosi = 1.0,
-                  tempo_apoptosi = 5.0, tolleranza = 1e-8, solutore = :pieno,
+                  tempo_apoptosi = 5.0, tolleranza = 1e-8, solutore = :pieno, meccanica_ogni = 1,
                   operazioni = (soglia = 0.3, area_soglia = 0.3, lunghezza_nuova = 1.0))
     tabella = Tuple(programma)
     isempty(tabella) && throw(ArgumentError("il programma non ha fasi"))
     topologia in (:generale, :prismi) || throw(ArgumentError("topologia :generale o :prismi"))
     ogni >= 1 || throw(ArgumentError("ogni deve essere almeno 1"))
     solutore in (:pieno, :sparso) || throw(ArgumentError("solutore :pieno o :sparso"))
+    meccanica_ogni >= 1 || throw(ArgumentError("meccanica_ogni deve essere almeno 1"))
     cellule = [StatoCellula(tabella, c, false, 1, 1, 1,
                             stati === nothing ? Dict{Symbol,Float64}() : Dict{Symbol,Float64}(stati[c]),
                             Dict{Symbol,Float64}(), t.intenzioni[c], t.intenzioni[c],
                             Dict{Symbol,Float64}()) for c in eachindex(t.cellule)]
     return Embrione(t, cellule, Dict{Symbol,Campo}(campi), Dict{Symbol,Campo}(matrici), parametri,
                     Float64(dt), 0, interruttori, seme, ogni, topologia, Float64(volume_apoptosi),
-                    Float64(tempo_apoptosi), tolleranza, solutore, operazioni, length(cellule) + 1,
+                    Float64(tempo_apoptosi), tolleranza, solutore, meccanica_ogni, operazioni, length(cellule) + 1,
                     NamedTuple{(:passata, :fasi),Tuple{Int,Vector{Int}}}[],
                     NamedTuple{(:passata, :tipo, :identita),Tuple{Int,Symbol,Int}}[])
 end
@@ -374,8 +380,8 @@ function passata!(e::Embrione; ordine = eachindex(e.cellule))
             s.ingresso = e.passata + 1
         end
     end
-    # 5. meccanica
-    if e.interruttori.meccanica
+    # 5. meccanica, ogni `meccanica_ogni` passate, con un passo lungo altrettante passate
+    if e.interruttori.meccanica && e.passata % e.meccanica_ogni == 0
         for (c, s) in enumerate(e.cellule)
             t.intenzioni[c] = s.intenzioni
         end
@@ -385,7 +391,7 @@ function passata!(e::Embrione; ordine = eachindex(e.cellule))
         # e la topologia, al passo 6, sblocca. Resta registrato.
         minimo! = e.solutore == :sparso ? minimizza_sparso! : minimizza!
         r = minimo!(t, e.parametri; tolleranza = e.tolleranza, iterazioni_massime = 200,
-                    ancora = copy(t.x), peso = e.parametri.η / e.dt)
+                    ancora = copy(t.x), peso = e.parametri.η / (e.dt * e.meccanica_ogni))
         r.convergito || push!(e.eventi, (passata = e.passata, tipo = :meccanica_non_risolta,
                                          identita = 0))
     end

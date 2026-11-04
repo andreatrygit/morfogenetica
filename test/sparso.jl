@@ -55,7 +55,14 @@ function prova_stesso_minimo()
         ra = minimizza!(a, P_PROGRAMMA; tolleranza = 1e-9, iterazioni_massime = 300, kw...)
         rb = minimizza_sparso!(b, P_PROGRAMMA; tolleranza = 1e-9, iterazioni_massime = 300, kw...)
         (ra.convergito && rb.convergito) || return false
-        maximum(abs, a.x .- b.x) < 1e-6 || return false
+        # un foglio periodico senza ancora si può traslare rigidamente senza cambiare energia: i
+        # due minimi si confrontano a meno della traslazione media dei vertici (corretto il 4
+        # novembre: prima si confrontavano le posizioni assolute, e passava per caso)
+        nv = Morfogenetica._nvert(a)
+        d = [a.x[3k-3+c] - b.x[3k-3+c] for k in 1:nv, c in 1:3]
+        periodico && !ancorato && (d .-= sum(d; dims = 1) ./ nv)
+        maximum(abs, d) < 1e-6 || return false
+        maximum(abs, a.x[3nv+1:end] .- b.x[3nv+1:end]; init = 0.0) < 1e-6 || return false
         isapprox(energia(a, P_PROGRAMMA), energia(b, P_PROGRAMMA); rtol = 1e-10) || return false
     end
     return true

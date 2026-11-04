@@ -338,10 +338,29 @@ l'impegno quando il prodotto del gene supera metà del massimo, poi l'onda e `co
 prodotto del gene. Alla 132ª ora simulata l'organizzatore si è impegnato da solo, l'onda ha
 portato tutte le 1672 cellule nella seconda fase, 78 cellule costringono e la regione è scesa di
 3.6 µm. Fermata lì: la meccanica costava circa 15 s per passata (5–10 iterazioni di Newton, ognuna
-con una matrice nuova da 2.7 s; la fattorizzazione ne costa 0.3). **Commit rosso** dei due
-rimedi: Newton modificato in `15` (riusa la matrice; `prova_passo_grande_veloce`, meno di 5 s per
-passo) e `meccanica_ogni` in `13` (specifica, decisione 6: la meccanica ogni m passate, con passo
-m·dt; estensione compatibile, `prova_meccanica_ogni`).
+con una matrice nuova da 2.7 s; la fattorizzazione ne costa 0.3).
+
+I rimedi (4 novembre), con le prove scritte prima:
+- `meccanica_ogni` in `13` (specifica, decisione 6: la meccanica ogni m passate, con passo m·dt;
+  estensione compatibile): **fatto**, `prova_meccanica_ogni` verde, impronta predefinita
+  identica. La chimica di Nodal/Lefty chiede passate di 5 minuti, la meccanica no (il suo tempo
+  è circa 35 minuti): con m = 6 i passi meccanici sono sei volte meno.
+- Newton modificato (riusare la matrice fra le iterazioni): **provato e scartato**. In questo
+  regime la forza non si dimezza con la matrice vecchia, che va ricalcolata quasi sempre, e i
+  tentativi falliti costano in più (passo da 12 a 17 s).
+- Matrice dai gradienti parziali (`15`): per ogni gruppo di colore il gradiente si calcola solo
+  sulle cellule che contengono i suoi vertici, un sotto-tessuto. **Fatto**: la matrice scende da
+  2.7 a 1.75 s, il passo da 12 a circa 9 s.
+- Matrice in parallelo sui fili (`15`, `scripts/prove.sh` con `--threads=auto`): **fatto**,
+  identica bit per bit con 1 e con 4 fili, ma quasi senza guadagno. Ogni matrice alloca 4 GiB in
+  8 milioni di pezzi (il gradiente di `07` crea un vettore nuovo per ogni faccia), e il garbage
+  collector ferma tutti i fili insieme.
+- Obiettivo di `prova_passo_grande_veloce` (meno di 5 s per passo): **non raggiunto**, la prova
+  resta rossa (`@test_broken`). Il passo successivo è togliere le allocazioni dal gradiente di
+  `07` con l'eccezione per le prestazioni (risultati identici bit per bit).
+- Corretta, nel frattempo, una prova mal posta: `prova_stesso_minimo` confrontava le posizioni
+  assolute di un foglio periodico senza ancora, che si può traslare rigidamente senza cambiare
+  energia; ora le confronta a meno della traslazione (la forma coincide a 10⁻¹²).
 
 Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
 `prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);

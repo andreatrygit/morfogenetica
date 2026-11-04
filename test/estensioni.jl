@@ -55,5 +55,5 @@ end
 
 @testset "estensioni compatibili" begin
     @test prova_passata_predefinita_identica()
-    @test_broken prova_meccanica_ogni()
+    @test prova_meccanica_ogni()
 end

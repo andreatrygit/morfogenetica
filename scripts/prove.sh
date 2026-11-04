@@ -14,4 +14,5 @@ case "${1:-tutte}" in
     *) echo "uso: scripts/prove.sh [veloci]" >&2; exit 2 ;;
 esac
 # Manifest.toml non è versionato: lo si rigenera dalle dipendenze di Project.toml
-julia --project=. -e 'using Pkg; Pkg.resolve(); Pkg.instantiate(); Pkg.test()'
+# --threads=auto: il solutore sparso calcola la matrice in parallelo (15_sparso.jl)
+julia --project=. -e 'using Pkg; Pkg.resolve(); Pkg.instantiate(); Pkg.test(; julia_args = `--threads=auto`)'

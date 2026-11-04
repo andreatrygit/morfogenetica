@@ -52,7 +52,10 @@ aa0961841468d32efd993f15a70fa4d8ca9ad8ab0412c3ea76b90d6041799e34  motore/12_chim
 # 13 esteso il 3 novembre (CLAUDE.md, regola 1, estensione compatibile): l'opzione
 # `solutore = :pieno o :sparso` dell'Embrione; con :pieno, il predefinito, i risultati sono
 # identici bit per bit: test/estensioni.jl ("prova_passata_predefinita_identica")
-3b1852a245d1512a500f690afb4fc5f9a025d71f96d706612f0c62cc720cf96e  motore/13_programma.jl
+# 13 esteso il 4 novembre (estensione compatibile): l'opzione `meccanica_ogni` (la meccanica
+# ogni m passate, con passo m·dt; specifica, decisione 6); con 1, il predefinito, i risultati
+# sono identici bit per bit: test/estensioni.jl ("prova_passata_predefinita_identica")
+6e3c5ca1ecde954bd0c340c249b383be3386ac545f35f800a4e1986e1557ac07  motore/13_programma.jl
 
 # motore-popolazione-v1 — commit "CONGELATO: MOTORE-POPOLAZIONE-V1", 2 novembre 2026
 2657f478e974976ced391a567c4326e146cdccd189e455f3bc0654a00fdadb1d  motore/14_popolazione.jl
