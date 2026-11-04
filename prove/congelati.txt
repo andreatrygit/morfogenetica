@@ -63,3 +63,6 @@ aa0961841468d32efd993f15a70fa4d8ca9ad8ab0412c3ea76b90d6041799e34  motore/12_chim
 
 # motore-popolazione-v1 — commit "CONGELATO: MOTORE-POPOLAZIONE-V1", 2 novembre 2026
 2657f478e974976ced391a567c4326e146cdccd189e455f3bc0654a00fdadb1d  motore/14_popolazione.jl
+
+# motore-sparso-v1 — commit "CONGELATO: MOTORE-SPARSO-V1", 4 novembre 2026
+bf753c2f20b2957f6e13f666b32eac4f55959e7c7f24b1c0e2a5c167d6388ef6  motore/15_sparso.jl
