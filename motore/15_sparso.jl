@@ -26,6 +26,7 @@
 # solo se l'energia scende, spostamento limitato per vertice. Solo per `Tessuto3D`.
 
 using SparseArrays: sparse, SparseMatrixCSC
+using LinearAlgebra: cholesky!
 
 export minimizza_sparso!
 
@@ -91,7 +92,7 @@ function _hessiana_sparsa(t::Tessuto3D, p::ParametriMeccanici, x;
     # sue copie di lavoro, e si raccolgono nel loro ordine, così la matrice è la stessa bit per
     # bit qualunque sia il numero di fili
     compiti = [(k, a) for k in eachindex(struttura.gruppi) for a in 1:3]
-    pezzi = Vector{NTuple{3,Vector}}(undef, length(compiti))
+    pezzi = Vector{Tuple{Vector{Int},Vector{Int},Vector{Float64}}}(undef, length(compiti))
     Threads.@threads for q in eachindex(compiti)
         k, a = compiti[q]
         gruppo, T = struttura.gruppi[k], struttura.sotto[k]
@@ -120,9 +121,11 @@ function _hessiana_sparsa(t::Tessuto3D, p::ParametriMeccanici, x;
         end
         pezzi[q] = (Iq, Jq, Vq)
     end
-    I = reduce(vcat, (pz[1] for pz in pezzi); init = Int[])
-    J = reduce(vcat, (pz[2] for pz in pezzi); init = Int[])
-    V = reduce(vcat, (pz[3] for pz in pezzi); init = Float64[])
+    # una sola concatenazione per vettore, nell'ordine dei compiti (reduce con un generatore
+    # ricopierebbe tutto a ogni aggiunta)
+    I = reduce(vcat, [pz[1] for pz in pezzi])
+    J = reduce(vcat, [pz[2] for pz in pezzi])
+    V = reduce(vcat, [pz[3] for pz in pezzi])
     y = copy(x); gp = similar(x); gm = similar(x)
     # le voci della scatola: colonne piene, e le righe per simmetria
     for j in 3nv+1:n
@@ -159,6 +162,7 @@ function minimizza_sparso!(t::Tessuto3D, p::ParametriMeccanici; tolleranza, iter
     end
     struttura = _struttura(t)
     g = similar(x); gp = similar(x)
+    simbolica = nothing
     μ = 1e-3
     f = Inf
     for it in 1:iterazioni_massime
@@ -173,8 +177,19 @@ function minimizza_sparso!(t::Tessuto3D, p::ParametriMeccanici; tolleranza, iter
         E0 = obiettivo(x)
         accettato = false
         for _ in 1:60
-            C = cholesky(Symmetric(H + μ * I); check = false)
+            # l'analisi simbolica (l'ordinamento) dipende solo dalla struttura della matrice, che
+            # non cambia: la prima fattorizzazione la fa, le altre la riusano
+            A = Symmetric(H + μ * I)
+            if simbolica === nothing
+                C = cholesky(A; check = false)
+                simbolica = C
+            else
+                C = cholesky!(simbolica, A; check = false)
+            end
             if !issuccess(C)
+                # una fattorizzazione fallita lascia l'oggetto in uno stato di errore: la prossima
+                # ricomincia da capo (con il riuso cieco, μ cresceva senza fine)
+                simbolica = nothing
                 μ *= 4
                 continue
             end

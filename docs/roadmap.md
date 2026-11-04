@@ -50,8 +50,8 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `programmi/composizione.jl` | `insieme` (‖, rifiuta i conflitti) e `con_fine` | fatta |
 | `programmi/invaginazione.jl` | la prima forma: l'invaginazione di una placca | fatta (R5) |
 
-Prove: `scripts/prove.sh`, la batteria intera: 848 passate e nessuna rotta al 3 novembre, circa
-13 minuti e mezzo (il grosso è Newton sui tessuti 3D, a matrice piena o sparsa); `scripts/prove.sh veloci` salta i 21 gruppi
+Prove: `scripts/prove.sh`, la batteria intera: 856 passate e una rotta dichiarata
+(`prova_gradiente_veloce`) al 4 novembre, circa 18 minuti (il grosso è Newton sui tessuti 3D, a matrice piena o sparsa); `scripts/prove.sh veloci` salta i 21 gruppi
 marcati `@lenta` e dura circa 2 minuti (780 prove). Quando lanciare quale: `CLAUDE.md`. Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -355,18 +355,29 @@ I rimedi (4 novembre), con le prove scritte prima:
   identica bit per bit con 1 e con 4 fili, ma quasi senza guadagno. Ogni matrice alloca 4 GiB in
   8 milioni di pezzi (il gradiente di `07` crea un vettore nuovo per ogni faccia), e il garbage
   collector ferma tutti i fili insieme.
-- Obiettivo di `prova_passo_grande_veloce` (meno di 5 s per passo): **non raggiunto**, la prova
-  resta rossa (`@test_broken`). Il passo successivo è togliere le allocazioni dal gradiente di
-  `07` con l'eccezione per le prestazioni (risultati identici bit per bit).
+- Obiettivo di `prova_passo_grande_veloce` (meno di 5 s per passo): non raggiunto con i soli
+  rimedi di `15` (circa 9 s); raggiunto dopo, con il gradiente senza allocazioni (sotto).
 - Perché la batteria intera è passata da 13 a 26 minuti (misurato il 4 novembre): non per i fili.
   Con 4 fili i file pesanti vanno uguali o più veloci che con uno (`invaginazione` 248 s contro
   305); ma con un filo solo file il cui codice non è cambiato (`scambi`, `estrusione`) sono 1.4–1.5
   volte più lenti della misura del 3 novembre: la macchina, oggi, va più piano. Il resto sono le
   prove lente nuove (organizzatore, passo grande, scala vera).
-- **Gradiente di `07` senza allocazioni: commit rosso fatto.** In `test/prestazioni.jl`
-  l'impronta di gradiente, energia e volumi su tre tessuti (bloccato, periodico, con uno
-  scutoide), presa prima, e una prova di allocazioni e tempo sul foglio grande (meno di 512 KiB e
-  di 4 ms; oggi 7.6 MiB e 9.5 ms), marcata `@test_broken`.
+- **Gradiente di `07` senza allocazioni: fatto**, con l'eccezione per le prestazioni: un vettore
+  di lavoro riusato al posto di uno nuovo per faccia, in gradiente, energia, volumi e controllo.
+  L'impronta di gradiente, energia e volumi su tre tessuti (bloccato, periodico, con uno scutoide)
+  è identica bit per bit. Le allocazioni del gradiente sul foglio grande passano da 7.9 MB a 208
+  byte; il suo tempo solo da 9.95 a 8.4 ms (il costo è calcolo), quindi l'obiettivo dei 4 ms resta
+  rosso (`prova_gradiente_veloce`, `@test_broken`).
+- Trovata e tolta anche una perdita mia in `15`: i pezzi della matrice si univano con un
+  `reduce` che ricopiava tutto a ogni aggiunta (3.4 GiB per matrice).
+- Con le due correzioni i fili lavorano: la matrice passa da 2.7 s (all'inizio) a 1.2 s con un
+  filo e 0.65 s con quattro, identica bit per bit; **il passo meccanico grande scende a 4.2 s**, e
+  `prova_passo_grande_veloce` (meno di 5 s) è verde. Riusata anche l'analisi simbolica della
+  fattorizzazione (l'ordinamento non cambia fra le iterazioni): dopo le prove pesanti il passo
+  costa 3.8–3.9 s invece di 4.4–4.75, e il foglio grande con la regione larga 300 µm va
+  all'equilibrio in 84 iterazioni e 111 s (erano 237). Un errore trovato per strada: dopo una
+  fattorizzazione fallita l'oggetto riusato restava nello stato di errore e μ cresceva senza fine
+  (`prova_scala_vera` non convergeva più); ora dopo un fallimento si ricomincia da capo.
 - Corretta, nel frattempo, una prova mal posta: `prova_stesso_minimo` confrontava le posizioni
   assolute di un foglio periodico senza ancora, che si può traslare rigidamente senza cambiare
   energia; ora le confronta a meno della traslazione (la forma coincide a 10⁻¹²).

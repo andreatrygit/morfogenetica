@@ -81,20 +81,34 @@ const IMPRONTA_GUSCIO = "f934c86719faeea8727bc11e427913512efb1d38ad6e72f275e9fa1
 
 prova_guscio_identico() = impronta_guscio() == IMPRONTA_GUSCIO
 
-function prova_gradiente_senza_allocazioni()
+# Divisa in due nel verde (4 novembre): le allocazioni sono sparite (208 byte invece di 7.9 MB, ed
+# è questo che lascia lavorare i fili del solutore sparso), il tempo no: il gradiente è solo il
+# 10–15% più veloce (8.4 ms contro 9.95; il suo costo è calcolo, non memoria). L'obiettivo dei 4 ms
+# resta rosso, dichiarato. La prova di tempo che fallisce prima e passa dopo, per l'eccezione della
+# regola 1, è prova_passo_grande_veloce (test/sparso.jl).
+function _gradiente_grande()
     P = ParametriMeccanici(K = 0.1, η = 1.0, lunghezza_minima = 0.05, k_contatto = 0.0, d_contatto = 0.5)
     t = foglio_periodico(fill(Intenzioni3D(1.0, 1.0, 2sqrt(3), 0.0, 8768.0), 38 * 44), 38, 44;
                          lato = 15.0, altezza = 15.0)
     g = similar(t.x)
     gradiente!(g, t, P)                              # compilazione
-    byte = @allocated gradiente!(g, t, P)
-    tempo = minimum(@elapsed(gradiente!(g, t, P)) for _ in 1:5)
-    return byte < 512 * 1024 && tempo < 0.004
+    return t, P, g
+end
+
+function prova_gradiente_senza_allocazioni()
+    t, P, g = _gradiente_grande()
+    return @allocated(gradiente!(g, t, P)) < 512 * 1024
+end
+
+function prova_gradiente_veloce()
+    t, P, g = _gradiente_grande()
+    return minimum(@elapsed(gradiente!(g, t, P)) for _ in 1:20) < 0.004
 end
 
 @testset "prestazioni del motore congelato" begin
     @test prova_secrezione_identica()
     @test prova_secrezione_veloce()
     @test prova_guscio_identico()
-    @test_broken prova_gradiente_senza_allocazioni()
+    @test prova_gradiente_senza_allocazioni()
+    @test_broken prova_gradiente_veloce()
 end

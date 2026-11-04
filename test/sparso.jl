@@ -132,5 +132,5 @@ end
     @test prova_stesso_minimo()
     @test prova_passata_sparsa_come_piena()
     @lenta @test prova_scala_vera()
-    @lenta @test_broken prova_passo_grande_veloce()
+    @lenta @test prova_passo_grande_veloce()
 end
