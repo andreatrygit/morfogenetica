@@ -37,5 +37,6 @@ include(joinpath(RADICE, "primitive", "induci.jl"))
 # I programmi: la composizione delle fasi e le catene.
 include(joinpath(RADICE, "programmi", "composizione.jl"))
 include(joinpath(RADICE, "programmi", "invaginazione.jl"))
+include(joinpath(RADICE, "programmi", "gastrula.jl"))
 
 end # module

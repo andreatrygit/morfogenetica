@@ -42,16 +42,17 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `12_chimica.jl` | una sostanza che diffonde su griglia 3D, con degradazione, secrezione e assorbimento delle cellule; la griglia segue la scatola | congelato, `motore-chimica-v1` |
 | `13_programma.jl` | percezione a quattro canali, tabella di fasi, onda, passata completa (popolazione, matrice, casualità con seme) | congelato, `motore-programma-v1`; modificato il 2/11 con test che fallivano (le fasi dichiarano che cosa scrivono) |
 | `14_popolazione.jl` | divisione nel guscio a prismi (angolo dato o regola di Hertwig) | congelato, `motore-popolazione-v1` |
-| `15_sparso.jl` | il solutore sparso per i tessuti di migliaia di cellule | **in corso, non congelato** (R6) |
+| `15_sparso.jl` | il solutore sparso per i tessuti di migliaia di cellule | congelato, `motore-sparso-v1` |
 | `primitive/costringi.jl` | la prima primitiva: anello apicale teso dove la sostanza supera la soglia | fatta (le primitive non si congelano: si ridisegnano) |
 | `primitive/secerni.jl` | secernere un segnale se marcata | fatta |
 | `primitive/attiva_inibisci.jl` | attivatore e inibitore (Nodal/Lefty): l'organizzatore senza seme | fatta |
 | `primitive/induci.jl` | un gene bersaglio che si accumula con il segnale | fatta |
 | `programmi/composizione.jl` | `insieme` (‖, rifiuta i conflitti) e `con_fine` | fatta |
 | `programmi/invaginazione.jl` | la prima forma: l'invaginazione di una placca | fatta (R5) |
+| `programmi/gastrula.jl` | la catena a scala vera: l'organizzatore senza seme, poi la sua invaginazione | fatta (R5) |
 
-Prove: `scripts/prove.sh`, la batteria intera: 856 passate e una rotta dichiarata
-(`prova_gradiente_veloce`) al 4 novembre, circa 18 minuti (il grosso è Newton sui tessuti 3D, a matrice piena o sparsa); `scripts/prove.sh veloci` salta i 21 gruppi
+Prove: `scripts/prove.sh`, la batteria intera: 861 passate e una rotta dichiarata
+(`prova_gradiente_veloce`) al 4 novembre, circa 37 minuti (il grosso è Newton sui tessuti 3D, a matrice piena o sparsa); `scripts/prove.sh veloci` salta i 21 gruppi
 marcati `@lenta` e dura circa 2 minuti (780 prove). Quando lanciare quale: `CLAUDE.md`. Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
@@ -382,12 +383,14 @@ I rimedi (4 novembre), con le prove scritte prima:
   assolute di un foglio periodico senza ancora, che si può traslare rigidamente senza cambiare
   energia; ora le confronta a meno della traslazione (la forma coincide a 10⁻¹²).
 
-**La catena a scala vera: commit rosso fatto** (4 novembre). Tre prove `@lenta` in
-`test/gastrula.jl`, marcate `@test_broken`: nei primi quattro giorni nessuna cellula si impegna
+**La catena a scala vera: fatta** (4 novembre), `programmi/gastrula.jl`. Tre prove `@lenta` in
+`test/gastrula.jl`, scritte prima, verdi: nei primi quattro giorni nessuna cellula si impegna
 (l'organizzatore nasce in giorni); poi una sola regione si impegna (fra 20 e 600 cellule,
 connessa); le cellule impegnate tendono l'anello e la regione scende di oltre 3 µm dal lato
-basale. Il programma va in `programmi/gastrula.jl` (organizza ; invagina, con
-`meccanica_ogni` = 6 e il solutore sparso).
+basale. Il programma è organizza ; invagina, con `meccanica_ogni` = 6 e il solutore sparso.
+Numeri (seme 1): la prima cellula si impegna alla 128ª ora (5.3 giorni), si impegnano 331 cellule
+in una sola regione, la regione scende di 17.9 µm, nessun passo meccanico irrisolto. La prova
+dura circa 19 minuti.
 
 Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
 `prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);

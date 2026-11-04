@@ -666,6 +666,36 @@ impiega centinaia di iterazioni. Per prismi di lato e altezza 15 µm con σa = �
 eccezione della regola 1 (estensione compatibile): con `:pieno`, il predefinito, i risultati
 sono identici bit per bit (`test/estensioni.jl`).
 
+## 20. La catena a scala vera (roadmap R5), e la strada per farla girare
+
+3–4 novembre, in red-green. La catena: **organizza** (Nodal e Lefty fanno nascere senza seme una
+macchia, e ogni cellula accumula il prodotto di un gene bersaglio) ; **invagina** (le cellule il
+cui prodotto ha superato metà del massimo tendono l'anello apicale). Foglio periodico di 1672
+cellule, circa 1 × 1 mm.
+
+**Che cosa ha chiesto, nell'ordine.**
+
+- *Un gene bersaglio* (`induci`, Dubrulle et al., eLife 2015): una soglia sulla concentrazione
+  istantanea accende e spegne le cellule al bordo della macchia; il prodotto del gene integra il
+  segnale nel tempo e filtra i picchi.
+- *Passate di 5 minuti per la chimica* (risultato negativo #17): le secrezioni restano fisse per
+  tutta la passata, e per un circuito di retroazione è un passo esplicito, stabile solo sotto
+  2δ/ω²; con κ = 0.35 il limite è 12.9 minuti.
+- *La meccanica ogni 30 minuti* (`meccanica_ogni`, estensione compatibile di `13`; specifica,
+  decisione 6).
+- *Un solutore sparso più veloce*: la matrice dai gradienti di un sotto-tessuto per ogni gruppo di
+  colore; il gradiente di `07` senza allocazioni (eccezione per le prestazioni, risultati identici
+  bit per bit), che ha liberato i fili; una perdita mia tolta in `15` (una concatenazione che
+  ricopiava tutto); l'analisi simbolica della fattorizzazione riusata, e rifatta dopo un
+  fallimento. La matrice è passata da 2.7 a 0.65 s, il passo meccanico grande da 12 a circa 4 s.
+  Provato e scartato: il Newton modificato (riusare la matrice), più lento in questo regime.
+
+**Risultato** (seme 1): la prima cellula si impegna alla 128ª ora (5.3 giorni); 331 cellule in una
+sola regione; la regione scende di 17.9 µm dal lato basale; nessun passo meccanico irrisolto.
+
+**Non raggiunto.** Il gradiente da solo resta a 8.4 ms (l'obiettivo era 4): il suo costo è calcolo,
+non memoria. Il passo successivo per la velocità è la matrice delle derivate seconde analitica.
+
 ## Fonti
 
 - Krajnc e Ziherl, *Theory of epithelial elasticity*, Phys. Rev. E 92, 052713 (2015):

@@ -81,7 +81,7 @@ function prova_la_regione_si_invagina()
 end
 
 @testset "R5 la catena a scala vera" begin
-    @lenta @test_broken prova_l_organizzatore_nasce_in_giorni()
-    @lenta @test_broken prova_una_sola_regione_si_impegna()
-    @lenta @test_broken prova_la_regione_si_invagina()
+    @lenta @test prova_l_organizzatore_nasce_in_giorni()
+    @lenta @test prova_una_sola_regione_si_impegna()
+    @lenta @test prova_la_regione_si_invagina()
 end
