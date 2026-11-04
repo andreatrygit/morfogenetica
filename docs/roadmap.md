@@ -358,6 +358,15 @@ I rimedi (4 novembre), con le prove scritte prima:
 - Obiettivo di `prova_passo_grande_veloce` (meno di 5 s per passo): **non raggiunto**, la prova
   resta rossa (`@test_broken`). Il passo successivo è togliere le allocazioni dal gradiente di
   `07` con l'eccezione per le prestazioni (risultati identici bit per bit).
+- Perché la batteria intera è passata da 13 a 26 minuti (misurato il 4 novembre): non per i fili.
+  Con 4 fili i file pesanti vanno uguali o più veloci che con uno (`invaginazione` 248 s contro
+  305); ma con un filo solo file il cui codice non è cambiato (`scambi`, `estrusione`) sono 1.4–1.5
+  volte più lenti della misura del 3 novembre: la macchina, oggi, va più piano. Il resto sono le
+  prove lente nuove (organizzatore, passo grande, scala vera).
+- **Gradiente di `07` senza allocazioni: commit rosso fatto.** In `test/prestazioni.jl`
+  l'impronta di gradiente, energia e volumi su tre tessuti (bloccato, periodico, con uno
+  scutoide), presa prima, e una prova di allocazioni e tempo sul foglio grande (meno di 512 KiB e
+  di 4 ms; oggi 7.6 MiB e 9.5 ms), marcata `@test_broken`.
 - Corretta, nel frattempo, una prova mal posta: `prova_stesso_minimo` confrontava le posizioni
   assolute di un foglio periodico senza ancora, che si può traslare rigidamente senza cambiare
   energia; ora le confronta a meno della traslazione (la forma coincide a 10⁻¹²).
