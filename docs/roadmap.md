@@ -333,6 +333,16 @@ decade senza (Dubrulle et al., eLife 2015: contano la cinetica e la durata dell'
 una soglia sulla concentrazione). Tre prove in `test/induci.jl`, scritte prima, verdi; `costringi`
 può leggere il prodotto del gene (`voce`) invece della concentrazione.
 
+**La catena a scala vera, primo tentativo** (3–4 novembre): `attiva_inibisci ‖ induci`, con
+l'impegno quando il prodotto del gene supera metà del massimo, poi l'onda e `costringi` sul
+prodotto del gene. Alla 132ª ora simulata l'organizzatore si è impegnato da solo, l'onda ha
+portato tutte le 1672 cellule nella seconda fase, 78 cellule costringono e la regione è scesa di
+3.6 µm. Fermata lì: la meccanica costava circa 15 s per passata (5–10 iterazioni di Newton, ognuna
+con una matrice nuova da 2.7 s; la fattorizzazione ne costa 0.3). **Commit rosso** dei due
+rimedi: Newton modificato in `15` (riusa la matrice; `prova_passo_grande_veloce`, meno di 5 s per
+passo) e `meccanica_ogni` in `13` (specifica, decisione 6: la meccanica ogni m passate, con passo
+m·dt; estensione compatibile, `prova_meccanica_ogni`).
+
 Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
 `prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);
 la placca più larga che si chiude in una coppa (servirà il contatto in 3D, R6); poi la catena di

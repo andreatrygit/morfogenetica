@@ -32,6 +32,28 @@ function prova_passata_predefinita_identica()
     return impronta_passata(e) == IMPRONTA_PASSATA
 end
 
+# meccanica_ogni (4 novembre; specifica, decisione 6: scale di tempo separate): la meccanica
+# avanza solo ogni m passate, con un passo di m·dt. Con un programma che non cambia le
+# intenzioni, m = 3 con passata di 1 minuto dà esattamente lo stesso tessuto di m = 1 con
+# passata di 3 minuti; fra un passo meccanico e l'altro il tessuto non si muove.
+function prova_meccanica_ogni()
+    programma() = [Fase(:f, (p, par) -> Uscita(; intenzioni = (Λa = 3.0,)), NamedTuple(),
+                        (p, par) -> false; scrive = (:Λa,))]
+    tessuto() = foglio_esagonale(fill(PRISMA, 19), 2; lato = 5.0, altezza = 15.0, bordo_fisso = true)
+    a = Embrione(tessuto(), programma(); parametri = P_PROGRAMMA, dt = 1.0, meccanica_ogni = 3,
+                 interruttori = Interruttori(; topologia = false))
+    b = Embrione(tessuto(), programma(); parametri = P_PROGRAMMA, dt = 3.0,
+                 interruttori = Interruttori(; topologia = false))
+    x0 = copy(a.tessuto.x)
+    passata!(a); passata!(a)
+    a.tessuto.x == x0 || return false
+    passata!(a); passata!(b)
+    a.tessuto.x == b.tessuto.x || return false
+    passata!(a); passata!(a); passata!(a); passata!(b)
+    return a.tessuto.x == b.tessuto.x
+end
+
 @testset "estensioni compatibili" begin
     @test prova_passata_predefinita_identica()
+    @test_broken prova_meccanica_ogni()
 end
