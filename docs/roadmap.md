@@ -382,6 +382,13 @@ I rimedi (4 novembre), con le prove scritte prima:
   assolute di un foglio periodico senza ancora, che si può traslare rigidamente senza cambiare
   energia; ora le confronta a meno della traslazione (la forma coincide a 10⁻¹²).
 
+**La catena a scala vera: commit rosso fatto** (4 novembre). Tre prove `@lenta` in
+`test/gastrula.jl`, marcate `@test_broken`: nei primi quattro giorni nessuna cellula si impegna
+(l'organizzatore nasce in giorni); poi una sola regione si impegna (fra 20 e 600 cellule,
+connessa); le cellule impegnate tendono l'anello e la regione scende di oltre 3 µm dal lato
+basale. Il programma va in `programmi/gastrula.jl` (organizza ; invagina, con
+`meccanica_ogni` = 6 e il solutore sparso).
+
 Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
 `prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);
 la placca più larga che si chiude in una coppa (servirà il contatto in 3D, R6); poi la catena di
