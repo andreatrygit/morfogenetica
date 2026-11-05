@@ -4,7 +4,7 @@
 # test/organizzatore.jl (Müller et al. 2012, κ = 0.35), il gene bersaglio con tempo di
 # dimezzamento di 60 minuti (β = γ, K = 1.4 c0, n = 4: liberi), impegno a metà del massimo,
 # Λ = 8 nN. Passata di 5 minuti (la chimica la chiede, risultato negativo #17), meccanica ogni 6
-# passate (30 minuti; specifica, decisione 6), solutore sparso.
+# passate (30 minuti; specifica, decisione 6), solutore sparso con la matrice esatta (16).
 #
 # Le prove sono comportamenti: nei primi quattro giorni nessuna cellula si impegna (l'organizzatore
 # nasce in giorni); poi una sola regione si impegna, e si invagina dal lato basale.
@@ -27,7 +27,7 @@ function corsa_gastrula()
     programma = gastrula(; ka = NODAL_LEFTY.ka, kh = NODAL_LEFTY.kh, κ = NODAL_LEFTY.κ, β = γ, γ,
                          K = 1.4, n = 4, impegno = 0.5, Λ = 8.0, dt = 5.0)
     e = Embrione(t, programma; parametri = P_PROGRAMMA, dt = 5.0, campi, seme = 1,
-                 solutore = :sparso, tolleranza = 1e-5, meccanica_ogni = 6,
+                 solutore = :esatto, tolleranza = 1e-5, meccanica_ogni = 6,
                  interruttori = Interruttori(; topologia = false, popolazione = false))
     primo_impegno = 0
     for k in 1:round(Int, 7 * 24 * 60 / 5)              # 7 giorni

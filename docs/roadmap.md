@@ -43,7 +43,7 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `13_programma.jl` | percezione a quattro canali, tabella di fasi, onda, passata completa (popolazione, matrice, casualità con seme) | congelato, `motore-programma-v1`; modificato il 2/11 con test che fallivano (le fasi dichiarano che cosa scrivono) |
 | `14_popolazione.jl` | divisione nel guscio a prismi (angolo dato o regola di Hertwig) | congelato, `motore-popolazione-v1` |
 | `15_sparso.jl` | il solutore sparso per i tessuti di migliaia di cellule | congelato, `motore-sparso-v1`; esteso il 5/11 (`hessiana = :esatta`) |
-| `16_hessiana.jl` | la matrice delle derivate seconde esatta, per il solutore sparso | fatto, non ancora congelato |
+| `16_hessiana.jl` | la matrice delle derivate seconde esatta, per il solutore sparso | congelato, `motore-hessiana-v1` |
 | `primitive/costringi.jl` | la prima primitiva: anello apicale teso dove la sostanza supera la soglia | fatta (le primitive non si congelano: si ridisegnano) |
 | `primitive/secerni.jl` | secernere un segnale se marcata | fatta |
 | `primitive/attiva_inibisci.jl` | attivatore e inibitore (Nodal/Lefty): l'organizzatore senza seme | fatta |
@@ -391,7 +391,7 @@ connessa); le cellule impegnate tendono l'anello e la regione scende di oltre 3 
 basale. Il programma è organizza ; invagina, con `meccanica_ogni` = 6 e il solutore sparso.
 Numeri (seme 1): la prima cellula si impegna alla 128ª ora (5.3 giorni), si impegnano 331 cellule
 in una sola regione, la regione scende di 17.9 µm, nessun passo meccanico irrisolto. La prova
-dura circa 19 minuti.
+dura circa 19 minuti (14.7 con la matrice esatta, sotto).
 
 Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
 `prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);
@@ -450,6 +450,9 @@ veloce sul foglio grande. Numeri (foglio di 1672 cellule, 4 fili): la matrice da
 s, il passo meccanico grande da 4.4 a 2.9 s, con le stesse iterazioni. Scartato: differenziare
 due volte l'energia (ForwardDiff.hessian), giusto ma 6 s per matrice, dieci volte la versione
 per differenze. Il resto del passo è la fattorizzazione e le energie della ricerca del passo.
+La catena a scala vera (`test/gastrula.jl`) ora usa `solutore = :esatto`: stessi numeri (prima
+cellula impegnata alla 128ª ora, 331 cellule, −17.9 µm, nessun passo irrisolto) in 14.7 minuti
+invece di circa 19. Congelato il 5 novembre (`CONGELATO: MOTORE-HESSIANA-V1`).
 
 ### R7 — Multistrato e mesenchima
 
