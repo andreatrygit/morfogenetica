@@ -52,9 +52,9 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `programmi/invaginazione.jl` | la prima forma: l'invaginazione di una placca | fatta (R5) |
 | `programmi/gastrula.jl` | la catena a scala vera: l'organizzatore senza seme, poi la sua invaginazione | fatta (R5) |
 
-Prove: `scripts/prove.sh`, la batteria intera: 861 passate e una rotta dichiarata
-(`prova_gradiente_veloce`) al 4 novembre, circa 37 minuti (il grosso è Newton sui tessuti 3D, a matrice piena o sparsa); `scripts/prove.sh veloci` salta i 21 gruppi
-marcati `@lenta` e dura circa 2 minuti (780 prove). Quando lanciare quale: `CLAUDE.md`. Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
+Prove: `scripts/prove.sh`, la batteria intera: 866 passate e una rotta dichiarata
+(`prova_gradiente_veloce`) al 5 novembre, circa 40 minuti (il grosso è Newton sui tessuti 3D, a matrice piena o sparsa), e con le prove di scala, aggiunte dopo, circa un'ora; `scripts/prove.sh veloci` salta i gruppi
+marcati `@lenta` e dura circa 2 minuti (800 prove). Quando lanciare quale: `CLAUDE.md`. Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
 vuoto** "CONGELATO: MOTORE-…-V1" e dall'impronta in `prove/congelati.txt`.
@@ -393,14 +393,23 @@ Numeri (seme 1): la prima cellula si impegna alla 128ª ora (5.3 giorni), si imp
 in una sola regione, la regione scende di 17.9 µm, nessun passo meccanico irrisolto. La prova
 dura circa 19 minuti (14.7 con la matrice esatta, sotto).
 
-**Invarianza di scala: prove scritte** (5 novembre), `test/scala.jl`, prima della corsa: la
+**Invarianza di scala: fatta** (5 novembre), `test/scala.jl`, prove scritte prima della corsa: la
 catena a scala vera con cellule di lato 12 µm invece di 15 sullo stesso millimetro (2688 cellule),
 il foglio sempre alto 15 µm; in unità di cellula scalano il volume a riposo, σl e Λ. Chiedono la
 stessa area impegnata (entro il 25%), lo stesso tempo (entro il 15%), la stessa profondità (entro
-il 30%).
+il 30%). Tutte verdi, senza toccare né il motore né le primitive. Numeri (seme 1):
 
-Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
-`prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);
+| lato | cellule | primo impegno | impegnate | area impegnata | profondità |
+| --- | --- | --- | --- | --- | --- |
+| 15 µm | 1672 | 127.9 h | 331 | 193 000 µm² | −17.9 µm |
+| 12 µm | 2688 | 140.3 h | 558 | 209 000 µm² | −13.7 µm |
+
+L'area segue la forma (+8%), non il numero di cellule (+69%). Due scarti da capire: la macchia
+nasce il 10% più tardi (più dei pochi punti attesi dal rumore mediato su più cellule), e la piega
+è il 23% meno profonda (con le cellule più strette, alte uguali, il foglio è meno cedevole a
+parità di tensione apicale per unità di lunghezza?). La corsa a 12 µm dura circa 20 minuti.
+
+Prossimi passi di R5: il #14 come prova dinamica (l'anello che stringe fino a uno scambio);
 la placca più larga che si chiude in una coppa (servirà il contatto in 3D, R6); poi la catena di
 gastrulazione con elezione, campo, costringi e differenzia (specifica, sezione 5). La batteria
 dura ormai circa 10 minuti: separare prove veloci e lente (R6) diventa urgente.

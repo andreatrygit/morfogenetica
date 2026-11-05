@@ -75,7 +75,7 @@ confronto/            lo stesso esperimento in un motore maturo
 Non ci sono test automatici su GitHub: la batteria si lancia a mano dalle sessioni.
 
 ```
-scripts/prove.sh          tutte le prove, circa 37 minuti
+scripts/prove.sh          tutte le prove, circa un'ora
 scripts/prove.sh veloci   salta i gruppi marcati @lenta (test/lente.jl), circa 2 minuti
 ```
 
