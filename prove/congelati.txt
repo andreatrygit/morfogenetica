@@ -18,7 +18,11 @@ a3b2a08c7e07d3121d09beb47a1bbe59b7c24881de674517c3155b604e7f871f  motore/03_rila
 # motore-guscio-v1 — commit "CONGELATO: MOTORE-GUSCIO-V1", 29 ottobre 2026
 # 07 modificato il 29 ottobre: centro delle facce = baricentro del contorno; test fisico che
 # fallisce: "suddividere uno spigolo non cambia la geometria" (test/guscio.jl)
-484eea0928a86b61d3ef85c0805ee0fa7520e0a6b2ce71d47014b3bc781cc664  motore/07_guscio.jl
+# 07 modificato il 4 novembre, solo per le prestazioni (regola 1): gradiente, energia, volumi
+# e controllo senza un vettore nuovo per faccia (un vettore di lavoro riusato); risultati
+# identici bit per bit ("prova_guscio_identico", test/prestazioni.jl); prova di tempo che
+# falliva: "prova_passo_grande_veloce" (test/sparso.jl, da circa 9 a 4.2 s per passo)
+d648812bccb0aa15316f42614112b3a6be70b3167dcefcd25b75d5b96b32ac5f  motore/07_guscio.jl
 
 # motore-scambi-v1 — commit "CONGELATO: MOTORE-SCAMBI-V1", 29 ottobre 2026
 2570bbbbd4248689ae39aed200d5e2baaaa04278e0b5ecac4bc961feb84b0a98  motore/08_scambi.jl
@@ -52,7 +56,19 @@ aa0961841468d32efd993f15a70fa4d8ca9ad8ab0412c3ea76b90d6041799e34  motore/12_chim
 # 13 esteso il 3 novembre (CLAUDE.md, regola 1, estensione compatibile): l'opzione
 # `solutore = :pieno o :sparso` dell'Embrione; con :pieno, il predefinito, i risultati sono
 # identici bit per bit: test/estensioni.jl ("prova_passata_predefinita_identica")
-3b1852a245d1512a500f690afb4fc5f9a025d71f96d706612f0c62cc720cf96e  motore/13_programma.jl
+# 13 esteso il 4 novembre (estensione compatibile): l'opzione `meccanica_ogni` (la meccanica
+# ogni m passate, con passo m·dt; specifica, decisione 6); con 1, il predefinito, i risultati
+# sono identici bit per bit: test/estensioni.jl ("prova_passata_predefinita_identica")
+# 13 esteso il 5 novembre (estensione compatibile): `solutore = :esatto` (il solutore sparso con
+# la matrice esatta di 16_hessiana.jl); con :pieno, il predefinito, i risultati sono identici bit
+# per bit: test/estensioni.jl ("prova_passata_predefinita_identica")
+f848dd4f4a5e74394533f71ffd95b027a8f352721e59306d067708a7ab3b41f6  motore/13_programma.jl
 
 # motore-popolazione-v1 — commit "CONGELATO: MOTORE-POPOLAZIONE-V1", 2 novembre 2026
 2657f478e974976ced391a567c4326e146cdccd189e455f3bc0654a00fdadb1d  motore/14_popolazione.jl
+
+# motore-sparso-v1 — commit "CONGELATO: MOTORE-SPARSO-V1", 4 novembre 2026
+# 15 esteso il 5 novembre (estensione compatibile): `hessiana = :esatta` (16_hessiana.jl); con
+# :differenze, il predefinito, i risultati sono identici bit per bit: test/estensioni.jl
+# ("prova_sparso_predefinito_identico")
+28c53dd9222617d8db060225c8f78f8d6e2f5cb0b5575a46ddfc211bcd597d04  motore/15_sparso.jl

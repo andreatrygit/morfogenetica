@@ -109,6 +109,19 @@ _norma(a) = sqrt(_punto(a, a))
 _vertici(t::Tessuto3D, x, f::Faccia, tr = (0, 0)) =
     [_pos(t, x, v, _somma(im, tr)) for (v, im) in zip(f.vertici, f.immagini)]
 
+# La stessa cosa in un vettore di lavoro riusato (gli stessi numeri): gradiente, energia e
+# volumi lo usano per non creare un vettore nuovo per ogni faccia a ogni chiamata (4 novembre,
+# solo per le prestazioni: test/prestazioni.jl).
+function _vertici!(buf, t::Tessuto3D, x, f::Faccia, tr = (0, 0))
+    resize!(buf, length(f.vertici))
+    for k in eachindex(f.vertici)
+        buf[k] = _pos(t, x, f.vertici[k], _somma(f.immagini[k], tr))
+    end
+    return buf
+end
+
+_lavoro(x) = NTuple{3,eltype(x)}[]
+
 # Il centro da cui si triangola una faccia: il baricentro del suo contorno, cioè la media dei
 # punti medi degli spigoli pesata per la loro lunghezza. Non cambia se si aggiunge un punto su uno
 # spigolo, quindi aree e volumi non dipendono da come è suddiviso il contorno. Il baricentro dei
@@ -133,7 +146,11 @@ end
 # per w. Con c = Σ_e L_e m_e / Σ_e L_e, la derivata rispetto al vertice k raccoglie i due spigoli
 # che lo toccano: Σ_e [u_e ((m_e − c)·gc) + (L_e / 2) gc] / L_tot, con u_e il versore dello
 # spigolo verso k e m_e il suo punto medio.
-function _ripartisci_centro!(g, t, vertici, immagini, P, c, gc, w)
+_ripartisci_centro!(g, t, vertici, immagini, P, c, gc, w) =
+    _ripartisci_centro!(g, t, vertici, immagini, P, c, gc, w, (0, 0))
+
+# con le immagini traslate di `tr` periodi (calcolate al volo invece che in un vettore)
+function _ripartisci_centro!(g, t, vertici, immagini, P, c, gc, w, tr)
     n = length(P)
     Ltot = 0.0
     for k in 1:n
@@ -141,7 +158,7 @@ function _ripartisci_centro!(g, t, vertici, immagini, P, c, gc, w)
     end
     if Ltot == 0
         for k in 1:n
-            _aggiungi!(g, t, vertici[k], immagini[k], gc, w / n)
+            _aggiungi!(g, t, vertici[k], _somma(immagini[k], tr), gc, w / n)
         end
         return g
     end
@@ -157,7 +174,7 @@ function _ripartisci_centro!(g, t, vertici, immagini, P, c, gc, w)
             tot = (tot[1] + u[1] * s + l / 2 * gc[1], tot[2] + u[2] * s + l / 2 * gc[2],
                    tot[3] + u[3] * s + l / 2 * gc[3])
         end
-        _aggiungi!(g, t, vertici[k], immagini[k], tot, w / Ltot)
+        _aggiungi!(g, t, vertici[k], _somma(immagini[k], tr), tot, w / Ltot)
     end
     return g
 end
@@ -182,11 +199,13 @@ function _area(P)
 end
 
 "Volume della cellula `c` (µm³), dal teorema della divergenza sulla stessa triangolazione."
-function volume_cellula(t::Tessuto3D, c::Int, x = t.x)
+volume_cellula(t::Tessuto3D, c::Int, x = t.x) = _volume_cellula(t, c, x, _lavoro(x))
+
+function _volume_cellula(t::Tessuto3D, c::Int, x, buf)
     V = 0.0
     cel = t.cellule[c]
     for (fi, s, tr) in zip(cel.facce, cel.segni, cel.traslazioni)
-        P = _vertici(t, x, t.facce[fi], tr)
+        P = _vertici!(buf, t, x, t.facce[fi], tr)
         g = _baricentro(P)
         n = length(P)
         for k in 1:n
@@ -213,8 +232,9 @@ end
 function energia(t::Tessuto3D, p::ParametriMeccanici, x = t.x)
     _senza_contatto(p)
     E = 0.0
+    buf = _lavoro(x)
     for f in t.facce
-        P = _vertici(t, x, f)
+        P = _vertici!(buf, t, x, f)
         E += _tensione_faccia(t, f) * _area(P)
         if f.etichetta == apicale
             # anello apicale: ogni spigolo pesa per la quota di questa cellula
@@ -226,7 +246,7 @@ function energia(t::Tessuto3D, p::ParametriMeccanici, x = t.x)
         end
     end
     for c in eachindex(t.cellule)
-        E += p.K / 2 * (volume_cellula(t, c, x) - t.intenzioni[c].V0)^2
+        E += p.K / 2 * (_volume_cellula(t, c, x, buf) - t.intenzioni[c].V0)^2
     end
     return E
 end
@@ -234,10 +254,11 @@ end
 function gradiente!(g, t::Tessuto3D, p::ParametriMeccanici, x = t.x)
     _senza_contatto(p)
     fill!(g, 0)
+    buf = _lavoro(x)
     # tensione di superficie e anello apicale, faccia per faccia
     for f in t.facce
         σ = _tensione_faccia(t, f)
-        P = _vertici(t, x, f)
+        P = _vertici!(buf, t, x, f)
         n = length(P)
         c = _baricentro(P)
         gc = (0.0, 0.0, 0.0)
@@ -267,10 +288,10 @@ function gradiente!(g, t::Tessuto3D, p::ParametriMeccanici, x = t.x)
     end
     # volume, cellula per cellula, con le facce nel riferimento della cellula
     for (ci, cel) in enumerate(t.cellule)
-        Pc = p.K * (volume_cellula(t, ci, x) - t.intenzioni[ci].V0)
+        Pc = p.K * (_volume_cellula(t, ci, x, buf) - t.intenzioni[ci].V0)
         for (fi, s, tr) in zip(cel.facce, cel.segni, cel.traslazioni)
             f = t.facce[fi]
-            P = _vertici(t, x, f, tr)
+            P = _vertici!(buf, t, x, f, tr)
             n = length(P)
             c = _baricentro(P)
             w = s * Pc / 6
@@ -284,10 +305,11 @@ function gradiente!(g, t::Tessuto3D, p::ParametriMeccanici, x = t.x)
                 ab = _croce(a, b)
                 gc = (gc[1] + ab[1], gc[2] + ab[2], gc[3] + ab[3])
             end
-            _ripartisci_centro!(g, t, f.vertici, [_somma(im, tr) for im in f.immagini], P, c, gc, w)
+            _ripartisci_centro!(g, t, f.vertici, f.immagini, P, c, gc, w, tr)
         end
     end
-    for j in findall(t.fissi)
+    for j in eachindex(t.fissi)
+        t.fissi[j] || continue
         g[3j-2] = 0; g[3j-1] = 0; g[3j] = 0
     end
     return g
@@ -303,8 +325,9 @@ function forza_per_vertice(t::Tessuto3D, g)
 end
 
 function controlla_ammissibile(t::Tessuto3D, p::ParametriMeccanici, x = t.x)
+    buf = _lavoro(x)
     for f in t.facce
-        P = _vertici(t, x, f)
+        P = _vertici!(buf, t, x, f)
         n = length(P)
         for k in 1:n
             L = _norma(_meno(P[mod1(k + 1, n)], P[k]))
@@ -313,7 +336,7 @@ function controlla_ammissibile(t::Tessuto3D, p::ParametriMeccanici, x = t.x)
         end
     end
     for c in eachindex(t.cellule)
-        V = volume_cellula(t, c, x)
+        V = _volume_cellula(t, c, x, buf)
         V <= 0 && throw(ConfigurazioneNonAmmissibile("cellula $c con volume $V µm³"))
     end
     return nothing

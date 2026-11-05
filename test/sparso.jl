@@ -55,7 +55,14 @@ function prova_stesso_minimo()
         ra = minimizza!(a, P_PROGRAMMA; tolleranza = 1e-9, iterazioni_massime = 300, kw...)
         rb = minimizza_sparso!(b, P_PROGRAMMA; tolleranza = 1e-9, iterazioni_massime = 300, kw...)
         (ra.convergito && rb.convergito) || return false
-        maximum(abs, a.x .- b.x) < 1e-6 || return false
+        # un foglio periodico senza ancora si può traslare rigidamente senza cambiare energia: i
+        # due minimi si confrontano a meno della traslazione media dei vertici (corretto il 4
+        # novembre: prima si confrontavano le posizioni assolute, e passava per caso)
+        nv = Morfogenetica._nvert(a)
+        d = [a.x[3k-3+c] - b.x[3k-3+c] for k in 1:nv, c in 1:3]
+        periodico && !ancorato && (d .-= sum(d; dims = 1) ./ nv)
+        maximum(abs, d) < 1e-6 || return false
+        maximum(abs, a.x[3nv+1:end] .- b.x[3nv+1:end]; init = 0.0) < 1e-6 || return false
         isapprox(energia(a, P_PROGRAMMA), energia(b, P_PROGRAMMA); rtol = 1e-10) || return false
     end
     return true
@@ -89,9 +96,41 @@ function prova_scala_vera()
     return r.convergito
 end
 
+# Newton modificato (4 novembre): costruire la matrice costa 2.7 s sul foglio grande, fattorizzarla
+# 0.3 s, e un passo meccanico di 5 minuti con una regione che costringe faceva 5–10 iterazioni,
+# ognuna con una matrice nuova (12 s). Riusando la matrice finché la forza scende abbastanza il
+# passo deve costare meno di 5 s, arrivando allo stesso equilibrio (le prove sopra).
+const _FOGLIO_GRANDE = Ref{Any}(nothing)
+function foglio_grande_rilassato()
+    if _FOGLIO_GRANDE[] === nothing
+        σl = 2sqrt(3)
+        t = foglio_periodico(fill(Intenzioni3D(1.0, 1.0, σl, 0.0, 8768.0), 38 * 44), 38, 44;
+                             lato = 15.0, altezza = 15.0)
+        minimizza_sparso!(t, P_PROGRAMMA; tolleranza = 1e-5, iterazioni_massime = 100)
+        _FOGLIO_GRANDE[] = t
+    end
+    return deepcopy(_FOGLIO_GRANDE[])
+end
+
+function prova_passo_grande_veloce()
+    t = foglio_grande_rilassato()
+    Lx, Ly = t.x[end-1], t.x[end]
+    for c in eachindex(t.cellule)
+        g = centro_cellula(t, c)
+        hypot(g[1] - Lx / 2, g[2] - Ly / 2) < 75 &&
+            (t.intenzioni[c] = Intenzioni3D(1.0, 1.0, 2sqrt(3), 8.0, 8768.0))
+    end
+    passo() = minimizza_sparso!(t, P_PROGRAMMA; tolleranza = 1e-5, iterazioni_massime = 200,
+                                ancora = copy(t.x), peso = P_PROGRAMMA.η / 5.0)
+    passo(); passo()                                   # i primi due passi, i più lunghi
+    tempo = @elapsed r = passo()
+    return r.convergito && tempo < 5.0
+end
+
 @testset "R6 solutore sparso" begin
     @test prova_hessiana_sparsa_uguale_alla_piena()
     @test prova_stesso_minimo()
     @test prova_passata_sparsa_come_piena()
     @lenta @test prova_scala_vera()
+    @lenta @test prova_passo_grande_veloce()
 end

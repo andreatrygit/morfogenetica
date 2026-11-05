@@ -75,7 +75,7 @@ confronto/            lo stesso esperimento in un motore maturo
 Non ci sono test automatici su GitHub: la batteria si lancia a mano dalle sessioni.
 
 ```
-scripts/prove.sh          tutte le prove, circa 13 minuti
+scripts/prove.sh          tutte le prove, circa 37 minuti
 scripts/prove.sh veloci   salta i gruppi marcati @lenta (test/lente.jl), circa 2 minuti
 ```
 
@@ -104,9 +104,10 @@ registro da GitHub con `JULIA_PKG_SERVER="" scripts/prove.sh`.
 ## Stato
 
 Lo stato aggiornato, modulo per modulo, è in `docs/roadmap.md` (sezione 2); la storia dettagliata
-e i numeri misurati in `docs/piano.md`. In breve: `motore/01`–`14` sono congelati, `15_sparso.jl` (R6) è in corso (impronte in
+e i numeri misurati in `docs/piano.md`. In breve: `motore/01`–`15` sono congelati (impronte in
 `prove/congelati.txt`, la prova "file congelati" fallisce se cambiano; una modifica ammessa
 richiede un test fisico che fallisce e aggiorna l'impronta nello stesso commit); R5, le prime
-forme, è in corso (fatta l'invaginazione di una placca). I moduli congelati sono segnati da commit vuoti "CONGELATO: MOTORE-…-V1" al posto
+forme, è in corso (fatte l'invaginazione di una placca e la catena a scala vera: l'organizzatore
+senza seme e la sua invaginazione). I moduli congelati sono segnati da commit vuoti "CONGELATO: MOTORE-…-V1" al posto
 dei tag, che da questo ambiente non si possono pushare. Ogni file nuovo in `motore/` va aggiunto
 a mano in `src/Morfogenetica.jl`: la cache di Julia non vede i file nuovi in una cartella.

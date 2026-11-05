@@ -2,9 +2,10 @@
 # la tensione dell'anello apicale della cellula. Minimizzare l'energia a volume costante con
 # l'anello teso è diventare un cuneo.
 #
-# Regola, sui canali "dentro di sé" e "misura assoluta": se la concentrazione della sostanza
-# alla mia posizione supera la soglia, la mia tensione di linea apicale è Λ; altrimenti torna
-# quella a riposo. La condizione si rivaluta a ogni passata: una marca è un'ipotesi sul
+# Regola, sui canali "dentro di sé" e "misura assoluta": se il segnale (la concentrazione della
+# sostanza alla mia posizione, oppure una voce del mio stato, come il prodotto di un gene
+# bersaglio) supera la soglia, la mia tensione di linea apicale è Λ; altrimenti torna quella a
+# riposo. La condizione si rivaluta a ogni passata: una marca è un'ipotesi sul
 # presente, non un ricordo (specifica, sezione 8). Predicato di fine: nessuno (la fase dura
 # finché un'altra fase non la segue per l'onda).
 #
@@ -17,18 +18,25 @@
 export costringi
 
 function _regola_costringi(p::Percezione, par)
-    attiva = get(p.concentrazioni, par.sostanza, 0.0) > par.soglia
+    segnale = par.voce === nothing ? get(p.concentrazioni, par.sostanza, 0.0) :
+                                     get(p.stato, par.voce, 0.0)
+    attiva = segnale > par.soglia
     return Uscita(; intenzioni = (Λa = attiva ? par.Λ : p.intenzioni.Λa,))
 end
 
 _fine_costringi(p::Percezione, par) = false
 
 """
-    costringi(; Λ, sostanza, soglia)
+    costringi(; Λ, soglia, sostanza = nothing, voce = nothing)
 
-La fase che alza la tensione dell'anello apicale a `Λ` (nN) dove la concentrazione di
-`sostanza` supera `soglia`.
+La fase che alza la tensione dell'anello apicale a `Λ` (nN) dove il segnale supera `soglia`.
+Il segnale è la concentrazione di `sostanza` alla propria posizione, oppure, con `voce`, una
+voce dello stato interno (il prodotto di un gene bersaglio, `induci`).
 """
-costringi(; Λ, sostanza, soglia) =
-    Fase(:costringi, _regola_costringi, (Λ = Float64(Λ), sostanza = sostanza, soglia = Float64(soglia)),
-         _fine_costringi; scrive = (:Λa,))
+function costringi(; Λ, soglia, sostanza = nothing, voce = nothing)
+    (sostanza === nothing) == (voce === nothing) &&
+        throw(ArgumentError("costringi: serve una sostanza oppure una voce dello stato"))
+    return Fase(:costringi, _regola_costringi,
+                (Λ = Float64(Λ), sostanza = sostanza, soglia = Float64(soglia), voce = voce),
+                _fine_costringi; scrive = (:Λa,))
+end

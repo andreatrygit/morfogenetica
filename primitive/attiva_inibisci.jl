@@ -13,6 +13,11 @@
 # elimina più lentamente dell'attivatore (come Lefty rispetto a Nodal), lo stato uniforme
 # oscilla invece di formare una macchia. Predicato di fine: nessuno.
 #
+# Attenzione al passo della passata: le secrezioni restano fisse per tutta la passata, e per
+# questo circuito è un passo esplicito, stabile solo se la passata è più corta di 2δ/ω² (δ e ω
+# smorzamento e frequenza dello stato uniforme linearizzato). Con Cyclops/Lefty2 e κ = 0.35 il
+# limite è 12.9 minuti, con κ = 0.29 1.9 minuti (risultato negativo #17).
+#
 # Meccanismo: Nodal induce la propria espressione e quella di Lefty; Lefty, più diffusivo,
 #   inibisce la via di Nodal a distanza. Nodal e Lefty sono una coppia attivatore–inibitore dal
 #   riccio di mare al topo; la loro diffusività diversa è la condizione di Turing.
