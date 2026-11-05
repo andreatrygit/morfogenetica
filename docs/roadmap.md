@@ -42,7 +42,8 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `12_chimica.jl` | una sostanza che diffonde su griglia 3D, con degradazione, secrezione e assorbimento delle cellule; la griglia segue la scatola | congelato, `motore-chimica-v1` |
 | `13_programma.jl` | percezione a quattro canali, tabella di fasi, onda, passata completa (popolazione, matrice, casualità con seme) | congelato, `motore-programma-v1`; modificato il 2/11 con test che fallivano (le fasi dichiarano che cosa scrivono) |
 | `14_popolazione.jl` | divisione nel guscio a prismi (angolo dato o regola di Hertwig) | congelato, `motore-popolazione-v1` |
-| `15_sparso.jl` | il solutore sparso per i tessuti di migliaia di cellule | congelato, `motore-sparso-v1` |
+| `15_sparso.jl` | il solutore sparso per i tessuti di migliaia di cellule | congelato, `motore-sparso-v1`; esteso il 5/11 (`hessiana = :esatta`) |
+| `16_hessiana.jl` | la matrice delle derivate seconde esatta, per il solutore sparso | fatto, non ancora congelato |
 | `primitive/costringi.jl` | la prima primitiva: anello apicale teso dove la sostanza supera la soglia | fatta (le primitive non si congelano: si ridisegnano) |
 | `primitive/secerni.jl` | secernere un segnale se marcata | fatta |
 | `primitive/attiva_inibisci.jl` | attivatore e inibitore (Nodal/Lefty): l'organizzatore senza seme | fatta |
@@ -433,17 +434,22 @@ deve partire all'equilibrio (σl = 2√3 per prismi di lato e altezza 15 µm, te
   proporzionate alla cellula (risultato negativo #16), poi divisione e morte senza il guscio a
   prismi.
 
-**La matrice delle derivate seconde esatta: commit rosso fatto** (5 novembre). Il collo di
-bottiglia della meccanica a scala vera è la matrice, calcolata per differenze del gradiente (264
-gradienti). Al posto di formule a mano (il centro di ogni faccia è il baricentro del contorno, e
-le sue derivate seconde a mano sono un campo minato) la differenziazione automatica in avanti
-(ForwardDiff) dei termini locali dell'energia: faccia per faccia e cellula per cellula, esatta a
-precisione di macchina. Il codice va in un file nuovo, `motore/16_hessiana.jl`; `15` e `13`
-guadagnano un'opzione (estensioni compatibili: `minimizza_sparso!(...; hessiana = :esatta)`,
+**La matrice delle derivate seconde esatta: fatto** (5 novembre), `motore/16_hessiana.jl`. Il
+collo di bottiglia della meccanica a scala vera era la matrice, calcolata per differenze del
+gradiente (264 gradienti). Il gradiente di ogni termine di faccia (σA con l'anello apicale, e il
+contributo di volume) è scritto in forma chiusa, sulle sole posizioni della faccia; la sua
+matrice jacobiana, cioè le derivate seconde, viene dalla differenziazione automatica in avanti
+(ForwardDiff), esatta a precisione di macchina, senza scrivere a mano le derivate seconde del
+baricentro del contorno. Ogni cellula raccoglie in una matrice piena il suo volume
+(K·(∇V ∇Vᵀ + (V − V0) ∇²V)) e le facce di cui è la prima cellula. `15` e `13` hanno guadagnato
+un'opzione (estensioni compatibili: `minimizza_sparso!(...; hessiana = :esatta)`,
 `Embrione(...; solutore = :esatto)`), con l'impronta del predefinito presa prima
-(`test/estensioni.jl`). Prove in `test/hessiana.jl`, marcate `@test_broken`: uguale alla
-matrice per differenze (entro l'errore delle differenze) e simmetrica, stesso minimo, la passata
-come quella sparsa, almeno due volte più veloce sul foglio grande.
+(`test/estensioni.jl`). Prove in `test/hessiana.jl`, tutte verdi: uguale alla matrice per
+differenze e simmetrica, stesso minimo, la passata come quella sparsa, almeno due volte più
+veloce sul foglio grande. Numeri (foglio di 1672 cellule, 4 fili): la matrice da circa 0.7 a 0.3
+s, il passo meccanico grande da 4.4 a 2.9 s, con le stesse iterazioni. Scartato: differenziare
+due volte l'energia (ForwardDiff.hessian), giusto ma 6 s per matrice, dieci volte la versione
+per differenze. Il resto del passo è la fattorizzazione e le energie della ricerca del passo.
 
 ### R7 — Multistrato e mesenchima
 

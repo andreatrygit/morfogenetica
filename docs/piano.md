@@ -694,7 +694,28 @@ cellule, circa 1 × 1 mm.
 sola regione; la regione scende di 17.9 µm dal lato basale; nessun passo meccanico irrisolto.
 
 **Non raggiunto.** Il gradiente da solo resta a 8.4 ms (l'obiettivo era 4): il suo costo è calcolo,
-non memoria. Il passo successivo per la velocità è la matrice delle derivate seconde analitica.
+non memoria. Il passo successivo per la velocità è la matrice delle derivate seconde esatta (sezione 21).
+
+## 21. La matrice delle derivate seconde esatta (roadmap R6)
+
+5 novembre, in red-green: `motore/16_hessiana.jl`, usato da `minimizza_sparso!(...; hessiana =
+:esatta)` e da `Embrione(...; solutore = :esatto)` (estensioni compatibili di `15` e `13`).
+
+**Come.** L'energia è una somma di termini di faccia e di cellula. Per ogni faccia il gradiente
+di σA (con l'anello apicale) e del contributo di volume v_f è in forma chiusa, come in
+`gradiente!` ma sulle sole posizioni della faccia; la matrice jacobiana di quel gradiente, presa
+per differenziazione automatica in avanti con tutte le derivate in un passaggio, è la matrice
+delle derivate seconde esatta. Per la cellula: K·(∇V ∇Vᵀ + (V − V0) Σ ±∇²v_f). Le voci della
+scatola entrano con la regola della catena (P = q + immagine·L). I conti di faccia sono su tuple
+di lunghezza fissa, senza memoria temporanea.
+
+**Che cosa non ha funzionato.** Differenziare due volte l'energia (ForwardDiff.hessian, numeri
+duali annidati): esatta, ma 6 s per matrice sul foglio grande, contro 0.7 s per differenze. Poi
+la jacobiana del gradiente, ma su vettori: 0.7 s, la memoria temporanea fermava i fili. Su
+tuple, e con un'unica matrice piena per cellula: 0.3 s.
+
+**Numeri** (1672 cellule, 4 fili): il passo meccanico grande da 4.4 a 2.9 s, stesse iterazioni.
+Ora pesano la fattorizzazione e le energie della ricerca del passo.
 
 ## Fonti
 

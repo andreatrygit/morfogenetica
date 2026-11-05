@@ -233,7 +233,8 @@ fissa la casualità; la popolazione si aggiorna ogni `ogni` passate; `topologia`
 morire). Una cellula in apoptosi ha il volume bersaglio che scende esponenzialmente, con tempo
 `tempo_apoptosi` (min, libero), fino a `volume_apoptosi` (µm³, libero). `solutore` è il metodo
 del passo meccanico: `:pieno` (`minimizza!`, 06_integratore.jl) o `:sparso`
-(`minimizza_sparso!`, 15_sparso.jl, per i tessuti di migliaia di cellule). Con
+(`minimizza_sparso!`, 15_sparso.jl, per i tessuti di migliaia di cellule) o `:esatto` (lo
+stesso, con la matrice delle derivate seconde esatta di 16_hessiana.jl). Con
 `meccanica_ogni` = m la meccanica avanza solo ogni m passate, con un passo di m·dt (specifica,
 decisione 6: scale di tempo separate; la chimica di un circuito di retroazione chiede passate
 brevi, la meccanica no).
@@ -270,7 +271,8 @@ function Embrione(t::Tessuto3D, programma; parametri, dt, campi = Dict{Symbol,Ca
     isempty(tabella) && throw(ArgumentError("il programma non ha fasi"))
     topologia in (:generale, :prismi) || throw(ArgumentError("topologia :generale o :prismi"))
     ogni >= 1 || throw(ArgumentError("ogni deve essere almeno 1"))
-    solutore in (:pieno, :sparso) || throw(ArgumentError("solutore :pieno o :sparso"))
+    solutore in (:pieno, :sparso, :esatto) ||
+        throw(ArgumentError("solutore :pieno, :sparso o :esatto"))
     meccanica_ogni >= 1 || throw(ArgumentError("meccanica_ogni deve essere almeno 1"))
     cellule = [StatoCellula(tabella, c, false, 1, 1, 1,
                             stati === nothing ? Dict{Symbol,Float64}() : Dict{Symbol,Float64}(stati[c]),
@@ -389,9 +391,11 @@ function passata!(e::Embrione; ordine = eachindex(e.cellule))
         # quando la topologia è in ritardo (una cellula in apoptosi che stringe i lati sotto
         # la lunghezza minima prima degli scambi); come in rilassa_con_topologia!, si va avanti
         # e la topologia, al passo 6, sblocca. Resta registrato.
-        minimo! = e.solutore == :sparso ? minimizza_sparso! : minimizza!
-        r = minimo!(t, e.parametri; tolleranza = e.tolleranza, iterazioni_massime = 200,
-                    ancora = copy(t.x), peso = e.parametri.η / (e.dt * e.meccanica_ogni))
+        argomenti = (tolleranza = e.tolleranza, iterazioni_massime = 200, ancora = copy(t.x),
+                     peso = e.parametri.η / (e.dt * e.meccanica_ogni))
+        r = e.solutore == :pieno  ? minimizza!(t, e.parametri; argomenti...) :
+            e.solutore == :sparso ? minimizza_sparso!(t, e.parametri; argomenti...) :
+                                    minimizza_sparso!(t, e.parametri; argomenti..., hessiana = :esatta)
         r.convergito || push!(e.eventi, (passata = e.passata, tipo = :meccanica_non_risolta,
                                          identita = 0))
     end

@@ -4,8 +4,7 @@
 # apicale), cellula per cellula (volume: K·(∇V ∇Vᵀ + (V − V0) ∇²V)). Usata da
 # `minimizza_sparso!(...; hessiana = :esatta)` e da `Embrione(...; solutore = :esatto)`.
 #
-# Ogni prova è una funzione che restituisce un Bool. Commit rosso: marcate @test_broken finché
-# il codice non c'è.
+# Ogni prova è una funzione che restituisce un Bool.
 
 function prova_esatta_come_differenze()
     P = P_PROGRAMMA
@@ -64,8 +63,8 @@ function prova_esatta_piu_veloce()
 end
 
 @testset "R6 la matrice delle derivate seconde esatta" begin
-    @test_broken prova_esatta_come_differenze()
-    @test_broken prova_stesso_minimo_esatto()
-    @test_broken prova_passata_esatta_come_sparsa()
-    @lenta @test_broken prova_esatta_piu_veloce()
+    @test prova_esatta_come_differenze()
+    @test prova_stesso_minimo_esatto()
+    @test prova_passata_esatta_come_sparsa()
+    @lenta @test prova_esatta_piu_veloce()
 end

@@ -144,14 +144,18 @@ end
 
 """
     minimizza_sparso!(t, p; tolleranza, iterazioni_massime, spostamento_massimo = 1.0,
-                      ancora = nothing, peso = 0.0)
+                      ancora = nothing, peso = 0.0, hessiana = :differenze)
 
 Come `minimizza!` (06_integratore.jl), con la matrice delle derivate seconde sparsa: porta il
 tessuto 3D al minimo di E(x) + (peso/2)·|x − ancora|², finché la forza massima su un vertice
 scende sotto `tolleranza` (nN). Restituisce `(convergito, iterazioni, forza_massima)`.
+Con `hessiana = :esatta` la matrice è quella esatta di 16_hessiana.jl invece di quella per
+differenze del gradiente.
 """
 function minimizza_sparso!(t::Tessuto3D, p::ParametriMeccanici; tolleranza, iterazioni_massime,
-                           spostamento_massimo = 1.0, ancora = nothing, peso = 0.0)
+                           spostamento_massimo = 1.0, ancora = nothing, peso = 0.0,
+                           hessiana = :differenze)
+    hessiana in (:differenze, :esatta) || throw(ArgumentError("hessiana :differenze o :esatta"))
     p.k_contatto > 0 && (spostamento_massimo = min(spostamento_massimo, p.d_contatto / 4))
     x = t.x
     obiettivo(y) = energia(t, p, y) + (ancora === nothing ? 0.0 : peso / 2 * sum(abs2, y .- ancora))
@@ -160,7 +164,7 @@ function minimizza_sparso!(t::Tessuto3D, p::ParametriMeccanici; tolleranza, iter
         ancora === nothing || (g .+= peso .* (y .- ancora))
         return g
     end
-    struttura = _struttura(t)
+    struttura = hessiana == :esatta ? nothing : _struttura(t)
     g = similar(x); gp = similar(x)
     simbolica = nothing
     μ = 1e-3
@@ -172,7 +176,8 @@ function minimizza_sparso!(t::Tessuto3D, p::ParametriMeccanici; tolleranza, iter
             _controlla_contatto(t, p)
             return (convergito = true, iterazioni = it, forza_massima = f)
         end
-        H = _hessiana_sparsa(t, p, x; struttura, ancora, peso)
+        H = hessiana == :esatta ? _hessiana_esatta(t, p, x; ancora, peso) :
+                                  _hessiana_sparsa(t, p, x; struttura, ancora, peso)
         grad!(g, x)
         E0 = obiettivo(x)
         accettato = false
