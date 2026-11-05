@@ -34,6 +34,7 @@ include("lente.jl")
     include("estensioni.jl")
     include("sparso.jl")
     include("gastrula.jl")
+    include("hessiana.jl")
     include("fisica_confronto_3d.jl")
     include("congelati.jl")
 end

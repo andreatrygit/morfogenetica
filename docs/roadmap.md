@@ -433,6 +433,18 @@ deve partire all'equilibrio (σl = 2√3 per prismi di lato e altezza 15 µm, te
   proporzionate alla cellula (risultato negativo #16), poi divisione e morte senza il guscio a
   prismi.
 
+**La matrice delle derivate seconde esatta: commit rosso fatto** (5 novembre). Il collo di
+bottiglia della meccanica a scala vera è la matrice, calcolata per differenze del gradiente (264
+gradienti). Al posto di formule a mano (il centro di ogni faccia è il baricentro del contorno, e
+le sue derivate seconde a mano sono un campo minato) la differenziazione automatica in avanti
+(ForwardDiff) dei termini locali dell'energia: faccia per faccia e cellula per cellula, esatta a
+precisione di macchina. Il codice va in un file nuovo, `motore/16_hessiana.jl`; `15` e `13`
+guadagnano un'opzione (estensioni compatibili: `minimizza_sparso!(...; hessiana = :esatta)`,
+`Embrione(...; solutore = :esatto)`), con l'impronta del predefinito presa prima
+(`test/estensioni.jl`). Prove in `test/hessiana.jl`, marcate `@test_broken`: uguale alla
+matrice per differenze (entro l'errore delle differenze) e simmetrica, stesso minimo, la passata
+come quella sparsa, almeno due volte più veloce sul foglio grande.
+
 ### R7 — Multistrato e mesenchima
 
 Con R1 fatto, la struttura dati e la topologia sono già quelle di un modello 3D completo: manca

@@ -53,7 +53,29 @@ function prova_meccanica_ogni()
     return a.tessuto.x == b.tessuto.x
 end
 
+# La matrice delle derivate seconde esatta (5 novembre): `minimizza_sparso!(...; hessiana =
+# :differenze o :esatta)` in 15_sparso.jl e `solutore = :esatto` dell'Embrione in 13_programma.jl.
+# Con i valori predefiniti, lo stesso minimo bit per bit: l'impronta di minimizza_sparso! su un
+# foglio periodico disturbato, presa prima.
+function impronta_sparso()
+    P = ParametriMeccanici(K = 0.1, η = 1.0, lunghezza_minima = 0.05, k_contatto = 0.0, d_contatto = 0.5)
+    t = foglio_periodico(fill(Intenzioni3D(1.0, 1.0, 1.0, 0.0, 1000.0), 16), 4, 4; lato = 5.0, altezza = 15.0)
+    rng = MersenneTwister(31)
+    n = length(t.x) - 2
+    t.x[1:n] .+= 0.3 .* (rand(rng, n) .- 0.5)
+    for c in 1:3
+        t.intenzioni[c] = Intenzioni3D(1.0, 1.0, 1.0, 2.0, 900.0)
+    end
+    minimizza_sparso!(t, P; tolleranza = 1e-9, iterazioni_massime = 300, ancora = copy(t.x), peso = 0.5)
+    return bytes2hex(sha256(reinterpret(UInt8, t.x)))
+end
+
+const IMPRONTA_SPARSO = "e79d32d0018a2c2569ef466c618b105994cf7d625f505c150902364a11575ef2"
+
+prova_sparso_predefinito_identico() = impronta_sparso() == IMPRONTA_SPARSO
+
 @testset "estensioni compatibili" begin
     @test prova_passata_predefinita_identica()
     @test prova_meccanica_ogni()
+    @test prova_sparso_predefinito_identico()
 end
