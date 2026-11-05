@@ -72,3 +72,6 @@ f848dd4f4a5e74394533f71ffd95b027a8f352721e59306d067708a7ab3b41f6  motore/13_prog
 # :differenze, il predefinito, i risultati sono identici bit per bit: test/estensioni.jl
 # ("prova_sparso_predefinito_identico")
 28c53dd9222617d8db060225c8f78f8d6e2f5cb0b5575a46ddfc211bcd597d04  motore/15_sparso.jl
+
+# motore-hessiana-v1 — commit "CONGELATO: MOTORE-HESSIANA-V1", 5 novembre 2026
+47ec07fb1cc6d155f0d489c82b1c7bbb5339a099d3fda31d4c857f57c3585074  motore/16_hessiana.jl

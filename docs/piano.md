@@ -717,6 +717,26 @@ tuple, e con un'unica matrice piena per cellula: 0.3 s.
 **Numeri** (1672 cellule, 4 fili): il passo meccanico grande da 4.4 a 2.9 s, stesse iterazioni.
 Ora pesano la fattorizzazione e le energie della ricerca del passo.
 
+## 22. Invarianza di scala (roadmap R5)
+
+5 novembre. La catena a scala vera (organizza ; invagina) a due taglie di cellula sullo stesso
+millimetro, il foglio alto 15 µm. Le tre unità del quaderno: lunghezze della forma fisse (scatola,
+altezza, griglia, Nodal e Lefty), lunghezze della cellula che scalano con il lato (volume a
+riposo, σl, Λ), tempi fissi. La secrezione di `attiva_inibisci` è già proporzionale al volume
+della cellula, quindi per unità di tessuto non cambia. Le prove (`test/scala.jl`) sono state
+scritte e messe nel commit prima della corsa, con le tolleranze.
+
+| lato | cellule | primo impegno | impegnate | area impegnata | profondità |
+| --- | --- | --- | --- | --- | --- |
+| 15 µm | 1672 | 127.9 h | 331 | 193 000 µm² | −17.9 µm |
+| 12 µm | 2688 | 140.3 h | 558 | 209 000 µm² | −13.7 µm |
+
+Rapporti 12/15: area 1.08 (tolleranza 0.75–1.33), tempo 1.10 (0.85–1.18), profondità 0.77
+(0.7–1.43). Passano tutte, ma due scarti restano aperti: il ritardo è più grande dei pochi punti
+attesi dal rumore, e la profondità cala di un quarto. La seconda è probabilmente meccanica (a
+parità di Λ/lato, cellule più strette e alte uguali hanno pareti laterali in proporzione più
+estese); un terzo lato, o la stessa prova a Λ fisso, lo direbbe.
+
 ## Fonti
 
 - Krajnc e Ziherl, *Theory of epithelial elasticity*, Phys. Rev. E 92, 052713 (2015):

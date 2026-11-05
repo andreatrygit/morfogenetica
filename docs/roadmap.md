@@ -43,7 +43,7 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `13_programma.jl` | percezione a quattro canali, tabella di fasi, onda, passata completa (popolazione, matrice, casualità con seme) | congelato, `motore-programma-v1`; modificato il 2/11 con test che fallivano (le fasi dichiarano che cosa scrivono) |
 | `14_popolazione.jl` | divisione nel guscio a prismi (angolo dato o regola di Hertwig) | congelato, `motore-popolazione-v1` |
 | `15_sparso.jl` | il solutore sparso per i tessuti di migliaia di cellule | congelato, `motore-sparso-v1`; esteso il 5/11 (`hessiana = :esatta`) |
-| `16_hessiana.jl` | la matrice delle derivate seconde esatta, per il solutore sparso | fatto, non ancora congelato |
+| `16_hessiana.jl` | la matrice delle derivate seconde esatta, per il solutore sparso | congelato, `motore-hessiana-v1` |
 | `primitive/costringi.jl` | la prima primitiva: anello apicale teso dove la sostanza supera la soglia | fatta (le primitive non si congelano: si ridisegnano) |
 | `primitive/secerni.jl` | secernere un segnale se marcata | fatta |
 | `primitive/attiva_inibisci.jl` | attivatore e inibitore (Nodal/Lefty): l'organizzatore senza seme | fatta |
@@ -52,9 +52,9 @@ nuovi di una cartella). I congelati hanno l'impronta SHA-256 in `prove/congelati
 | `programmi/invaginazione.jl` | la prima forma: l'invaginazione di una placca | fatta (R5) |
 | `programmi/gastrula.jl` | la catena a scala vera: l'organizzatore senza seme, poi la sua invaginazione | fatta (R5) |
 
-Prove: `scripts/prove.sh`, la batteria intera: 861 passate e una rotta dichiarata
-(`prova_gradiente_veloce`) al 4 novembre, circa 37 minuti (il grosso è Newton sui tessuti 3D, a matrice piena o sparsa); `scripts/prove.sh veloci` salta i 21 gruppi
-marcati `@lenta` e dura circa 2 minuti (780 prove). Quando lanciare quale: `CLAUDE.md`. Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
+Prove: `scripts/prove.sh`, la batteria intera: 866 passate e una rotta dichiarata
+(`prova_gradiente_veloce`) al 5 novembre, circa 40 minuti (il grosso è Newton sui tessuti 3D, a matrice piena o sparsa), e con le prove di scala, aggiunte dopo, circa un'ora; `scripts/prove.sh veloci` salta i gruppi
+marcati `@lenta` e dura circa 2 minuti (800 prove). Quando lanciare quale: `CLAUDE.md`. Confronti esterni con tyssue in `confronto/` (`LEGGIMI.md`).
 
 Il tag git non si può pushare da questo ambiente: un modulo congelato è segnato da un **commit
 vuoto** "CONGELATO: MOTORE-…-V1" e dall'impronta in `prove/congelati.txt`.
@@ -391,10 +391,25 @@ connessa); le cellule impegnate tendono l'anello e la regione scende di oltre 3 
 basale. Il programma è organizza ; invagina, con `meccanica_ogni` = 6 e il solutore sparso.
 Numeri (seme 1): la prima cellula si impegna alla 128ª ora (5.3 giorni), si impegnano 331 cellule
 in una sola regione, la regione scende di 17.9 µm, nessun passo meccanico irrisolto. La prova
-dura circa 19 minuti.
+dura circa 19 minuti (14.7 con la matrice esatta, sotto).
 
-Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
-`prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);
+**Invarianza di scala: fatta** (5 novembre), `test/scala.jl`, prove scritte prima della corsa: la
+catena a scala vera con cellule di lato 12 µm invece di 15 sullo stesso millimetro (2688 cellule),
+il foglio sempre alto 15 µm; in unità di cellula scalano il volume a riposo, σl e Λ. Chiedono la
+stessa area impegnata (entro il 25%), lo stesso tempo (entro il 15%), la stessa profondità (entro
+il 30%). Tutte verdi, senza toccare né il motore né le primitive. Numeri (seme 1):
+
+| lato | cellule | primo impegno | impegnate | area impegnata | profondità |
+| --- | --- | --- | --- | --- | --- |
+| 15 µm | 1672 | 127.9 h | 331 | 193 000 µm² | −17.9 µm |
+| 12 µm | 2688 | 140.3 h | 558 | 209 000 µm² | −13.7 µm |
+
+L'area segue la forma (+8%), non il numero di cellule (+69%). Due scarti da capire: la macchia
+nasce il 10% più tardi (più dei pochi punti attesi dal rumore mediato su più cellule), e la piega
+è il 23% meno profonda (con le cellule più strette, alte uguali, il foglio è meno cedevole a
+parità di tensione apicale per unità di lunghezza?). La corsa a 12 µm dura circa 20 minuti.
+
+Prossimi passi di R5: il #14 come prova dinamica (l'anello che stringe fino a uno scambio);
 la placca più larga che si chiude in una coppa (servirà il contatto in 3D, R6); poi la catena di
 gastrulazione con elezione, campo, costringi e differenzia (specifica, sezione 5). La batteria
 dura ormai circa 10 minuti: separare prove veloci e lente (R6) diventa urgente.
@@ -450,6 +465,9 @@ veloce sul foglio grande. Numeri (foglio di 1672 cellule, 4 fili): la matrice da
 s, il passo meccanico grande da 4.4 a 2.9 s, con le stesse iterazioni. Scartato: differenziare
 due volte l'energia (ForwardDiff.hessian), giusto ma 6 s per matrice, dieci volte la versione
 per differenze. Il resto del passo è la fattorizzazione e le energie della ricerca del passo.
+La catena a scala vera (`test/gastrula.jl`) ora usa `solutore = :esatto`: stessi numeri (prima
+cellula impegnata alla 128ª ora, 331 cellule, −17.9 µm, nessun passo irrisolto) in 14.7 minuti
+invece di circa 19. Congelato il 5 novembre (`CONGELATO: MOTORE-HESSIANA-V1`).
 
 ### R7 — Multistrato e mesenchima
 
