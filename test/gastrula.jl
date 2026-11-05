@@ -9,11 +9,25 @@
 # Le prove sono comportamenti: nei primi quattro giorni nessuna cellula si impegna (l'organizzatore
 # nasce in giorni); poi una sola regione si impegna, e si invagina dal lato basale.
 
-const _GASTRULA = Ref{Any}(nothing)
-function corsa_gastrula()
-    _GASTRULA[] === nothing || return _GASTRULA[]
-    σl = 2sqrt(3)
-    t = foglio_grande_rilassato()
+# Con `lato` diverso da 15 µm (test/scala.jl) il foglio copre lo stesso millimetro con cellule
+# più piccole, alto sempre 15 µm; le grandezze in unità di cellula scalano con il lato: il volume
+# a riposo, σl (perché il foglio stia in piedi alla stessa altezza: altezza/lato = √3·(σa + σb)/σl)
+# e Λ (la stessa tensione apicale per unità di lunghezza del tessuto, Λ/lato).
+const _GASTRULA = Dict{Float64,Any}()
+function foglio_a_taglia(lato)
+    lato == 15.0 && return foglio_grande_rilassato()
+    σl = 2sqrt(3) * lato / 15
+    nx = round(Int, 38 * 15 / lato)
+    ny = 2round(Int, 22 * 15 / lato)
+    V0 = 3sqrt(3) / 2 * lato^2 * 15
+    t = foglio_periodico(fill(Intenzioni3D(1.0, 1.0, σl, 0.0, V0), nx * ny), nx, ny; lato, altezza = 15.0)
+    minimizza_sparso!(t, P_PROGRAMMA; tolleranza = 1e-5, iterazioni_massime = 100, hessiana = :esatta)
+    return t
+end
+
+function corsa_gastrula(lato = 15.0)
+    haskey(_GASTRULA, lato) && return _GASTRULA[lato]
+    t = foglio_a_taglia(lato)
     Lx, Ly = t.x[end-1], t.x[end]
     griglia(nome, D, k) = Campo(Sostanza(nome, D, k); origine = (0.0, 0.0, 0.0),
                                 h = (Lx / 82, Ly / 82, 15.0), n = (82, 82, 1),
@@ -25,7 +39,7 @@ function corsa_gastrula()
     end
     γ = log(2) / 60
     programma = gastrula(; ka = NODAL_LEFTY.ka, kh = NODAL_LEFTY.kh, κ = NODAL_LEFTY.κ, β = γ, γ,
-                         K = 1.4, n = 4, impegno = 0.5, Λ = 8.0, dt = 5.0)
+                         K = 1.4, n = 4, impegno = 0.5, Λ = 8.0 * lato / 15, dt = 5.0)
     e = Embrione(t, programma; parametri = P_PROGRAMMA, dt = 5.0, campi, seme = 1,
                  solutore = :esatto, tolleranza = 1e-5, meccanica_ogni = 6,
                  interruttori = Interruttori(; topologia = false, popolazione = false))
@@ -34,8 +48,8 @@ function corsa_gastrula()
         passata!(e)
         primo_impegno == 0 && any(c -> c.fase == 2, e.cellule) && (primo_impegno = k)
     end
-    _GASTRULA[] = (e, primo_impegno)
-    return _GASTRULA[]
+    _GASTRULA[lato] = (e, primo_impegno)
+    return _GASTRULA[lato]
 end
 
 impegnate(e) = [c for c in eachindex(e.cellule) if get(e.cellule[c].stato, :gene, 0.0) > 0.5]

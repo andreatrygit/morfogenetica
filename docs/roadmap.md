@@ -393,6 +393,12 @@ Numeri (seme 1): la prima cellula si impegna alla 128ª ora (5.3 giorni), si imp
 in una sola regione, la regione scende di 17.9 µm, nessun passo meccanico irrisolto. La prova
 dura circa 19 minuti (14.7 con la matrice esatta, sotto).
 
+**Invarianza di scala: prove scritte** (5 novembre), `test/scala.jl`, prima della corsa: la
+catena a scala vera con cellule di lato 12 µm invece di 15 sullo stesso millimetro (2688 cellule),
+il foglio sempre alto 15 µm; in unità di cellula scalano il volume a riposo, σl e Λ. Chiedono la
+stessa area impegnata (entro il 25%), lo stesso tempo (entro il 15%), la stessa profondità (entro
+il 30%).
+
 Prossimi passi di R5: la stessa forma a due taglie di cellula (invarianza di scala,
 `prove/attesi.md`); il #14 come prova dinamica (l'anello che stringe fino a uno scambio);
 la placca più larga che si chiude in una coppa (servirà il contatto in 3D, R6); poi la catena di
